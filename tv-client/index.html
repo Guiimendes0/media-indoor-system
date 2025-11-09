@@ -345,41 +345,44 @@ async init() {
 }
             
 // Dentro da classe MediaPlayer - CORRIGIR detecção de IP
-
 async detectClientIp() {
     try {
-        console.log('🔍 Iniciando detecção de IP...');
+        console.log('🔍 Iniciando detecção de IP público...');
         
-        // Tentativa 1: Usar WebRTC para IP local (mais preciso)
-        const localIp = await this.getLocalIp();
-        if (localIp && localIp !== 'Não detectado') {
-            this.clientIp = localIp;
-            this.detectedIpElement.textContent = `${localIp} (Local)`;
-            console.log(`📡 IP Local detectado: ${localIp}`);
-            return;
-        }
-        
-        // Tentativa 2: Usar método alternativo para IP local
-        const altLocalIp = await this.getAlternativeLocalIp();
-        if (altLocalIp && altLocalIp !== 'Não detectado') {
-            this.clientIp = altLocalIp;
-            this.detectedIpElement.textContent = `${altLocalIp} (Local)`;
-            console.log(`📡 IP Local alternativo: ${altLocalIp}`);
-            return;
-        }
-        
-        // Tentativa 3: Usar serviço externo para IP público (FALLBACK)
-        console.log('🌐 Tentando detectar IP público...');
+        // PRIMEIRO: Tentar obter IP público via serviço externo
+        console.log('🌐 Obtendo IP público...');
         const response = await fetch('https://api.ipify.org?format=json');
         const data = await response.json();
         this.clientIp = data.ip;
-        this.detectedIpElement.textContent = `${data.ip} (Público - use para testes)`;
+        this.detectedIpElement.textContent = `${data.ip} (Público)`;
         console.log(`🌐 IP Público detectado: ${data.ip}`);
         
     } catch (error) {
-        console.error('❌ Erro na detecção de IP:', error);
-        this.clientIp = 'Não detectado';
-        this.detectedIpElement.textContent = 'Não detectado - Recarregue a página';
+        console.error('❌ Erro na detecção de IP público:', error);
+        
+        // FALLBACK: Tentar métodos alternativos
+        try {
+            // Tentativa com serviço alternativo
+            const altResponse = await fetch('https://api64.ipify.org?format=json');
+            const altData = await altResponse.json();
+            this.clientIp = altData.ip;
+            this.detectedIpElement.textContent = `${altData.ip} (Público - Alternativo)`;
+            console.log(`🌐 IP Público alternativo: ${altData.ip}`);
+        } catch (fallbackError) {
+            console.error('❌ Todos os métodos de IP público falharam:', fallbackError);
+            
+            // ÚLTIMO FALLBACK: Usar hostname do servidor
+            const hostname = window.location.hostname;
+            if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                this.clientIp = hostname;
+                this.detectedIpElement.textContent = `${hostname} (Hostname)`;
+                console.log(`🌐 Usando hostname: ${hostname}`);
+            } else {
+                this.clientIp = 'Não detectado';
+                this.detectedIpElement.textContent = 'Não detectado - Recarregue a página';
+                console.log('❌ IP não detectado');
+            }
+        }
     }
 }
 
