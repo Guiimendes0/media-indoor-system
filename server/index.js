@@ -169,15 +169,27 @@ app.post('/api/devices/register-code', (req, res) => {
     });
 });
 
-// Middleware para dispositivo autorizado - ATUALIZADO para MAC
+// ATUALIZAR: Middleware para aceitar MAC de múltiplas formas
 function checkDeviceAuthorization(req, res, next) {
     // IGNORAR requisições para arquivos de mídia
     if (req.path.startsWith('/media/')) {
         return next();
     }
     
-    // CORREÇÃO: Obter MAC do header ou query parameter
+    // CORREÇÃO: Obter MAC do header, query parameter OU body
     let deviceMac = req.headers['x-device-mac'] || req.query.mac;
+    
+    // Para POST requests, tentar obter do body também
+    if (req.method === 'POST' && !deviceMac) {
+        try {
+            // Não podemos ler o body duas vezes, então usamos uma flag
+            if (req.body && req.body.mac) {
+                deviceMac = req.body.mac;
+            }
+        } catch (error) {
+            console.log('Não foi possível ler MAC do body');
+        }
+    }
     
     console.log(`🔍 Verificando autorização para MAC: ${deviceMac} - Rota: ${req.path}`);
     
@@ -208,8 +220,7 @@ function checkDeviceAuthorization(req, res, next) {
             return res.status(403).json({ 
                 error: 'Dispositivo não autorizado',
                 message: `MAC ${deviceMac} não está cadastrado como dispositivo ativo`,
-                detectedMac: deviceMac,
-                registeredDevices: devices.filter(d => d.status === 'active').map(d => ({ name: d.name, mac: d.mac }))
+                detectedMac: deviceMac
             });
         }
         
@@ -913,8 +924,64 @@ app.get('/api/client/media', (req, res) => {
     res.json(mediaList);
 });
 
+// ADICIONAR: Rota para verificar se dispositivo foi ativado
+app.post('/api/client/check-activation', (req, res) => {
+    const { mac } = req.body;
+    
+    console.log(`🔍 Verificando ativação para MAC: ${mac}`);
+    
+    if (!mac) {
+        return res.status(400).json({ error: 'MAC é obrigatório' });
+    }
+    
+    // Buscar dispositivo pelo MAC
+    const device = devices.find(d => d.mac === mac && d.status === 'active');
+    
+    if (device) {
+        console.log(`✅ Dispositivo ${device.name} está ativado`);
+        res.json({
+            activated: true,
+            device: {
+                id: device.id,
+                name: device.name,
+                mac: device.mac,
+                location: device.location,
+                playlistId: device.playlistId,
+                status: device.status
+            }
+        });
+    } else {
+        console.log(`❌ Dispositivo com MAC ${mac} não está ativado`);
+        res.json({
+            activated: false
+        });
+    }
+});
+
+// ATUALIZAR: Rota client device para aceitar MAC no body também
 app.get('/api/client/device', (req, res) => {
+    if (!req.authorizedDevice) {
+        return res.status(403).json({ error: 'Dispositivo não autorizado' });
+    }
+    
     res.json(req.authorizedDevice);
+});
+
+// ADICIONAR: Rota alternativa para client device com MAC no body
+app.post('/api/client/device', (req, res) => {
+    const { mac } = req.body;
+    
+    if (!mac) {
+        return res.status(400).json({ error: 'MAC é obrigatório' });
+    }
+    
+    const device = devices.find(d => d.mac === mac && d.status === 'active');
+    
+    if (!device) {
+        return res.status(403).json({ error: 'Dispositivo não autorizado ou não ativado' });
+    }
+    
+    res.json(device);
 });
 
 // Servir arquivos

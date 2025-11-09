@@ -345,18 +345,74 @@
                 this.init();
             }
             
-            async init() {
-                console.log('🎬 Iniciando Media Indoor Player...');
-                
-                // Gerar/recuperar MAC address
-                await this.generateDeviceMac();
-                
-                // Verificar se já está autenticado
-                await this.checkAuthenticationStatus();
-                
-                // Iniciar geração de códigos
-                this.startCodeGeneration();
+async init() {
+    console.log('🎬 Iniciando Media Indoor Player...');
+    
+    // Gerar/recuperar MAC address
+    await this.generateDeviceMac();
+    
+    // Verificar se já está autenticado
+    await this.checkAuthenticationStatus();
+    
+    // Iniciar geração de códigos
+    this.startCodeGeneration();
+    
+    // INICIAR verificação periódica de ativação
+    this.startActivationPolling();
+}
+
+// NOVO: Método para verificar periodicamente se o dispositivo foi ativado
+startActivationPolling() {
+    console.log('🔄 Iniciando verificação periódica de ativação...');
+    
+    this.activationInterval = setInterval(async () => {
+        if (this.deviceId) {
+            // Já está autenticado, parar verificação
+            clearInterval(this.activationInterval);
+            return;
+        }
+        
+        try {
+            // Verificar se este MAC foi ativado
+            const response = await fetch(`${this.serverUrl}/api/client/check-activation`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    mac: this.deviceMac
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.activated && result.device) {
+                    console.log('🎉 Dispositivo foi ativado!', result.device);
+                    this.deviceId = result.device.id;
+                    this.deviceInfo = result.device;
+                    
+                    // Salvar autenticação
+                    localStorage.setItem('deviceAuth', JSON.stringify({
+                        deviceId: this.deviceId,
+                        mac: this.deviceMac,
+                        activatedAt: new Date()
+                    }));
+                    
+                    // Parar geração de códigos
+                    if (this.codeGenerationInterval) {
+                        clearInterval(this.codeGenerationInterval);
+                        this.codeGenerationInterval = null;
+                    }
+                    
+                    // Iniciar playback
+                    this.startPlayback();
+                }
             }
+        } catch (error) {
+            console.log('Verificação de ativação:', error.message);
+        }
+    }, 5000); // Verificar a cada 5 segundos
+}
 
             // Gerar MAC address único para o dispositivo
             async generateDeviceMac() {
@@ -379,33 +435,49 @@
                 console.log(`📱 MAC do dispositivo: ${this.deviceMac}`);
             }
 
-            // Verificar status de autenticação
-            async checkAuthenticationStatus() {
-                try {
-                    // Verificar se já está autenticado
-                    const savedAuth = localStorage.getItem('deviceAuth');
-                    if (savedAuth) {
-                        const authData = JSON.parse(savedAuth);
-                        this.deviceId = authData.deviceId;
-                        
-                        // Verificar se a autenticação ainda é válida
-                        const response = await fetch(`${this.serverUrl}/api/client/device`);
-                        if (response.ok) {
-                            this.deviceInfo = await response.json();
-                            console.log('✅ Dispositivo já autenticado:', this.deviceInfo);
-                            this.startPlayback();
-                            return;
-                        }
+// No método checkAuthenticationStatus - CORRIGIDO
+async checkAuthenticationStatus() {
+    try {
+        // Verificar se já está autenticado pelo localStorage
+        const savedAuth = localStorage.getItem('deviceAuth');
+        if (savedAuth) {
+            const authData = JSON.parse(savedAuth);
+            this.deviceId = authData.deviceId;
+            
+            console.log('🔍 Verificando autenticação salva:', authData);
+            
+            // Tentar carregar informações do dispositivo
+            try {
+                // ADICIONAR MAC no header para autorização
+                const response = await fetch(`${this.serverUrl}/api/client/device`, {
+                    headers: {
+                        'x-device-mac': this.deviceMac
                     }
-                    
-                    // Se não está autenticado, mostrar tela de código
-                    this.showAuthScreen();
-                    
-                } catch (error) {
-                    console.error('❌ Erro ao verificar autenticação:', error);
-                    this.showAuthScreen();
+                });
+                
+                if (response.ok) {
+                    this.deviceInfo = await response.json();
+                    console.log('✅ Dispositivo já autenticado e ativo:', this.deviceInfo);
+                    this.startPlayback();
+                    return;
+                } else if (response.status === 403) {
+                    console.log('❌ Autenticação salva não é mais válida');
+                    // Limpar autenticação salva se não for mais válida
+                    localStorage.removeItem('deviceAuth');
                 }
+            } catch (error) {
+                console.error('Erro ao verificar dispositivo:', error);
             }
+        }
+        
+        // Se não está autenticado, mostrar tela de código
+        this.showAuthScreen();
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar autenticação:', error);
+        this.showAuthScreen();
+    }
+}
 
             // Iniciar geração de códigos
             startCodeGeneration() {
@@ -454,29 +526,30 @@
             }
 
             // Registrar código no servidor
-            async registerAuthCodeWithServer() {
-                try {
-                    const response = await fetch(`${this.serverUrl}/api/devices/register-code`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            mac: this.deviceMac,
-                            authCode: this.authCode,
-                            expiry: this.codeExpiry.toISOString()
-                        })
-                    });
+// MODIFICAR: No método registerAuthCodeWithServer, garantir que o MAC está sendo enviado
+async registerAuthCodeWithServer() {
+    try {
+        const response = await fetch(`${this.serverUrl}/api/devices/register-code`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mac: this.deviceMac,
+                authCode: this.authCode,
+                expiry: this.codeExpiry.toISOString()
+            })
+        });
 
-                    if (response.ok) {
-                        console.log('✅ Código registrado no servidor');
-                    } else {
-                        console.error('❌ Erro ao registrar código no servidor');
-                    }
-                } catch (error) {
-                    console.error('❌ Erro de conexão ao registrar código:', error);
-                }
-            }
+        if (response.ok) {
+            console.log('✅ Código registrado no servidor para MAC:', this.deviceMac);
+        } else {
+            console.error('❌ Erro ao registrar código no servidor');
+        }
+    } catch (error) {
+        console.error('❌ Erro de conexão ao registrar código:', error);
+    }
+}
 
             // Conectar WebSocket
             connectWebSocket() {
@@ -696,21 +769,36 @@
                 }
             }
 
-            async startPlayback() {
-                this.hideAuthScreen();
-                this.connectionError.classList.add('hidden');
-                this.statusOverlay.classList.remove('hidden');
-                this.debugPanel.classList.remove('hidden');
-                
-                this.deviceNameElement.textContent = this.deviceInfo.name;
-                this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
-                this.deviceStatusElement.textContent = 'Autenticado';
-                
-                this.mediaStartTime = new Date();
-                
-                await this.loadMediaList();
-                this.connectWebSocket();
-            }
+// MODIFICAR: No método startPlayback, garantir que todas as inicializações acontecem
+async startPlayback() {
+    console.log('🚀 Iniciando playback para dispositivo:', this.deviceInfo);
+    
+    this.hideAuthScreen();
+    this.connectionError.classList.add('hidden');
+    this.statusOverlay.classList.remove('hidden');
+    this.debugPanel.classList.remove('hidden');
+    
+    this.deviceNameElement.textContent = this.deviceInfo.name;
+    this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
+    this.deviceStatusElement.textContent = 'Autenticado';
+    
+    // PARAR toda verificação de ativação
+    if (this.activationInterval) {
+        clearInterval(this.activationInterval);
+        this.activationInterval = null;
+    }
+    
+    // PARAR geração de códigos
+    if (this.codeGenerationInterval) {
+        clearInterval(this.codeGenerationInterval);
+        this.codeGenerationInterval = null;
+    }
+    
+    this.mediaStartTime = new Date();
+    
+    await this.loadMediaList();
+    this.connectWebSocket();
+}
 
             // ... (outras funções permanecem as mesmas)
 
@@ -949,41 +1037,45 @@
                     });
                 }
             }
-
-            async loadMediaList(forceRestart = false) {
-                try {
-                    this.showLoading('Carregando conteúdo...');
-                    
-                    const response = await fetch(`${this.serverUrl}/api/client/media`);
-                    
-                    if (response.ok) {
-                        const newMediaList = await response.json();
-                        const mediaChanged = JSON.stringify(newMediaList) !== JSON.stringify(this.mediaList);
-                        
-                        this.mediaList = newMediaList;
-                        console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
-                        
-                        if (this.mediaList.length > 0) {
-                            this.hideLoading();
-                            
-                            if (forceRestart || mediaChanged || this.currentMediaIndex >= this.mediaList.length) {
-                                this.currentMediaIndex = 0;
-                                this.mediaStartTime = new Date();
-                                this.playNextMedia();
-                            } else if (!this.isSyncing) {
-                                this.playNextMedia();
-                            }
-                        } else {
-                            this.showLoading('⚠️ Nenhum conteúdo disponível');
-                        }
-                    } else {
-                        throw new Error('Erro ao carregar conteúdo');
-                    }
-                } catch (error) {
-                    console.error('❌ Erro ao carregar mídias:', error);
-                    this.showErrorScreen('Erro ao carregar conteúdo');
-                }
+// ADICIONAR: Método para carregar mídias com autorização por MAC
+async loadMediaList(forceRestart = false) {
+    try {
+        this.showLoading('Carregando conteúdo...');
+        
+        const response = await fetch(`${this.serverUrl}/api/client/media`, {
+            headers: {
+                'x-device-mac': this.deviceMac
             }
+        });
+        
+        if (response.ok) {
+            const newMediaList = await response.json();
+            const mediaChanged = JSON.stringify(newMediaList) !== JSON.stringify(this.mediaList);
+            
+            this.mediaList = newMediaList;
+            console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
+            
+            if (this.mediaList.length > 0) {
+                this.hideLoading();
+                
+                if (forceRestart || mediaChanged || this.currentMediaIndex >= this.mediaList.length) {
+                    this.currentMediaIndex = 0;
+                    this.mediaStartTime = new Date();
+                    this.playNextMedia();
+                } else if (!this.isSyncing) {
+                    this.playNextMedia();
+                }
+            } else {
+                this.showLoading('⚠️ Nenhum conteúdo disponível');
+            }
+        } else {
+            throw new Error('Erro ao carregar conteúdo');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar mídias:', error);
+        this.showErrorScreen('Erro ao carregar conteúdo');
+    }
+}
 
             playNextMedia() {
                 if (this.mediaList.length === 0) {
