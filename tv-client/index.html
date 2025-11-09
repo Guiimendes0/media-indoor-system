@@ -43,7 +43,7 @@
             display: none !important;
         }
         
-        /* Tela de Autenticação */
+        /* Tela de Autenticação Atualizada */
         #auth-screen {
             position: absolute;
             top: 0;
@@ -66,13 +66,24 @@
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             width: 90%;
-            max-width: 400px;
+            max-width: 500px;
             color: #333;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo-image {
+            max-width: 200px;
+            max-height: 100px;
+            margin-bottom: 15px;
         }
 
         .auth-container h1 {
             color: #2c3e50;
             margin-bottom: 10px;
+            font-size: 1.8rem;
         }
 
         .auth-container p {
@@ -80,45 +91,42 @@
             margin-bottom: 20px;
         }
 
-        .auth-code-input {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .auth-code-input input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 18px;
+        .auth-code-display {
+            background: #f8f9fa;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
             text-align: center;
+        }
+
+        .auth-code {
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
             font-weight: bold;
-            letter-spacing: 3px;
+            color: #2c3e50;
+            letter-spacing: 8px;
+            margin: 10px 0;
         }
 
-        .auth-btn {
-            width: 100%;
-            padding: 15px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .auth-btn:hover {
-            background: #2980b9;
+        .code-expiry {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            font-weight: bold;
         }
 
         .device-info {
-            margin-top: 15px;
+            margin-top: 20px;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
             font-size: 14px;
+            text-align: left;
+        }
+
+        .device-info strong {
+            color: #2c3e50;
         }
 
         /* Status e controles */
@@ -209,34 +217,33 @@
 </head>
 <body>
     <div id="player-container">
-        <!-- Tela de Autenticação -->
- <!-- Na tela de autenticação - ADICIONAR BOTÃO DE RECARREGAR -->
-<div id="auth-screen">
-    <div class="auth-container">
-        <h1>🔐 Ativação do Dispositivo</h1>
-        <p>Digite o código de 6 dígitos fornecido pelo administrador</p>
-        
-        <div class="auth-code-input">
-            <input type="text" id="authCode" maxlength="6" placeholder="000000" pattern="[0-9]{6}">
-        </div>
-        
-        <button class="auth-btn" onclick="activateDevice()">✅ Ativar Dispositivo</button>
-        
-        <div class="device-info">
-            <strong>IP Detectado:</strong> <span id="detected-ip">Carregando...</span><br>
-            <small>Informe este IP ao administrador para obter o código</small>
-        </div>
+        <!-- Tela de Autenticação Atualizada -->
+        <div id="auth-screen">
+            <div class="auth-container">
+                <div class="logo-container">
+                    <!-- Espaço para logo - substitua o src pela URL da sua logo -->
+                    <img src="../tv-client/assets/Pantanera-logo.png" 
+                         alt="Media Indoor Logo" class="logo-image">
+                </div>
+                
+                <h1>Pantaneira Media Indoor</h1>
+                <p>Use o código abaixo para cadastrar este dispositivo no painel administrativo</p>
+                
+                <div class="auth-code-display">
+                    <div style="color: #666; margin-bottom: 10px;">Código de Ativação:</div>
+                    <div class="auth-code" id="generatedAuthCode">------</div>
+                    <div class="code-expiry" id="codeExpiry">Gerando novo código...</div>
+                </div>
+                
+                <div class="device-info">
+                    <strong>Identificador do Dispositivo:</strong> <span id="device-mac">Carregando...</span><br>
+                    <strong>Status:</strong> <span id="device-status">Não autenticado</span><br>
+                    <small>Este código é válido por 5 minutos. Após esse período, um novo código será gerado automaticamente.</small>
+                </div>
 
-        <!-- BOTÃO DE RECARREGAR ADICIONADO -->
-        <div style="margin-top: 15px;">
-            <button class="auth-btn" onclick="location.reload()" style="background: #95a5a6;">
-                🔄 Recarregar Página
-            </button>
+                <div id="auth-error" style="color: #e74c3c; margin-top: 15px; display: none;"></div>
+            </div>
         </div>
-
-        <div id="auth-error" style="color: #e74c3c; margin-top: 15px; display: none;"></div>
-    </div>
-</div>
         
         <!-- Tela de Erro -->
         <div id="connection-error" class="hidden">
@@ -292,7 +299,7 @@
                 this.updateInterval = 30000;
                 this.currentTimeout = null;
                 this.currentCountdown = null;
-                this.clientIp = null;
+                this.deviceMac = null;
                 this.currentMedia = null;
                 this.ws = null;
                 this.deviceId = null;
@@ -300,6 +307,9 @@
                 this.mediaStartTime = null;
                 this.isPlaying = false;
                 this.reconnectAttempts = 0;
+                this.authCode = null;
+                this.codeExpiry = null;
+                this.codeGenerationInterval = null;
                 
                 // Elementos DOM
                 this.authScreen = document.getElementById('auth-screen');
@@ -315,10 +325,12 @@
                 this.debugPanel = document.getElementById('debug-panel');
                 this.countdownElement = document.getElementById('countdown');
                 this.countdownTimer = document.getElementById('countdown-timer');
-                this.detectedIpElement = document.getElementById('detected-ip');
-                this.authCodeInput = document.getElementById('authCode');
+                this.deviceMacElement = document.getElementById('device-mac');
+                this.deviceStatusElement = document.getElementById('device-status');
                 this.authError = document.getElementById('auth-error');
                 this.syncNotification = document.getElementById('sync-notification');
+                this.generatedAuthCode = document.getElementById('generatedAuthCode');
+                this.codeExpiryElement = document.getElementById('codeExpiry');
                 
                 // Elementos de mídia
                 this.mediaDisplay = document.getElementById('media-display');
@@ -327,347 +339,393 @@
                 this.webDisplay = document.getElementById('web-display');
 
                 this.lastSyncTime = 0;
-                this.syncCooldown = 5000; // 5 segundos entre sincronizações
+                this.syncCooldown = 5000;
                 this.isProcessingSync = false;
                 
                 this.init();
             }
             
-async init() {
-    console.log('🎬 Iniciando Media Indoor Player...');
-    
-    // Detectar IP primeiro
-    await this.detectClientIp();
-    console.log(`📊 IP final para ativação: ${this.clientIp}`);
-    
-    // Verificar status do dispositivo
-    await this.checkDeviceStatus();
-}
-            
-// Dentro da classe MediaPlayer - CORRIGIR detecção de IP
-async detectClientIp() {
-    try {
-        console.log('🔍 Iniciando detecção de IP público...');
-        
-        // PRIMEIRO: Tentar obter IP público via serviço externo
-        console.log('🌐 Obtendo IP público...');
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        this.clientIp = data.ip;
-        this.detectedIpElement.textContent = `${data.ip} (Público)`;
-        console.log(`🌐 IP Público detectado: ${data.ip}`);
-        
-    } catch (error) {
-        console.error('❌ Erro na detecção de IP público:', error);
-        
-        // FALLBACK: Tentar métodos alternativos
-        try {
-            // Tentativa com serviço alternativo
-            const altResponse = await fetch('https://api64.ipify.org?format=json');
-            const altData = await altResponse.json();
-            this.clientIp = altData.ip;
-            this.detectedIpElement.textContent = `${altData.ip} (Público - Alternativo)`;
-            console.log(`🌐 IP Público alternativo: ${altData.ip}`);
-        } catch (fallbackError) {
-            console.error('❌ Todos os métodos de IP público falharam:', fallbackError);
-            
-            // ÚLTIMO FALLBACK: Usar hostname do servidor
-            const hostname = window.location.hostname;
-            if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                this.clientIp = hostname;
-                this.detectedIpElement.textContent = `${hostname} (Hostname)`;
-                console.log(`🌐 Usando hostname: ${hostname}`);
-            } else {
-                this.clientIp = 'Não detectado';
-                this.detectedIpElement.textContent = 'Não detectado - Recarregue a página';
-                console.log('❌ IP não detectado');
+            async init() {
+                console.log('🎬 Iniciando Media Indoor Player...');
+                
+                // Gerar/recuperar MAC address
+                await this.generateDeviceMac();
+                
+                // Verificar se já está autenticado
+                await this.checkAuthenticationStatus();
+                
+                // Iniciar geração de códigos
+                this.startCodeGeneration();
             }
-        }
-    }
-}
-     
-// No método checkDeviceStatus - MELHORAR tratamento de erro
-async checkDeviceStatus() {
-    try {
-        this.showLoading('Verificando status do dispositivo...');
-        console.log(`🔍 Verificando status para IP: ${this.clientIp}`);
-        
-        const response = await fetch(`${this.serverUrl}/api/client/device`);
-        
-        if (response.ok) {
-            this.deviceInfo = await response.json();
-            this.deviceId = this.deviceInfo.id;
-            console.log('✅ Dispositivo ativo:', this.deviceInfo);
-            this.connectWebSocket();
-            this.startPlayback();
-        } else if (response.status === 403) {
-            const errorData = await response.json();
-            console.log('🔐 Dispositivo não autorizado:', errorData);
-            
-            // CORRIGIR: Chamar a função correta
-            this.showAuthScreen(); // Esta função existe na classe
-            
-        } else {
-            throw new Error('Erro ao verificar status');
-        }
-    } catch (error) {
-        console.error('❌ Erro ao verificar status:', error);
-        // CORRIGIR: Usar a função correta para mostrar erro
-        this.showErrorScreen('Erro de conexão com o servidor: ' + error.message);
-    }
-}
-            
-showAuthScreen() {
-    console.log('🎯 Mostrando tela de autenticação...');
-    this.authScreen.classList.remove('hidden');
-    this.connectionError.classList.add('hidden');
-    this.statusOverlay.classList.add('hidden');
-    this.hideLoading();
-}
 
-
-// Conectar WebSocket - CORRIGIDO para melhor reconexão
-connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
-    
-    console.log(`🔗 Conectando WebSocket: ${wsUrl}`);
-    
-    this.ws = new WebSocket(wsUrl);
-    
-    this.ws.onopen = () => {
-        console.log('✅ WebSocket conectado com sucesso');
-        this.reconnectAttempts = 0; // Resetar tentativas
-        this.wsStatusElement.textContent = 'Conectado';
-        this.wsStatusElement.style.color = '#27ae60';
-        
-        // Registrar dispositivo IMEDIATAMENTE
-        if (this.deviceId) {
-            this.ws.send(JSON.stringify({
-                type: 'register',
-                deviceId: this.deviceId,
-                ip: this.clientIp,
-                timestamp: Date.now()
-            }));
-            console.log(`📱 Dispositivo ${this.deviceId} registrado no WebSocket`);
-        }
-        
-        // Iniciar heartbeat OTIMIZADO
-        setInterval(() => {
-            if (this.ws.readyState === WebSocket.OPEN && this.deviceId) {
-                this.ws.send(JSON.stringify({
-                    type: 'ping',
-                    deviceId: this.deviceId,
-                    timestamp: Date.now()
-                }));
+            // Gerar MAC address único para o dispositivo
+            async generateDeviceMac() {
+                // Tentar recuperar MAC salvo
+                let savedMac = localStorage.getItem('deviceMac');
+                
+                if (!savedMac) {
+                    // Gerar novo MAC (formato: XX:XX:XX:XX:XX:XX)
+                    const macArray = new Uint8Array(6);
+                    crypto.getRandomValues(macArray);
+                    savedMac = Array.from(macArray)
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join(':')
+                        .toUpperCase();
+                    localStorage.setItem('deviceMac', savedMac);
+                }
+                
+                this.deviceMac = savedMac;
+                this.deviceMacElement.textContent = this.deviceMac;
+                console.log(`📱 MAC do dispositivo: ${this.deviceMac}`);
             }
-        }, 25000); // A cada 25 segundos
-    };
-    
-    this.ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            console.log('📨 Mensagem WebSocket recebida:', data.type);
-            this.handleWebSocketMessage(data);
-        } catch (error) {
-            console.error('❌ Erro ao processar mensagem WebSocket:', error);
-        }
-    };
-    
-    this.ws.onclose = (event) => {
-        console.log(`🔌 WebSocket desconectado: Código ${event.code}, Razão: ${event.reason}`);
-        this.wsStatusElement.textContent = 'Desconectado';
-        this.wsStatusElement.style.color = '#e74c3c';
-        
-        // Tentar reconectar com backoff exponencial
-        const reconnectDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-        console.log(`🔄 Tentando reconectar em ${reconnectDelay}ms...`);
-        
-        setTimeout(() => {
-            this.reconnectAttempts = this.reconnectAttempts + 1;
-            this.connectWebSocket();
-        }, reconnectDelay);
-    };
-    
-    this.ws.onerror = (error) => {
-        console.error('❌ Erro WebSocket:', error);
-        this.wsStatusElement.textContent = 'Erro';
-        this.wsStatusElement.style.color = '#e74c3c';
-    };
-}
 
-// 3. handleWebSocketMessage() - Substituir toda a função atual por:
-handleWebSocketMessage(data) {
-    console.log('📨 Mensagem WebSocket:', data.type, data);
-    
-    switch(data.type) {
-        case 'sync_command':
-            console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
-            this.handleSyncCommand(data);
-            break;
-        case 'announcement':
-            console.log('📢 Pronunciamento recebido:', data);
-            this.handleAnnouncement(data);
-            break;
-        case 'announcement_cancelled':
-            console.log('❌ Pronunciamento cancelado:', data);
-            this.handleAnnouncementCancelled(data);
-            break;
-        case 'send_preview':
-            console.log('📸 Preview solicitado');
-            this.sendCurrentMedia();
-            break;
-    }
-}
+            // Verificar status de autenticação
+            async checkAuthenticationStatus() {
+                try {
+                    // Verificar se já está autenticado
+                    const savedAuth = localStorage.getItem('deviceAuth');
+                    if (savedAuth) {
+                        const authData = JSON.parse(savedAuth);
+                        this.deviceId = authData.deviceId;
+                        
+                        // Verificar se a autenticação ainda é válida
+                        const response = await fetch(`${this.serverUrl}/api/client/device`);
+                        if (response.ok) {
+                            this.deviceInfo = await response.json();
+                            console.log('✅ Dispositivo já autenticado:', this.deviceInfo);
+                            this.startPlayback();
+                            return;
+                        }
+                    }
+                    
+                    // Se não está autenticado, mostrar tela de código
+                    this.showAuthScreen();
+                    
+                } catch (error) {
+                    console.error('❌ Erro ao verificar autenticação:', error);
+                    this.showAuthScreen();
+                }
+            }
 
-handleSyncCommand(data) {
-    const now = Date.now();
-    
-    // Verificar se já estamos processando uma sync ou se é muito recente
-    if (this.isProcessingSync || (now - this.lastSyncTime < this.syncCooldown)) {
-        console.log('⏸️  Sync ignorada - muito recente ou já em processamento');
-        return;
-    }
-    
-    console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
-    
-    this.isProcessingSync = true;
-    this.lastSyncTime = now;
-    
-    // PARAR tudo e aplicar sincronização IMEDIATAMENTE
-    this.clearTimers();
-    this.stopAllMedia();
-    
-    this.syncData = {
-        currentMediaIndex: data.currentMediaIndex || 0,
-        mediaStartTime: new Date(data.mediaStartTime),
-        syncTime: new Date(data.syncTime),
-        totalPlaylistDuration: data.totalPlaylistDuration,
-        currentMediaDuration: data.currentMediaDuration,
-        remainingTime: data.remainingTime,
-        elapsedPlaylistTime: data.elapsedPlaylistTime,
-        serverTime: data.serverTime
-    };
-    
-    console.log('🎯 Aplicando sincronização IMEDIATA:', this.syncData);
-    
-    // Aplicar sincronização IMEDIATAMENTE
-    this.applySync();
-    
-    // Liberar para próxima sync após um delay
-    setTimeout(() => {
-        this.isProcessingSync = false;
-    }, 1000);
-}
+            // Iniciar geração de códigos
+            startCodeGeneration() {
+                // Gerar primeiro código imediatamente
+                this.generateNewAuthCode();
+                
+                // Gerar novo código a cada 5 minutos
+                this.codeGenerationInterval = setInterval(() => {
+                    this.generateNewAuthCode();
+                }, 5 * 60 * 1000); // 5 minutos
+            }
 
-// 5. applySync() - Se já existir, substituir. Se não existir, adicionar:
-applySync() {
-    console.log('🎯 Aplicando sincronização completa:', this.syncData);
-    
-    this.clearTimers();
-    this.stopAllMedia();
-    
-    // Usar TODOS os parâmetros da sincronização
-    this.currentMediaIndex = this.syncData.currentMediaIndex || 0;
-    this.mediaStartTime = new Date(this.syncData.mediaStartTime);
-    this.syncTime = new Date(this.syncData.syncTime);
-    this.totalPlaylistDuration = this.syncData.totalPlaylistDuration || 0;
-    
-    // CÁLCULO DE TEMPO OTIMIZADO - usar serverTime se disponível
-    const now = Date.now();
-    const serverTime = this.syncData.serverTime || now;
-    const clientTime = now;
-    
-    // Calcular diferença entre servidor e cliente (latência de rede)
-    const networkLatency = clientTime - serverTime;
-    console.log(`📡 Latência de rede: ${networkLatency}ms`);
-    
-    // Ajustar o tempo considerando a latência
-    const adjustedNow = now - networkLatency;
-    const elapsedSinceSync = adjustedNow - this.syncTime.getTime();
-    
-    console.log(`⏰ Tempo desde sincronização (ajustado): ${elapsedSinceSync}ms`);
-    
-    let remainingTime = this.syncData.remainingTime || 0;
-    let currentMediaDuration = this.syncData.currentMediaDuration || 0;
-    
-    // Se temos tempo decorrido, ajustar o tempo restante COM PRECISÃO
-    if (elapsedSinceSync > 0 && currentMediaDuration > 0) {
-        remainingTime = Math.max(0, currentMediaDuration - elapsedSinceSync);
-        console.log(`⏱️ Tempo restante ajustado: ${remainingTime}ms (${elapsedSinceSync}ms decorridos)`);
-    }
-    
-    console.log(`📊 Sincronização OTIMIZADA: Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes, Duração: ${currentMediaDuration}ms`);
-    
-    if (this.mediaList.length > 0 && this.currentMediaIndex < this.mediaList.length) {
-        const media = this.mediaList[this.currentMediaIndex];
-        this.playMediaWithExactSync(media, remainingTime, currentMediaDuration);
-    } else {
-        console.log('❌ Índice de mídia inválido, reiniciando...');
-        this.currentMediaIndex = 0;
-        this.playNextMedia();
-    }
-    
-    this.isSyncing = false;
-}
+            // Gerar novo código de autenticação
+            generateNewAuthCode() {
+                // Gerar código de 6 dígitos
+                this.authCode = Math.floor(100000 + Math.random() * 900000).toString();
+                this.codeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
+                
+                // Atualizar interface
+                this.generatedAuthCode.textContent = this.authCode;
+                this.updateCodeExpiryDisplay();
+                
+                console.log(`🔐 Novo código gerado: ${this.authCode} (Válido até: ${this.codeExpiry.toLocaleTimeString()})`);
+                
+                // Enviar código para o servidor
+                this.registerAuthCodeWithServer();
+            }
 
-// Nova função para sincronização exata - OTIMIZADA
-playMediaWithExactSync(media, remainingTime, mediaDuration) {
-    this.currentMedia = media;
-    this.stopAllMedia();
-    
-    const remainingSeconds = Math.round(remainingTime / 1000);
-    const totalSeconds = Math.round(mediaDuration / 1000);
-    
-    this.currentMediaElement.textContent = media.originalName;
-    this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
-    this.debugInfo.textContent = `Sincronizado: ${media.originalName} (${remainingSeconds}s)`;
-    
-    console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}, ${remainingSeconds}s restantes de ${totalSeconds}s totais`);
-    
-    // Programar próxima mídia com o tempo EXATO - OTIMIZADO
-    this.currentTimeout = setTimeout(() => {
-        console.log('⏰ Timer da mídia atual finalizado, indo para próxima...');
-        this.playNextMedia();
-    }, remainingTime);
-    
-    // Iniciar countdown
-    this.startCountdown(remainingTime);
-    
-    // Enviar informação da mídia atual
-    this.sendCurrentMedia();
-    
-    // Reproduzir a mídia baseada no tipo - INICIAR IMEDIATAMENTE
-    this.playMediaByType(media, mediaDuration - remainingTime);
-}
-            
-            playMediaWithRemainingTime(media, remainingTimeMs) {
+            // Atualizar display de expiração do código
+            updateCodeExpiryDisplay() {
+                const now = new Date();
+                const timeLeft = this.codeExpiry - now;
+                
+                if (timeLeft <= 0) {
+                    this.codeExpiryElement.textContent = 'Código expirado - gerando novo...';
+                    return;
+                }
+                
+                const minutes = Math.floor(timeLeft / (60 * 1000));
+                const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+                
+                this.codeExpiryElement.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Atualizar a cada segundo
+                setTimeout(() => this.updateCodeExpiryDisplay(), 1000);
+            }
+
+            // Registrar código no servidor
+            async registerAuthCodeWithServer() {
+                try {
+                    const response = await fetch(`${this.serverUrl}/api/devices/register-code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mac: this.deviceMac,
+                            authCode: this.authCode,
+                            expiry: this.codeExpiry.toISOString()
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('✅ Código registrado no servidor');
+                    } else {
+                        console.error('❌ Erro ao registrar código no servidor');
+                    }
+                } catch (error) {
+                    console.error('❌ Erro de conexão ao registrar código:', error);
+                }
+            }
+
+            // Conectar WebSocket
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}`;
+                
+                console.log(`🔗 Conectando WebSocket: ${wsUrl}`);
+                
+                this.ws = new WebSocket(wsUrl);
+                
+                this.ws.onopen = () => {
+                    console.log('✅ WebSocket conectado com sucesso');
+                    this.reconnectAttempts = 0;
+                    this.wsStatusElement.textContent = 'Conectado';
+                    this.wsStatusElement.style.color = '#27ae60';
+                    
+                    // Registrar dispositivo
+                    if (this.deviceId) {
+                        this.ws.send(JSON.stringify({
+                            type: 'register',
+                            deviceId: this.deviceId,
+                            mac: this.deviceMac,
+                            timestamp: Date.now()
+                        }));
+                    }
+                    
+                    // Heartbeat
+                    setInterval(() => {
+                        if (this.ws.readyState === WebSocket.OPEN && this.deviceId) {
+                            this.ws.send(JSON.stringify({
+                                type: 'ping',
+                                deviceId: this.deviceId,
+                                timestamp: Date.now()
+                            }));
+                        }
+                    }, 25000);
+                };
+                
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('📨 Mensagem WebSocket recebida:', data.type);
+                        this.handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error('❌ Erro ao processar mensagem WebSocket:', error);
+                    }
+                };
+                
+                this.ws.onclose = (event) => {
+                    console.log(`🔌 WebSocket desconectado: Código ${event.code}, Razão: ${event.reason}`);
+                    this.wsStatusElement.textContent = 'Desconectado';
+                    this.wsStatusElement.style.color = '#e74c3c';
+                    
+                    const reconnectDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+                    setTimeout(() => {
+                        this.reconnectAttempts++;
+                        this.connectWebSocket();
+                    }, reconnectDelay);
+                };
+                
+                this.ws.onerror = (error) => {
+                    console.error('❌ Erro WebSocket:', error);
+                    this.wsStatusElement.textContent = 'Erro';
+                    this.wsStatusElement.style.color = '#e74c3c';
+                };
+            }
+
+            // Restante das funções permanecem as mesmas...
+            handleWebSocketMessage(data) {
+                console.log('📨 Mensagem WebSocket:', data.type, data);
+                
+                switch(data.type) {
+                    case 'sync_command':
+                        console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
+                        this.handleSyncCommand(data);
+                        break;
+                    case 'announcement':
+                        console.log('📢 Pronunciamento recebido:', data);
+                        this.handleAnnouncement(data);
+                        break;
+                    case 'announcement_cancelled':
+                        console.log('❌ Pronunciamento cancelado:', data);
+                        this.handleAnnouncementCancelled(data);
+                        break;
+                    case 'send_preview':
+                        console.log('📸 Preview solicitado');
+                        this.sendCurrentMedia();
+                        break;
+                }
+            }
+
+            handleSyncCommand(data) {
+                const now = Date.now();
+                
+                if (this.isProcessingSync || (now - this.lastSyncTime < this.syncCooldown)) {
+                    console.log('⏸️  Sync ignorada - muito recente ou já em processamento');
+                    return;
+                }
+                
+                console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
+                
+                this.isProcessingSync = true;
+                this.lastSyncTime = now;
+                
+                this.clearTimers();
+                this.stopAllMedia();
+                
+                this.syncData = {
+                    currentMediaIndex: data.currentMediaIndex || 0,
+                    mediaStartTime: new Date(data.mediaStartTime),
+                    syncTime: new Date(data.syncTime),
+                    totalPlaylistDuration: data.totalPlaylistDuration,
+                    currentMediaDuration: data.currentMediaDuration,
+                    remainingTime: data.remainingTime,
+                    elapsedPlaylistTime: data.elapsedPlaylistTime,
+                    serverTime: data.serverTime
+                };
+                
+                console.log('🎯 Aplicando sincronização IMEDIATA:', this.syncData);
+                
+                this.applySync();
+                
+                setTimeout(() => {
+                    this.isProcessingSync = false;
+                }, 1000);
+            }
+
+            applySync() {
+                console.log('🎯 Aplicando sincronização completa:', this.syncData);
+                
+                this.clearTimers();
+                this.stopAllMedia();
+                
+                this.currentMediaIndex = this.syncData.currentMediaIndex || 0;
+                this.mediaStartTime = new Date(this.syncData.mediaStartTime);
+                this.syncTime = new Date(this.syncData.syncTime);
+                this.totalPlaylistDuration = this.syncData.totalPlaylistDuration || 0;
+                
+                const now = Date.now();
+                const serverTime = this.syncData.serverTime || now;
+                const clientTime = now;
+                
+                const networkLatency = clientTime - serverTime;
+                console.log(`📡 Latência de rede: ${networkLatency}ms`);
+                
+                const adjustedNow = now - networkLatency;
+                const elapsedSinceSync = adjustedNow - this.syncTime.getTime();
+                
+                console.log(`⏰ Tempo desde sincronização (ajustado): ${elapsedSinceSync}ms`);
+                
+                let remainingTime = this.syncData.remainingTime || 0;
+                let currentMediaDuration = this.syncData.currentMediaDuration || 0;
+                
+                if (elapsedSinceSync > 0 && currentMediaDuration > 0) {
+                    remainingTime = Math.max(0, currentMediaDuration - elapsedSinceSync);
+                    console.log(`⏱️ Tempo restante ajustado: ${remainingTime}ms (${elapsedSinceSync}ms decorridos)`);
+                }
+                
+                console.log(`📊 Sincronização OTIMIZADA: Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes, Duração: ${currentMediaDuration}ms`);
+                
+                if (this.mediaList.length > 0 && this.currentMediaIndex < this.mediaList.length) {
+                    const media = this.mediaList[this.currentMediaIndex];
+                    this.playMediaWithExactSync(media, remainingTime, currentMediaDuration);
+                } else {
+                    console.log('❌ Índice de mídia inválido, reiniciando...');
+                    this.currentMediaIndex = 0;
+                    this.playNextMedia();
+                }
+                
+                this.isSyncing = false;
+            }
+
+            playMediaWithExactSync(media, remainingTime, mediaDuration) {
                 this.currentMedia = media;
                 this.stopAllMedia();
                 
-                const remainingSeconds = Math.round(remainingTimeMs / 1000);
+                const remainingSeconds = Math.round(remainingTime / 1000);
+                const totalSeconds = Math.round(mediaDuration / 1000);
                 
                 this.currentMediaElement.textContent = media.originalName;
-                this.mediaTimeElement.textContent = `${remainingSeconds}s`;
+                this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
                 this.debugInfo.textContent = `Sincronizado: ${media.originalName} (${remainingSeconds}s)`;
                 
-                console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}, ${remainingSeconds}s restantes`);
+                console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}, ${remainingSeconds}s restantes de ${totalSeconds}s totais`);
                 
-                // Programar próxima mídia com o tempo restante
                 this.currentTimeout = setTimeout(() => {
+                    console.log('⏰ Timer da mídia atual finalizado, indo para próxima...');
                     this.playNextMedia();
-                }, remainingTimeMs);
+                }, remainingTime);
                 
-                // Iniciar countdown
-                this.startCountdown(remainingTimeMs);
+                this.startCountdown(remainingTime);
                 
-                // Enviar informação da mídia atual
                 this.sendCurrentMedia();
                 
-                // Reproduzir a mídia baseada no tipo
-                this.playMediaByType(media, remainingTimeMs);
+                this.playMediaByType(media, mediaDuration - remainingTime);
             }
-            
+
+            showAuthScreen() {
+                console.log('🎯 Mostrando tela de autenticação...');
+                this.authScreen.classList.remove('hidden');
+                this.connectionError.classList.add('hidden');
+                this.statusOverlay.classList.add('hidden');
+                this.deviceStatusElement.textContent = 'Aguardando autenticação';
+                this.hideLoading();
+            }
+
+            hideAuthScreen() {
+                console.log('🎯 Ocultando tela de autenticação...');
+                this.authScreen.classList.add('hidden');
+                this.authError.style.display = 'none';
+                this.hideLoading();
+                
+                // Parar geração de códigos quando autenticado
+                if (this.codeGenerationInterval) {
+                    clearInterval(this.codeGenerationInterval);
+                    this.codeGenerationInterval = null;
+                }
+            }
+
+            async startPlayback() {
+                this.hideAuthScreen();
+                this.connectionError.classList.add('hidden');
+                this.statusOverlay.classList.remove('hidden');
+                this.debugPanel.classList.remove('hidden');
+                
+                this.deviceNameElement.textContent = this.deviceInfo.name;
+                this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
+                this.deviceStatusElement.textContent = 'Autenticado';
+                
+                this.mediaStartTime = new Date();
+                
+                await this.loadMediaList();
+                this.connectWebSocket();
+            }
+
+            // ... (outras funções permanecem as mesmas)
+
+            showErrorScreen(message) {
+                console.log('❌ Mostrando tela de erro:', message);
+                this.errorMessage.textContent = message;
+                this.connectionError.classList.remove('hidden');
+                this.statusOverlay.classList.add('hidden');
+                this.authScreen.classList.add('hidden');
+                this.hideLoading();
+                this.clearTimers();
+                this.stopAllMedia();
+            }
+
+            // Funções de mídia (permanecem as mesmas)
             playMediaByType(media, remainingTimeMs) {
                 const totalDuration = (media.displayTime || 10) * 1000;
                 const elapsedTime = totalDuration - remainingTimeMs;
@@ -691,304 +749,7 @@ playMediaWithExactSync(media, remainingTime, mediaDuration) {
                         setTimeout(() => this.playNextMedia(), 2000);
                 }
             }
-            
-            handleAnnouncement(data) {
-                console.log('📢 Anunciamento recebido:', data.announcement.name);
-                
-                this.clearTimers();
-                this.stopAllMedia();
-                
-                // Reproduzir o anunciamento
-                this.playMedia(data.media, true);
-                
-                // Programar retorno à programação normal
-                setTimeout(() => {
-                    this.loadMediaList(true);
-                }, data.announcement.displayTime * 1000);
-            }
-            
-            handleAnnouncementCancelled(data) {
-                console.log('🛑 Anunciamento cancelado');
-                this.loadMediaList(true);
-            }
-            
-            showSyncNotification() {
-                this.syncNotification.classList.remove('hidden');
-                setTimeout(() => {
-                    this.syncNotification.classList.add('hidden');
-                }, 3000);
-            }
-            
-// Corrigir a função sendCurrentMedia para enviar menos frequentemente:
-sendCurrentMedia() {
-    // Verificar se podemos enviar (evitar spam) - AUMENTAR o intervalo
-    const now = Date.now();
-    if (now - (this.lastMediaUpdate || 0) < 10000) { // 10 segundos entre updates (era 2)
-        return;
-    }
-    
-    if (this.ws && this.ws.readyState === WebSocket.OPEN && this.currentMedia) {
-        const mediaDuration = (this.currentMedia.displayTime || 10) * 1000;
-        
-        let elapsed = 0;
-        let remainingTime = mediaDuration;
-        
-        if (this.mediaStartTime) {
-            elapsed = now - this.mediaStartTime.getTime();
-            remainingTime = Math.max(0, mediaDuration - elapsed);
-        }
-        
-        const mediaInfo = {
-            type: 'current_media',
-            deviceId: this.deviceId,
-            media: this.currentMedia,
-            currentMediaIndex: this.currentMediaIndex,
-            mediaStartTime: this.mediaStartTime ? this.mediaStartTime.toISOString() : new Date().toISOString(),
-            syncTime: this.syncTime ? this.syncTime.toISOString() : null,
-            remainingTime: remainingTime,
-            mediaDuration: mediaDuration,
-            elapsed: elapsed,
-            timestamp: new Date()
-        };
-        
-        this.ws.send(JSON.stringify(mediaInfo));
-        this.lastMediaUpdate = now;
-        
-        console.log('📤 Enviando update de mídia:', {
-            media: this.currentMedia.originalName,
-            remainingTime: Math.round(remainingTime / 1000) + 's'
-        });
-    }
-}
-            
-// Função de ativação do dispositivo - CORRIGIDA
-async activateDevice() {
-    const authCode = this.authCodeInput.value.trim();
-    
-    if (authCode.length !== 6 || !/^\d+$/.test(authCode)) {
-        this.showAuthError('Código inválido. Digite 6 números.');
-        return;
-    }
 
-    try {
-        this.showLoading('Ativando dispositivo...');
-        
-        console.log(`🔐 Tentando ativar com IP: ${this.clientIp}, Código: ${authCode}`);
-        
-        const response = await fetch(`${this.serverUrl}/api/devices/activate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ip: this.clientIp,
-                authCode: authCode
-            })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Dispositivo ativado com sucesso:', result);
-            
-            // MOSTRAR MENSAGEM DE SUCESSO ANTES DE CONTINUAR
-            this.showLoading('✅ Dispositivo ativado! Conectando...');
-            
-            // Esperar um pouco para mostrar a mensagem de sucesso
-            setTimeout(() => {
-                this.hideAuthScreen();
-                this.checkDeviceStatus();
-            }, 2000);
-            
-        } else {
-            const error = await response.json();
-            console.error('❌ Erro na ativação:', error);
-            throw new Error(error.error || 'Código inválido');
-        }
-    } catch (error) {
-        console.error('❌ Erro na ativação:', error);
-        this.showAuthError(error.message);
-    }
-}
-
-// Corrigir a função hideAuthScreen
-hideAuthScreen() {
-    console.log('🎯 Ocultando tela de autenticação...');
-    this.authScreen.classList.add('hidden');
-    this.authError.style.display = 'none';
-    this.hideLoading();
-}
-
-// Corrigir a função showAuthError
-showAuthError(message) {
-    this.authError.textContent = message;
-    this.authError.style.display = 'block';
-    this.hideLoading();
-    console.log('❌ Erro de autenticação:', message);
-}
-            
-            showAuthError(message) {
-                this.authError.textContent = message;
-                this.authError.style.display = 'block';
-                this.hideLoading();
-            }
-            
-            async startPlayback() {
-                this.hideAuthScreen();
-                this.connectionError.classList.add('hidden');
-                this.statusOverlay.classList.remove('hidden');
-                this.debugPanel.classList.remove('hidden');
-                
-                this.deviceNameElement.textContent = this.deviceInfo.name;
-                this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
-                
-                // Iniciar com tempo atual
-                this.mediaStartTime = new Date();
-                
-                await this.loadMediaList();
-            }
-            
-            async loadMediaList(forceRestart = false) {
-                try {
-                    this.showLoading('Carregando conteúdo...');
-                    
-                    const response = await fetch(`${this.serverUrl}/api/client/media`);
-                    
-                    if (response.ok) {
-                        const newMediaList = await response.json();
-                        const mediaChanged = JSON.stringify(newMediaList) !== JSON.stringify(this.mediaList);
-                        
-                        this.mediaList = newMediaList;
-                        console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
-                        
-                        if (this.mediaList.length > 0) {
-                            this.hideLoading();
-                            
-                            if (forceRestart || mediaChanged || this.currentMediaIndex >= this.mediaList.length) {
-                                this.currentMediaIndex = 0;
-                                this.mediaStartTime = new Date();
-                                this.playNextMedia();
-                            } else if (!this.isSyncing) {
-                                // Continuar de onde parou
-                                this.playNextMedia();
-                            }
-                        } else {
-                            this.showLoading('⚠️ Nenhum conteúdo disponível');
-                        }
-                    } else {
-                        throw new Error('Erro ao carregar conteúdo');
-                    }
-                } catch (error) {
-                    console.error('❌ Erro ao carregar mídias:', error);
-                    this.showErrorScreen('Erro ao carregar conteúdo');
-                }
-            }
-            
-playNextMedia() {
-    if (this.mediaList.length === 0) {
-        console.log('❌ Nenhuma mídia para reproduzir');
-        return;
-    }
-    
-    this.clearTimers();
-    
-    // Se chegou ao final da playlist, voltar ao início
-    if (this.currentMediaIndex >= this.mediaList.length) {
-        this.currentMediaIndex = 0;
-        console.log('🔄 Fim da playlist, reiniciando...');
-    }
-    
-    const media = this.mediaList[this.currentMediaIndex];
-    const mediaDuration = (media.displayTime || 10) * 1000;
-    
-    console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName} por ${mediaDuration}ms`);
-    
-    // Se estamos em modo sincronizado, usar tempo exato
-    if (this.syncTime) {
-        const now = Date.now();
-        const syncElapsed = now - this.syncTime.getTime();
-        const playlistPosition = syncElapsed % this.totalPlaylistDuration;
-        
-        // Recalcular em qual mídia estamos baseado no tempo total da playlist
-        this.recalculateMediaIndexFromSync(playlistPosition);
-        
-        // Recalcular tempo restante - CORREÇÃO: usar tempo REAL decorrido
-        const mediaStartTime = this.calculateMediaStartTime(this.currentMediaIndex);
-        const mediaElapsed = now - mediaStartTime;
-        const remainingTime = Math.max(0, mediaDuration - mediaElapsed);
-        
-        console.log(`🔄 Recalculando sincronização: Posição ${playlistPosition}ms, Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes`);
-        
-        this.playMediaWithExactSync(media, remainingTime, mediaDuration);
-    } else {
-        // Modo normal (não sincronizado)
-        this.playMedia(media);
-    }
-    
-    // Avançar índice para próxima mídia (após cálculo de sincronização)
-    this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
-}
-
-// Funções auxiliares para cálculo de sincronização
-recalculateMediaIndexFromSync(playlistPosition) {
-    let accumulatedTime = 0;
-    
-    for (let i = 0; i < this.mediaList.length; i++) {
-        const media = this.mediaList[i];
-        const mediaDuration = (media.displayTime || 10) * 1000;
-        
-        if (playlistPosition < accumulatedTime + mediaDuration) {
-            this.currentMediaIndex = i;
-            console.log(`📊 Sincronização: Posição ${playlistPosition}ms → Mídia ${i}`);
-            return;
-        }
-        
-        accumulatedTime += mediaDuration;
-    }
-    
-    // Se passou de toda a playlist, voltar ao início
-    this.currentMediaIndex = 0;
-}
-
-calculateMediaStartTime(mediaIndex) {
-    if (!this.syncTime) return Date.now();
-    
-    let accumulatedTime = 0;
-    
-    for (let i = 0; i < mediaIndex; i++) {
-        const media = this.mediaList[i];
-        accumulatedTime += (media.displayTime || 10) * 1000;
-    }
-    
-    return this.syncTime.getTime() + accumulatedTime;
-}
-            
-            playMedia(media, isAnnouncement = false) {
-                this.currentMedia = media;
-                this.stopAllMedia();
-                
-                this.currentMediaElement.textContent = media.originalName;
-                this.mediaTimeElement.textContent = `${media.displayTime}s`;
-                this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
-                
-                const displayTime = (media.displayTime || 10) * 1000;
-                
-                // Atualizar tempo de início
-                this.mediaStartTime = new Date();
-                
-                this.startCountdown(displayTime);
-                
-                this.currentTimeout = setTimeout(() => {
-                    if (!isAnnouncement) {
-                        this.playNextMedia();
-                    }
-                }, displayTime);
-                
-                this.sendCurrentMedia();
-                
-                // Reproduzir a mídia
-                this.playMediaByType(media, 0);
-            }
-            
             playUploadedImage(media) {
                 this.showLoading(`Carregando imagem: ${media.originalName}`);
                 
@@ -1006,7 +767,7 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.mediaDisplay.src = `${this.serverUrl}${media.path}?t=${Date.now()}`;
             }
-            
+
             playUploadedVideo(media, seekTime = 0) {
                 this.showLoading(`Carregando vídeo: ${media.originalName}`);
                 
@@ -1040,7 +801,7 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.videoDisplay.src = `${this.serverUrl}${media.path}?t=${Date.now()}`;
             }
-            
+
             playYouTube(media, seekTime = 0) {
                 this.showLoading(`Carregando YouTube: ${media.originalName}`);
                 
@@ -1052,7 +813,6 @@ calculateMediaStartTime(mediaIndex) {
                     return;
                 }
                 
-                // Calcular tempo de início
                 let startParam = '';
                 if (seekTime > 0) {
                     const startSeconds = Math.floor(seekTime / 1000);
@@ -1076,7 +836,7 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.youtubeDisplay.src = embedUrl;
             }
-            
+
             playWebsite(media) {
                 this.showLoading(`Carregando site: ${media.originalName}`);
                 
@@ -1094,7 +854,7 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.webDisplay.src = media.path;
             }
-            
+
             stopAllMedia() {
                 this.mediaDisplay.classList.add('hidden');
                 this.videoDisplay.classList.add('hidden');
@@ -1103,10 +863,8 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.videoDisplay.pause();
                 this.videoDisplay.currentTime = 0;
-                
-                // Não limpar src para evitar flickering
             }
-            
+
             clearTimers() {
                 if (this.currentTimeout) {
                     clearTimeout(this.currentTimeout);
@@ -1120,13 +878,13 @@ calculateMediaStartTime(mediaIndex) {
                 
                 this.countdownElement.classList.add('hidden');
             }
-            
+
             extractYouTubeId(url) {
                 const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-                const match = url.match(regex) ;
+                const match = url.match(regex);
                 return match ? match[1] : null;
             }
-            
+
             startCountdown(duration) {
                 this.countdownElement.classList.remove('hidden');
                 let timeLeft = duration / 1000;
@@ -1142,7 +900,7 @@ calculateMediaStartTime(mediaIndex) {
                     }
                 }, 1000);
             }
-            
+
             showLoading(message) {
                 this.loadingElement.textContent = message;
                 this.loadingElement.classList.remove('hidden');
@@ -1151,36 +909,209 @@ calculateMediaStartTime(mediaIndex) {
             hideLoading() {
                 this.loadingElement.classList.add('hidden');
             }
+
+            sendCurrentMedia() {
+                const now = Date.now();
+                if (now - (this.lastMediaUpdate || 0) < 10000) {
+                    return;
+                }
+                
+                if (this.ws && this.ws.readyState === WebSocket.OPEN && this.currentMedia) {
+                    const mediaDuration = (this.currentMedia.displayTime || 10) * 1000;
+                    
+                    let elapsed = 0;
+                    let remainingTime = mediaDuration;
+                    
+                    if (this.mediaStartTime) {
+                        elapsed = now - this.mediaStartTime.getTime();
+                        remainingTime = Math.max(0, mediaDuration - elapsed);
+                    }
+                    
+                    const mediaInfo = {
+                        type: 'current_media',
+                        deviceId: this.deviceId,
+                        media: this.currentMedia,
+                        currentMediaIndex: this.currentMediaIndex,
+                        mediaStartTime: this.mediaStartTime ? this.mediaStartTime.toISOString() : new Date().toISOString(),
+                        syncTime: this.syncTime ? this.syncTime.toISOString() : null,
+                        remainingTime: remainingTime,
+                        mediaDuration: mediaDuration,
+                        elapsed: elapsed,
+                        timestamp: new Date()
+                    };
+                    
+                    this.ws.send(JSON.stringify(mediaInfo));
+                    this.lastMediaUpdate = now;
+                    
+                    console.log('📤 Enviando update de mídia:', {
+                        media: this.currentMedia.originalName,
+                        remainingTime: Math.round(remainingTime / 1000) + 's'
+                    });
+                }
+            }
+
+            async loadMediaList(forceRestart = false) {
+                try {
+                    this.showLoading('Carregando conteúdo...');
+                    
+                    const response = await fetch(`${this.serverUrl}/api/client/media`);
+                    
+                    if (response.ok) {
+                        const newMediaList = await response.json();
+                        const mediaChanged = JSON.stringify(newMediaList) !== JSON.stringify(this.mediaList);
+                        
+                        this.mediaList = newMediaList;
+                        console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
+                        
+                        if (this.mediaList.length > 0) {
+                            this.hideLoading();
+                            
+                            if (forceRestart || mediaChanged || this.currentMediaIndex >= this.mediaList.length) {
+                                this.currentMediaIndex = 0;
+                                this.mediaStartTime = new Date();
+                                this.playNextMedia();
+                            } else if (!this.isSyncing) {
+                                this.playNextMedia();
+                            }
+                        } else {
+                            this.showLoading('⚠️ Nenhum conteúdo disponível');
+                        }
+                    } else {
+                        throw new Error('Erro ao carregar conteúdo');
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao carregar mídias:', error);
+                    this.showErrorScreen('Erro ao carregar conteúdo');
+                }
+            }
+
+            playNextMedia() {
+                if (this.mediaList.length === 0) {
+                    console.log('❌ Nenhuma mídia para reproduzir');
+                    return;
+                }
+                
+                this.clearTimers();
+                
+                if (this.currentMediaIndex >= this.mediaList.length) {
+                    this.currentMediaIndex = 0;
+                    console.log('🔄 Fim da playlist, reiniciando...');
+                }
+                
+                const media = this.mediaList[this.currentMediaIndex];
+                const mediaDuration = (media.displayTime || 10) * 1000;
+                
+                console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName} por ${mediaDuration}ms`);
+                
+                if (this.syncTime) {
+                    const now = Date.now();
+                    const syncElapsed = now - this.syncTime.getTime();
+                    const playlistPosition = syncElapsed % this.totalPlaylistDuration;
+                    
+                    this.recalculateMediaIndexFromSync(playlistPosition);
+                    
+                    const mediaStartTime = this.calculateMediaStartTime(this.currentMediaIndex);
+                    const mediaElapsed = now - mediaStartTime;
+                    const remainingTime = Math.max(0, mediaDuration - mediaElapsed);
+                    
+                    console.log(`🔄 Recalculando sincronização: Posição ${playlistPosition}ms, Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes`);
+                    
+                    this.playMediaWithExactSync(media, remainingTime, mediaDuration);
+                } else {
+                    this.playMedia(media);
+                }
+                
+                this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
+            }
+
+            recalculateMediaIndexFromSync(playlistPosition) {
+                let accumulatedTime = 0;
+                
+                for (let i = 0; i < this.mediaList.length; i++) {
+                    const media = this.mediaList[i];
+                    const mediaDuration = (media.displayTime || 10) * 1000;
+                    
+                    if (playlistPosition < accumulatedTime + mediaDuration) {
+                        this.currentMediaIndex = i;
+                        console.log(`📊 Sincronização: Posição ${playlistPosition}ms → Mídia ${i}`);
+                        return;
+                    }
+                    
+                    accumulatedTime += mediaDuration;
+                }
+                
+                this.currentMediaIndex = 0;
+            }
+
+            calculateMediaStartTime(mediaIndex) {
+                if (!this.syncTime) return Date.now();
+                
+                let accumulatedTime = 0;
+                
+                for (let i = 0; i < mediaIndex; i++) {
+                    const media = this.mediaList[i];
+                    accumulatedTime += (media.displayTime || 10) * 1000;
+                }
+                
+                return this.syncTime.getTime() + accumulatedTime;
+            }
+
+            playMedia(media, isAnnouncement = false) {
+                this.currentMedia = media;
+                this.stopAllMedia();
+                
+                this.currentMediaElement.textContent = media.originalName;
+                this.mediaTimeElement.textContent = `${media.displayTime}s`;
+                this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
+                
+                const displayTime = (media.displayTime || 10) * 1000;
+                
+                this.mediaStartTime = new Date();
+                
+                this.startCountdown(displayTime);
+                
+                this.currentTimeout = setTimeout(() => {
+                    if (!isAnnouncement) {
+                        this.playNextMedia();
+                    }
+                }, displayTime);
+                
+                this.sendCurrentMedia();
+                
+                this.playMediaByType(media, 0);
+            }
+
+            handleAnnouncement(data) {
+                console.log('📢 Anunciamento recebido:', data.announcement.name);
+                
+                this.clearTimers();
+                this.stopAllMedia();
+                
+                this.playMedia(data.media, true);
+                
+                setTimeout(() => {
+                    this.loadMediaList(true);
+                }, data.announcement.displayTime * 1000);
+            }
             
-showErrorScreen(message) {
-    console.log('❌ Mostrando tela de erro:', message);
-    this.errorMessage.textContent = message;
-    this.connectionError.classList.remove('hidden');
-    this.statusOverlay.classList.add('hidden');
-    this.authScreen.classList.add('hidden');
-    this.hideLoading();
-    this.clearTimers();
-    this.stopAllMedia();
-}
+            handleAnnouncementCancelled(data) {
+                console.log('🛑 Anunciamento cancelado');
+                this.loadMediaList(true);
+            }
+            
+            showSyncNotification() {
+                this.syncNotification.classList.remove('hidden');
+                setTimeout(() => {
+                    this.syncNotification.classList.add('hidden');
+                }, 3000);
+            }
         }
         
         let mediaPlayer;
         
         document.addEventListener('DOMContentLoaded', () => {
             mediaPlayer = new MediaPlayer();
-            
-            document.getElementById('authCode').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    activateDevice();
-                }
-            });
         });
-
-        function activateDevice() {
-            if (mediaPlayer) {
-                mediaPlayer.activateDevice();
-            }
-        }
 
         document.addEventListener('dragstart', (e) => e.preventDefault());
         

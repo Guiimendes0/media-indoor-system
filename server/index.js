@@ -95,7 +95,7 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 }
 });
 
-// Middleware de autenticação - CORRIGIDO
+// Middleware de autenticação
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -116,67 +116,107 @@ function authenticateToken(req, res, next) {
     }
 }
 
-// Middleware para dispositivo autorizado - CORRIGIDA para ignorar arquivos de mídia
+// ==================== NOVAS ROTAS PARA SISTEMA MAC ====================
+
+// Rota para registrar código de autenticação do dispositivo
+app.post('/api/devices/register-code', (req, res) => {
+    const { mac, authCode, expiry } = req.body;
+    
+    console.log(`🔐 Registrando código para MAC: ${mac}, Código: ${authCode}`);
+    
+    if (!mac || !authCode) {
+        return res.status(400).json({ error: 'MAC e código são obrigatórios' });
+    }
+    
+    // Verificar se o dispositivo já existe
+    let device = devices.find(d => d.mac === mac);
+    
+    if (device) {
+        // Atualizar código existente
+        device.authCode = authCode;
+        device.codeExpiry = expiry;
+        device.lastCodeUpdate = new Date();
+    } else {
+        // Criar novo dispositivo pendente
+        device = {
+            id: Date.now().toString(),
+            mac: mac,
+            authCode: authCode,
+            codeExpiry: expiry,
+            lastCodeUpdate: new Date(),
+            status: 'pending',
+            name: `Dispositivo ${mac}`,
+            location: 'Não definido',
+            playlistId: null,
+            userId: null, // Será definido na ativação
+            lastSeen: null,
+            createdAt: new Date()
+        };
+        devices.push(device);
+    }
+    
+    saveData(DATA_FILES.devices, devices);
+    
+    console.log(`✅ Código registrado para MAC ${mac}`);
+    
+    res.json({ 
+        message: 'Código registrado com sucesso',
+        device: {
+            mac: device.mac,
+            authCode: device.authCode,
+            expiry: device.codeExpiry
+        }
+    });
+});
+
+// Middleware para dispositivo autorizado - ATUALIZADO para MAC
 function checkDeviceAuthorization(req, res, next) {
     // IGNORAR requisições para arquivos de mídia
     if (req.path.startsWith('/media/')) {
-        return next(); // Pular verificação para arquivos de mídia
+        return next();
     }
     
-    let clientIp = req.ip || req.connection.remoteAddress;
+    // CORREÇÃO: Obter MAC do header ou query parameter
+    let deviceMac = req.headers['x-device-mac'] || req.query.mac;
     
-    // CORREÇÃO: Verificar se clientIp existe antes de usar .replace()
-    if (!clientIp) {
-        console.log('❌ IP do cliente não detectado');
-        clientIp = 'unknown';
-    } else {
-        // Limpar e normalizar o IP apenas se não for undefined
-        clientIp = clientIp.replace('::ffff:', '').replace('::1', '127.0.0.1');
-    }
-    
-    console.log(`🔍 Verificando autorização para IP: ${clientIp} - Rota: ${req.path}`);
+    console.log(`🔍 Verificando autorização para MAC: ${deviceMac} - Rota: ${req.path}`);
     
     // Aplicar verificação APENAS para rotas de API do cliente
     if (req.path.startsWith('/api/client/')) {
-        console.log('🔐 Rota cliente detectada, verificando dispositivos...');
+        console.log('🔐 Rota cliente detectada, verificando dispositivos por MAC...');
         
-        // Buscar dispositivo por IP EXATO primeiro
-        let authorizedDevice = devices.find(device => 
-            device.ip === clientIp && device.status === 'active'
-        );
-        
-        // Se não encontrou por IP exato, tentar match parcial (para casos de proxy)
-        if (!authorizedDevice) {
-            console.log(`❌ IP exato não encontrado, tentando match parcial...`);
-            authorizedDevice = devices.find(device => {
-                // CORREÇÃO: Verificar se device.ip existe antes de comparar
-                if (!device.ip) return false;
-                
-                const ipMatch = clientIp.includes(device.ip) || 
-                               (device.ip && device.ip.includes(clientIp));
-                return ipMatch && device.status === 'active';
+        if (!deviceMac) {
+            console.log('❌ MAC não fornecido na requisição');
+            return res.status(403).json({ 
+                error: 'MAC do dispositivo não fornecido',
+                message: 'O dispositivo deve fornecer seu MAC address'
             });
         }
         
+        // Buscar dispositivo por MAC
+        const authorizedDevice = devices.find(device => 
+            device.mac === deviceMac && device.status === 'active'
+        );
+        
         if (!authorizedDevice) {
-            console.log('❌ Acesso negado para IP:', clientIp);
+            console.log('❌ Acesso negado para MAC:', deviceMac);
             console.log('📊 Dispositivos cadastrados ativos:');
             devices.filter(d => d.status === 'active').forEach(device => {
-                console.log(`   - ${device.name}: ${device.ip} (${device.status})`);
+                console.log(`   - ${device.name}: ${device.mac} (${device.status})`);
             });
             
             return res.status(403).json({ 
                 error: 'Dispositivo não autorizado',
-                message: `IP ${clientIp} não está cadastrado como dispositivo ativo`,
-                detectedIp: clientIp,
-                registeredDevices: devices.filter(d => d.status === 'active').map(d => ({ name: d.name, ip: d.ip }))
+                message: `MAC ${deviceMac} não está cadastrado como dispositivo ativo`,
+                detectedMac: deviceMac,
+                registeredDevices: devices.filter(d => d.status === 'active').map(d => ({ name: d.name, mac: d.mac }))
             });
         }
         
         authorizedDevice.lastSeen = new Date();
         saveData(DATA_FILES.devices, devices);
         
-        console.log('✅ Acesso autorizado para:', authorizedDevice.name, `IP: ${clientIp}`);
+        console.log('✅ Acesso autorizado para:', authorizedDevice.name, `MAC: ${deviceMac}`);
         req.authorizedDevice = authorizedDevice;
     }
     
@@ -184,262 +224,12 @@ function checkDeviceAuthorization(req, res, next) {
 }
 
 app.use(checkDeviceAuthorization);
-// ADICIONAR este middleware para debug de todas as requisições - CORRIGIDO
+
+// ADICIONAR este middleware para debug de todas as requisições
 app.use((req, res, next) => {
-    // Não logar requisições para arquivos de mídia para evitar spam
-    if (!req.path.startsWith('/media/') && !req.path.startsWith('/admin/') && !req.path.startsWith('/client/')) {
-        const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
-        console.log(`🌐 ${req.method} ${req.path} - IP: ${clientIp}`);
-    }
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    console.log(`🌐 ${req.method} ${req.path} - IP: ${clientIp}`);
     next();
-});
-
-
-// WebSocket connection
-wss.on('connection', (ws, req) => {
-    const clientIp = req.socket.remoteAddress.replace('::ffff:', '');
-    console.log('🔗 WebSocket conectado:', clientIp);
-    
-    // Armazenar informações do cliente
-    let clientDeviceId = null;
-    
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log('📨 Mensagem WebSocket recebida:', data);
-            
-            if (data.type === 'register') {
-                // Registrar cliente para sincronização/visualização
-                clientDeviceId = data.deviceId;
-                connectedClients.set(data.deviceId, {
-                    ws: ws,
-                    deviceId: data.deviceId,
-                    ip: clientIp,
-                    lastPing: Date.now(),
-                    currentMedia: null
-                });
-                console.log(`📱 Dispositivo ${data.deviceId} registrado para WebSocket`);
-            }
-            
-            if (data.type === 'ping') {
-                // Atualizar ping
-                const client = connectedClients.get(data.deviceId);
-                if (client) {
-                    client.lastPing = Date.now();
-                }
-            }
-            
-            if (data.type === 'current_media') {
-                // Atualizar informação da mídia atual
-                const client = connectedClients.get(data.deviceId);
-                if (client) {
-                    client.currentMedia = data;
-                    client.lastPing = Date.now();
-                }
-                
-                // Broadcast da mídia atual para visualização (apenas para admins)
-                broadcastToAdmins({
-                    type: 'device_media_update',
-                    deviceId: data.deviceId,
-                    media: data.media,
-                    currentMediaIndex: data.currentMediaIndex,
-                    timestamp: new Date()
-                });
-            }
-
-            if (data.type === 'request_preview') {
-                // Solicitação de preview - enviar para o dispositivo específico
-                const client = connectedClients.get(data.deviceId);
-                if (client && client.ws.readyState === WebSocket.OPEN) {
-                    client.ws.send(JSON.stringify({
-                        type: 'send_preview',
-                        timestamp: new Date()
-                    }));
-                }
-            }
-        } catch (error) {
-            console.error('Erro WebSocket:', error);
-        }
-    });
-    
-    ws.on('close', () => {
-        // Remover cliente desconectado
-        if (clientDeviceId) {
-            connectedClients.delete(clientDeviceId);
-            console.log(`📱 Dispositivo ${clientDeviceId} desconectado do WebSocket`);
-        }
-    });
-    
-    ws.on('error', (error) => {
-        console.error('❌ Erro WebSocket:', error);
-        if (clientDeviceId) {
-            connectedClients.delete(clientDeviceId);
-        }
-    });
-});
-
-// Função para broadcast para admins
-function broadcastToAdmins(message) {
-    connectedClients.forEach((client, deviceId) => {
-        // Enviar apenas para clientes que são admins (baseado no IP ou outro critério)
-        // Por enquanto, enviar para todos os clientes conectados
-        if (client.ws.readyState === WebSocket.OPEN) {
-            client.ws.send(JSON.stringify(message));
-        }
-    });
-}
-
-// Função para broadcast para dispositivos específicos - CORRIGIDA
-function broadcastToDevices(deviceIds, message) {
-    console.log(`📤 Broadcast para ${deviceIds.length} dispositivos:`, message.type);
-    
-    // Log para debug de loops
-    if (message.type === 'sync_command') {
-        console.log('🔧 Sync Command Details:', {
-            playlistId: message.playlistId,
-            currentMediaIndex: message.currentMediaIndex,
-            timestamp: new Date().toISOString()
-        });
-    }
-    
-    let connectedCount = 0;
-    
-    deviceIds.forEach(deviceId => {
-        const client = connectedClients.get(deviceId);
-        if (client && client.ws.readyState === WebSocket.OPEN) {
-            console.log(`✅ Enviando ${message.type} para dispositivo ${deviceId}`);
-            client.ws.send(JSON.stringify(message));
-            connectedCount++;
-        } else {
-            console.log(`❌ Dispositivo ${deviceId} não conectado`);
-        }
-    });
-    
-    console.log(`📊 ${message.type} enviada para ${connectedCount}/${deviceIds.length} dispositivos`);
-    return connectedCount;
-}
-
-// WebSocket connection - CORRIGIDO para melhor reconexão
-wss.on('connection', (ws, req) => {
-    const clientIp = req.socket.remoteAddress.replace('::ffff:', '');
-    console.log('🔗 WebSocket conectado:', clientIp);
-    
-    // Armazenar informações do cliente
-    let clientDeviceId = null;
-    
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log('📨 Mensagem WebSocket recebida:', data.type, 'de:', data.deviceId);
-            
-            if (data.type === 'register') {
-                // Registrar cliente para sincronização/visualização
-                clientDeviceId = data.deviceId;
-                connectedClients.set(data.deviceId, {
-                    ws: ws,
-                    deviceId: data.deviceId,
-                    ip: clientIp,
-                    lastPing: Date.now(),
-                    currentMedia: null,
-                    lastActivity: new Date()
-                });
-                console.log(`📱 Dispositivo ${data.deviceId} registrado para WebSocket`);
-                
-                // Atualizar status do dispositivo
-                const device = devices.find(d => d.id === data.deviceId);
-                if (device) {
-                    device.status = 'active';
-                    device.lastSeen = new Date();
-                    saveData(DATA_FILES.devices, devices);
-                    console.log(`✅ Status do dispositivo ${device.name} atualizado para ativo`);
-                }
-            }
-            
-            if (data.type === 'ping') {
-                // Atualizar ping
-                const client = connectedClients.get(data.deviceId);
-                if (client) {
-                    client.lastPing = Date.now();
-                    client.lastActivity = new Date();
-                }
-            }
-            
-            if (data.type === 'current_media') {
-                // Atualizar informação da mídia atual
-                const client = connectedClients.get(data.deviceId);
-                if (client) {
-                    client.currentMedia = data;
-                    client.lastPing = Date.now();
-                    client.lastActivity = new Date();
-                }
-                
-                // Broadcast da mídia atual para visualização (apenas para admins)
-                broadcastToAdmins({
-                    type: 'device_media_update',
-                    deviceId: data.deviceId,
-                    media: data.media,
-                    currentMediaIndex: data.currentMediaIndex,
-                    timestamp: new Date()
-                });
-            }
-
-            if (data.type === 'request_preview') {
-                // Solicitação de preview - enviar para o dispositivo específico
-                const client = connectedClients.get(data.deviceId);
-                if (client && client.ws.readyState === WebSocket.OPEN) {
-                    client.ws.send(JSON.stringify({
-                        type: 'send_preview',
-                        timestamp: new Date()
-                    }));
-                }
-            }
-        } catch (error) {
-            console.error('Erro WebSocket:', error);
-        }
-    });
-    
-    ws.on('close', (code, reason) => {
-        console.log(`🔌 WebSocket desconectado: ${clientDeviceId} - Código: ${code}, Razão: ${reason}`);
-        // Remover cliente desconectado
-        if (clientDeviceId) {
-            connectedClients.delete(clientDeviceId);
-            console.log(`📱 Dispositivo ${clientDeviceId} desconectado do WebSocket`);
-            
-            // Atualizar status do dispositivo
-            const device = devices.find(d => d.id === clientDeviceId);
-            if (device) {
-                device.status = 'offline';
-                saveData(DATA_FILES.devices, devices);
-                console.log(`📴 Status do dispositivo ${device.name} atualizado para offline`);
-            }
-        }
-    });
-    
-    ws.on('error', (error) => {
-        console.error('❌ Erro WebSocket:', error);
-        if (clientDeviceId) {
-            connectedClients.delete(clientDeviceId);
-        }
-    });
-    
-    // Heartbeat para manter conexão ativa
-    const heartbeatInterval = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.ping(); // WebSocket ping
-        } else {
-            clearInterval(heartbeatInterval);
-        }
-    }, 30000);
-    
-    ws.on('pong', () => {
-        // Conexão está ativa
-        if (clientDeviceId) {
-            const client = connectedClients.get(clientDeviceId);
-            if (client) {
-                client.lastPing = Date.now();
-            }
-        }
-    });
 });
 
 // ==================== ROTAS DE AUTENTICAÇÃO ====================
@@ -570,39 +360,59 @@ app.get('/api/devices', authenticateToken, (req, res) => {
     const userDevices = req.user.role === 'admin' 
         ? devices 
         : devices.filter(device => device.userId === req.user.id);
+    
+    // Ordenar: dispositivos ativos primeiro, depois pendentes
+    userDevices.sort((a, b) => {
+        if (a.status === 'active' && b.status !== 'active') return -1;
+        if (a.status !== 'active' && b.status === 'active') return 1;
+        return new Date(b.lastSeen || b.createdAt) - new Date(a.lastSeen || a.createdAt);
+    });
+    
     res.json(userDevices);
 });
 
+// ATUALIZADA: Adicionar dispositivo por código (não por IP)
 app.post('/api/devices', authenticateToken, (req, res) => {
-    const { name, ip, location, playlistId } = req.body;
+    const { authCode, name, location, playlistId } = req.body;
     
-    if (devices.find(d => d.ip === ip)) {
-        return res.status(400).json({ error: 'IP já cadastrado' });
+    if (!authCode) {
+        return res.status(400).json({ error: 'Código de autenticação é obrigatório' });
     }
     
-    const authCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // Buscar dispositivo pendente pelo código
+    const pendingDevice = devices.find(d => 
+        d.authCode === authCode && 
+        d.status === 'pending' &&
+        (!d.codeExpiry || new Date(d.codeExpiry) > new Date())
+    );
     
-    const device = {
-        id: Date.now().toString(),
-        name,
-        ip,
-        location,
-        playlistId: playlistId || null,
-        userId: req.user.id,
-        authCode,
-        status: 'pending',
-        lastSeen: null,
-        createdAt: new Date()
-    };
+    if (!pendingDevice) {
+        return res.status(400).json({ error: 'Código inválido ou expirado' });
+    }
     
-    devices.push(device);
+    // Ativar dispositivo
+    pendingDevice.status = 'active';
+    pendingDevice.userId = req.user.id;
+    pendingDevice.name = name || `Dispositivo ${pendingDevice.mac}`;
+    pendingDevice.location = location || 'Não definido';
+    pendingDevice.playlistId = playlistId || null;
+    pendingDevice.lastSeen = new Date();
+    pendingDevice.activatedAt = new Date();
+    pendingDevice.activatedBy = req.user.id;
+    
     saveData(DATA_FILES.devices, devices);
-    res.json(device);
+    
+    console.log(`✅ Dispositivo ativado: ${pendingDevice.name} (MAC: ${pendingDevice.mac})`);
+    
+    res.json({
+        message: 'Dispositivo adicionado com sucesso',
+        device: pendingDevice
+    });
 });
 
 app.put('/api/devices/:id', authenticateToken, (req, res) => {
     const deviceId = req.params.id;
-    const { name, ip, location, playlistId } = req.body;
+    const { name, location, playlistId } = req.body;
     
     const deviceIndex = devices.findIndex(device => 
         device.id === deviceId && (device.userId === req.user.id || req.user.role === 'admin')
@@ -612,18 +422,9 @@ app.put('/api/devices/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: 'Dispositivo não encontrado' });
     }
     
-    // Verificar se o IP já está em uso por outro dispositivo
-    if (ip && ip !== devices[deviceIndex].ip) {
-        const existingDevice = devices.find(d => d.ip === ip && d.id !== deviceId);
-        if (existingDevice) {
-            return res.status(400).json({ error: 'IP já está em uso por outro dispositivo' });
-        }
-    }
-    
     devices[deviceIndex] = {
         ...devices[deviceIndex],
         name: name || devices[deviceIndex].name,
-        ip: ip || devices[deviceIndex].ip,
         location: location || devices[deviceIndex].location,
         playlistId: playlistId !== undefined ? playlistId : devices[deviceIndex].playlistId
     };
@@ -647,64 +448,77 @@ app.delete('/api/devices/:id', authenticateToken, (req, res) => {
     res.json({ message: 'Dispositivo removido com sucesso' });
 });
 
-
-// Ativar dispositivo - ADICIONAR logs
-// Ativar dispositivo - CORRIGIDA com validação de IP
-app.post('/api/devices/activate', (req, res) => {
-    const { ip, authCode } = req.body;
+// NOVA: Rota para desconectar dispositivo
+app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
+    const deviceId = req.params.id;
     
-    // CORREÇÃO: Validar se IP foi fornecido
-    if (!ip) {
-        console.log('❌ Tentativa de ativação sem IP');
-        return res.status(400).json({ error: 'IP não fornecido' });
+    const deviceIndex = devices.findIndex(device => 
+        device.id === deviceId && (device.userId === req.user.id || req.user.role === 'admin')
+    );
+    
+    if (deviceIndex === -1) {
+        return res.status(404).json({ error: 'Dispositivo não encontrado' });
     }
     
-    console.log(`🔐 Tentativa de ativação - IP: ${ip}, Código: ${authCode}`);
-    console.log('📋 Dispositivos disponíveis:', devices.map(d => `${d.name} (${d.ip} - ${d.authCode})`));
+    const device = devices[deviceIndex];
     
-    const device = devices.find(d => d.ip === ip && d.authCode === authCode);
-    if (!device) {
-        console.log(`❌ Ativação falhou - IP: ${ip}, Código: ${authCode} não encontrado`);
-        return res.status(400).json({ error: 'Código de autenticação inválido' });
-    }
+    // Gerar novo código para reconexão
+    const newAuthCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
     
-    device.status = 'active';
-    device.lastSeen = new Date();
+    device.status = 'pending';
+    device.authCode = newAuthCode;
+    device.codeExpiry = codeExpiry.toISOString();
+    device.lastSeen = null;
+    device.disconnectedAt = new Date();
+    device.disconnectedBy = req.user.id;
+    
     saveData(DATA_FILES.devices, devices);
     
-    console.log(`✅ Dispositivo ativado: ${device.name} (${device.ip})`);
+    console.log(`🔌 Dispositivo desconectado: ${device.name} (MAC: ${device.mac})`);
+    
+    // Notificar dispositivo via WebSocket (se conectado)
+    const client = connectedClients.get(deviceId);
+    if (client && client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(JSON.stringify({
+            type: 'device_disconnected',
+            message: 'Dispositivo desconectado pelo administrador',
+            timestamp: new Date()
+        }));
+        client.ws.close();
+    }
     
     res.json({ 
-        message: 'Dispositivo ativado com sucesso',
+        message: 'Dispositivo desconectado com sucesso',
         device: {
+            id: device.id,
             name: device.name,
-            location: device.location,
-            id: device.id
+            mac: device.mac,
+            status: device.status
         }
     });
 });
 
-// ADICIONAR este middleware para debug de todas as requisições
-app.use((req, res, next) => {
-    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
-    console.log(`🌐 ${req.method} ${req.path} - IP: ${clientIp}`);
-    next();
-});
+// REMOVIDA: Rota de ativação por IP (substituída pelo sistema MAC)
 
 // ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
 
 app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
     
+    console.log(`🔄 Recebida solicitação de sincronização para playlist: ${playlistId}`);
+    
     const playlistIndex = playlists.findIndex(p => 
         p.id === playlistId && (p.userId === req.user.id || req.user.role === 'admin')
     );
     
     if (playlistIndex === -1) {
+        console.log(`❌ Playlist não encontrada: ${playlistId}`);
         return res.status(404).json({ error: 'Playlist não encontrada' });
     }
     
     const { currentMediaIndex = 0 } = req.body;
+    console.log(`📊 Sincronizando a partir da mídia índice: ${currentMediaIndex}`);
     
     // Encontrar todos os dispositivos ativos que usam esta playlist
     const devicesUsingPlaylist = devices.filter(device => 
@@ -713,43 +527,22 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     const deviceIds = devicesUsingPlaylist.map(device => device.id);
     
+    console.log(`📺 Dispositivos ativos encontrados: ${deviceIds.length}`);
+    
     if (deviceIds.length === 0) {
+        console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
         return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
     }
     
-    // Calcular tempo EXATO para cada dispositivo - SEMPRE COMEÇAR DO ZERO
-    const syncData = {
-        currentMediaIndex: currentMediaIndex,
-        mediaStartTime: new Date().toISOString(), // Começar AGORA
-        syncTime: new Date().toISOString(),
-        totalPlaylistDuration: calculatePlaylistDuration(playlistIndex),
-        currentMediaDuration: 0,
-        remainingTime: 0,
-        elapsedPlaylistTime: 0
-    };
+    // SINCRONIZAÇÃO OTIMIZADA - TEMPO REAL
+    const syncTime = new Date().toISOString();
+    const syncData = calculateExactSyncData(playlistIndex, currentMediaIndex);
     
-    // Calcular tempo real baseado no índice atual
-    if (currentMediaIndex > 0) {
-        let elapsedTime = 0;
-        for (let i = 0; i < currentMediaIndex; i++) {
-            const mediaId = playlists[playlistIndex].mediaIds[i];
-            const mediaItem = media.find(m => m.id === mediaId);
-            if (mediaItem) {
-                elapsedTime += (mediaItem.displayTime || 10) * 1000;
-            }
-        }
-        syncData.elapsedPlaylistTime = elapsedTime;
-    }
+    // Atualizar tempo de início para AGORA
+    syncData.mediaStartTime = syncTime;
+    syncData.syncTime = syncTime;
     
-    // Se tem mídia atual, calcular sua duração
-    if (playlists[playlistIndex].mediaIds[currentMediaIndex]) {
-        const currentMediaId = playlists[playlistIndex].mediaIds[currentMediaIndex];
-        const mediaItem = media.find(m => m.id === currentMediaId);
-        if (mediaItem) {
-            syncData.currentMediaDuration = (mediaItem.displayTime || 10) * 1000;
-            syncData.remainingTime = syncData.currentMediaDuration; // Começar do início da mídia
-        }
-    }
+    console.log(`📈 Dados de sincronização otimizados:`, syncData);
     
     // Atualizar informações de sincronização da playlist
     playlists[playlistIndex].syncInfo = {
@@ -763,8 +556,11 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     saveData(DATA_FILES.playlists, playlists);
     
-    // Broadcast para dispositivos com TODOS os parâmetros
-    broadcastToDevices(deviceIds, {
+    // Broadcast OTIMIZADO - enviar imediatamente
+    console.log(`📤 Enviando sincronização para dispositivos: ${deviceIds.join(', ')}`);
+    
+    // Enviar com timestamp de alta precisão
+    const syncMessage = {
         type: 'sync_command',
         command: 'sync_playlist',
         playlistId: playlistId,
@@ -775,16 +571,20 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
         currentMediaDuration: syncData.currentMediaDuration,
         remainingTime: syncData.remainingTime,
         elapsedPlaylistTime: syncData.elapsedPlaylistTime,
-        timestamp: new Date().toISOString()
-    });
+        timestamp: new Date().toISOString(),
+        serverTime: Date.now() // Timestamp de alta precisão
+    };
     
-    console.log(`🔄 Playlist ${playlistId} sincronizada. Dispositivos: ${deviceIds.join(', ')}`);
+    broadcastToDevices(deviceIds, syncMessage);
+    
+    console.log(`✅ Playlist ${playlistId} sincronizada com alta precisão!`);
     
     res.json({ 
         message: `Playlist sincronizada para ${deviceIds.length} dispositivo(s)`,
         playlistId: playlistId,
         deviceIds: deviceIds,
-        syncInfo: syncData
+        syncInfo: syncData,
+        serverTime: Date.now()
     });
 });
 
@@ -1144,6 +944,171 @@ server.on('upgrade', (request, socket, head) => {
     });
 });
 
+// WebSocket connection - ATUALIZADO para MAC
+wss.on('connection', (ws, req) => {
+    const clientIp = req.socket.remoteAddress.replace('::ffff:', '');
+    console.log('🔗 WebSocket conectado:', clientIp);
+    
+    let clientDeviceId = null;
+    let clientMac = null;
+    
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('📨 Mensagem WebSocket recebida:', data.type, 'de:', data.deviceId);
+            
+            if (data.type === 'register') {
+                clientDeviceId = data.deviceId;
+                clientMac = data.mac;
+                
+                connectedClients.set(data.deviceId, {
+                    ws: ws,
+                    deviceId: data.deviceId,
+                    mac: data.mac,
+                    ip: clientIp,
+                    lastPing: Date.now(),
+                    currentMedia: null,
+                    lastActivity: new Date()
+                });
+                
+                console.log(`📱 Dispositivo ${data.deviceId} (MAC: ${data.mac}) registrado para WebSocket`);
+                
+                // Atualizar status do dispositivo
+                const device = devices.find(d => d.id === data.deviceId);
+                if (device) {
+                    device.status = 'active';
+                    device.lastSeen = new Date();
+                    saveData(DATA_FILES.devices, devices);
+                    console.log(`✅ Status do dispositivo ${device.name} atualizado para ativo`);
+                }
+            }
+            
+            if (data.type === 'ping') {
+                const client = connectedClients.get(data.deviceId);
+                if (client) {
+                    client.lastPing = Date.now();
+                    client.lastActivity = new Date();
+                }
+            }
+            
+            if (data.type === 'current_media') {
+                const client = connectedClients.get(data.deviceId);
+                if (client) {
+                    client.currentMedia = data;
+                    client.lastPing = Date.now();
+                    client.lastActivity = new Date();
+                }
+                
+                broadcastToAdmins({
+                    type: 'device_media_update',
+                    deviceId: data.deviceId,
+                    mac: clientMac,
+                    media: data.media,
+                    currentMediaIndex: data.currentMediaIndex,
+                    timestamp: new Date()
+                });
+            }
+
+            if (data.type === 'request_preview') {
+                const client = connectedClients.get(data.deviceId);
+                if (client && client.ws.readyState === WebSocket.OPEN) {
+                    client.ws.send(JSON.stringify({
+                        type: 'send_preview',
+                        timestamp: new Date()
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('Erro WebSocket:', error);
+        }
+    });
+    
+    ws.on('close', (code, reason) => {
+        console.log(`🔌 WebSocket desconectado: ${clientDeviceId} - Código: ${code}, Razão: ${reason}`);
+        
+        if (clientDeviceId) {
+            connectedClients.delete(clientDeviceId);
+            console.log(`📱 Dispositivo ${clientDeviceId} desconectado do WebSocket`);
+            
+            // NÃO alterar status para offline - manter ativo até desconexão administrativa
+            const device = devices.find(d => d.id === clientDeviceId);
+            if (device) {
+                console.log(`📴 Dispositivo ${device.name} desconectado, mas mantendo status ativo`);
+                // Apenas atualizar lastSeen, manter status ativo
+                device.lastSeen = new Date();
+                saveData(DATA_FILES.devices, devices);
+            }
+        }
+    });
+    
+    ws.on('error', (error) => {
+        console.error('❌ Erro WebSocket:', error);
+        if (clientDeviceId) {
+            connectedClients.delete(clientDeviceId);
+        }
+    });
+    
+    // Heartbeat para manter conexão ativa
+    const heartbeatInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping(); // WebSocket ping
+        } else {
+            clearInterval(heartbeatInterval);
+        }
+    }, 30000);
+    
+    ws.on('pong', () => {
+        // Conexão está ativa
+        if (clientDeviceId) {
+            const client = connectedClients.get(clientDeviceId);
+            if (client) {
+                client.lastPing = Date.now();
+            }
+        }
+    });
+});
+
+// Função para broadcast para admins
+function broadcastToAdmins(message) {
+    connectedClients.forEach((client, deviceId) => {
+        // Enviar apenas para clientes que são admins (baseado no IP ou outro critério)
+        // Por enquanto, enviar para todos os clientes conectados
+        if (client.ws.readyState === WebSocket.OPEN) {
+            client.ws.send(JSON.stringify(message));
+        }
+    });
+}
+
+// Função para broadcast para dispositivos específicos
+function broadcastToDevices(deviceIds, message) {
+    console.log(`📤 Broadcast para ${deviceIds.length} dispositivos:`, message.type);
+    
+    // Log para debug de loops
+    if (message.type === 'sync_command') {
+        console.log('🔧 Sync Command Details:', {
+            playlistId: message.playlistId,
+            currentMediaIndex: message.currentMediaIndex,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    let connectedCount = 0;
+    
+    deviceIds.forEach(deviceId => {
+        const client = connectedClients.get(deviceId);
+        if (client && client.ws.readyState === WebSocket.OPEN) {
+            console.log(`✅ Enviando ${message.type} para dispositivo ${deviceId}`);
+            client.ws.send(JSON.stringify(message));
+            connectedCount++;
+        } else {
+            console.log(`❌ Dispositivo ${deviceId} não conectado`);
+        }
+    });
+    
+    console.log(`📊 ${message.type} enviada para ${connectedCount}/${deviceIds.length} dispositivos`);
+    return connectedCount;
+}
+
 // Inicializar com usuário admin
 async function initializeAdminUser() {
     if (users.length === 0) {
@@ -1164,28 +1129,7 @@ async function initializeAdminUser() {
     }
 }
 
-// Limpeza periódica de dispositivos inativos (opcional)
-setInterval(() => {
-    const now = new Date();
-    const inactiveThreshold = 30 * 60 * 1000; // 30 minutos
-    
-    devices.forEach(device => {
-        if (device.status === 'active' && device.lastSeen) {
-            const lastSeen = new Date(device.lastSeen);
-            if (now - lastSeen > inactiveThreshold) {
-                console.log(`🔌 Dispositivo ${device.name} marcado como inativo`);
-                device.status = 'inactive';
-            }
-        }
-    });
-    
-    saveData(DATA_FILES.devices, devices);
-}, 5 * 60 * 1000); // Verificar a cada 5 minutos
-
-console.log('🔄 Sistema de limpeza de dispositivos inativos iniciado');
-
-
-// ==================== FUNÇÕES AUXILIARES PARA SINCRONIZAÇÃO OTIMIZADAS ====================
+// ==================== FUNÇÕES AUXILIARES PARA SINCRONIZAÇÃO ====================
 
 function calculatePlaylistDuration(playlistIndex) {
     const playlist = playlists[playlistIndex];
@@ -1242,104 +1186,47 @@ function calculateExactSyncData(playlistIndex, targetMediaIndex = 0) {
     };
 }
 
-// ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST OTIMIZADAS ====================
-
-app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
-    const playlistId = req.params.id;
+// Adicionar rota para limpeza de códigos expirados
+setInterval(() => {
+    const now = new Date();
+    let cleanedCount = 0;
     
-    console.log(`🔄 Recebida solicitação de sincronização para playlist: ${playlistId}`);
-    
-    const playlistIndex = playlists.findIndex(p => 
-        p.id === playlistId && (p.userId === req.user.id || req.user.role === 'admin')
-    );
-    
-    if (playlistIndex === -1) {
-        console.log(`❌ Playlist não encontrada: ${playlistId}`);
-        return res.status(404).json({ error: 'Playlist não encontrada' });
-    }
-    
-    const { currentMediaIndex = 0 } = req.body;
-    console.log(`📊 Sincronizando a partir da mídia índice: ${currentMediaIndex}`);
-    
-    // Encontrar todos os dispositivos ativos que usam esta playlist
-    const devicesUsingPlaylist = devices.filter(device => 
-        device.playlistId === playlistId && device.status === 'active'
-    );
-    
-    const deviceIds = devicesUsingPlaylist.map(device => device.id);
-    
-    console.log(`📺 Dispositivos ativos encontrados: ${deviceIds.length}`);
-    
-    if (deviceIds.length === 0) {
-        console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
-        return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
-    }
-    
-    // SINCRONIZAÇÃO OTIMIZADA - TEMPO REAL
-    const syncTime = new Date().toISOString();
-    const syncData = calculateExactSyncData(playlistIndex, currentMediaIndex);
-    
-    // Atualizar tempo de início para AGORA
-    syncData.mediaStartTime = syncTime;
-    syncData.syncTime = syncTime;
-    
-    console.log(`📈 Dados de sincronização otimizados:`, syncData);
-    
-    // Atualizar informações de sincronização da playlist
-    playlists[playlistIndex].syncInfo = {
-        currentMediaIndex: currentMediaIndex,
-        mediaStartTime: syncData.mediaStartTime,
-        syncTime: syncData.syncTime,
-        totalPlaylistDuration: syncData.totalPlaylistDuration,
-        lastSync: new Date().toISOString(),
-        syncBy: req.user.id
-    };
-    
-    saveData(DATA_FILES.playlists, playlists);
-    
-    // Broadcast OTIMIZADO - enviar imediatamente
-    console.log(`📤 Enviando sincronização para dispositivos: ${deviceIds.join(', ')}`);
-    
-    // Enviar com timestamp de alta precisão
-    const syncMessage = {
-        type: 'sync_command',
-        command: 'sync_playlist',
-        playlistId: playlistId,
-        currentMediaIndex: syncData.currentMediaIndex,
-        mediaStartTime: syncData.mediaStartTime,
-        syncTime: syncData.syncTime,
-        totalPlaylistDuration: syncData.totalPlaylistDuration,
-        currentMediaDuration: syncData.currentMediaDuration,
-        remainingTime: syncData.remainingTime,
-        elapsedPlaylistTime: syncData.elapsedPlaylistTime,
-        timestamp: new Date().toISOString(),
-        serverTime: Date.now() // Timestamp de alta precisão
-    };
-    
-    broadcastToDevices(deviceIds, syncMessage);
-    
-    console.log(`✅ Playlist ${playlistId} sincronizada com alta precisão!`);
-    
-    res.json({ 
-        message: `Playlist sincronizada para ${deviceIds.length} dispositivo(s)`,
-        playlistId: playlistId,
-        deviceIds: deviceIds,
-        syncInfo: syncData,
-        serverTime: Date.now()
+    devices.forEach(device => {
+        if (device.status === 'pending' && device.codeExpiry && new Date(device.codeExpiry) < now) {
+            // Gerar novo código para dispositivos pendentes com código expirado
+            device.authCode = Math.floor(100000 + Math.random() * 900000).toString();
+            device.codeExpiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+            device.lastCodeUpdate = new Date();
+            cleanedCount++;
+        }
     });
-});
+    
+    if (cleanedCount > 0) {
+        saveData(DATA_FILES.devices, devices);
+        console.log(`🧹 ${cleanedCount} código(s) expirado(s) renovado(s)`);
+    }
+}, 60000); // Verificar a cada minuto
 
-// Adicionar rota para debug de dispositivos
-app.get('/api/debug/devices', (req, res) => {
+console.log('🔄 Sistema de renovação de códigos expirados iniciado');
+
+// REMOVER limpeza periódica de dispositivos inativos (agora queremos persistência)
+// Apenas manter lastSeen atualizado quando dispositivos se conectarem
+
+// Adicionar rota para debug de dispositivos por MAC
+app.get('/api/debug/devices-mac', (req, res) => {
     res.json({
         totalDevices: devices.length,
         activeDevices: devices.filter(d => d.status === 'active'),
+        pendingDevices: devices.filter(d => d.status === 'pending'),
         allDevices: devices.map(d => ({
+            id: d.id,
             name: d.name,
-            ip: d.ip,
+            mac: d.mac,
             status: d.status,
             authCode: d.authCode,
-            location: d.location
+            codeExpiry: d.codeExpiry,
+            location: d.location,
+            lastSeen: d.lastSeen
         }))
     });
 });

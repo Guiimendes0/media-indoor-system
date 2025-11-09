@@ -796,13 +796,22 @@
             margin-bottom: 10px;
             font-size: 14px;
         }
+
+        .device-instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 14px;
+            border-left: 4px solid var(--info);
+        }
     </style>
 </head>
 <body>
     <!-- Tela de Login -->
     <div id="login-screen">
         <div class="login-container">
-            <h1>🎬 Media Indoor</h1>
+            <h1>Pantaneira Media Indoor</h1>
             <p>Sistema de Gerenciamento</p>
             <form class="login-form" id="loginForm">
                 <div class="form-group">
@@ -889,7 +898,6 @@
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>IP</th>
                                 <th>Localização</th>
                                 <th>Status</th>
                                 <th>Última Atividade</th>
@@ -915,11 +923,11 @@
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>IP</th>
                                 <th>Localização</th>
                                 <th>Status</th>
                                 <th>Código Auth</th>
                                 <th>Playlist</th>
+                                <th>Última Atividade</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -1072,8 +1080,10 @@
                     <input type="text" id="deviceName" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="deviceIp">Endereço IP *</label>
-                    <input type="text" id="deviceIp" class="form-control" required placeholder="Ex: 192.168.1.100">
+                    <label for="deviceIp" id="deviceIpLabel">Código de Ativação *</label>
+                    <input type="text" id="deviceIp" class="form-control" required 
+                           placeholder="Digite o código de 6 dígitos do dispositivo" 
+                           pattern="[0-9]{6}" maxlength="6">
                 </div>
                 <div class="form-group">
                     <label for="deviceLocation">Localização *</label>
@@ -1085,6 +1095,15 @@
                         <option value="">Todas as mídias</option>
                     </select>
                 </div>
+
+                <div class="device-instructions">
+                    <strong>📋 Como adicionar um dispositivo:</strong><br>
+                    1. Acesse o dispositivo na TV/Player<br>
+                    2. Anote o código de 6 dígitos exibido<br>
+                    3. Digite o código acima<br>
+                    4. O dispositivo será identificado automaticamente pelo MAC address
+                </div>
+
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
                     <button type="submit" class="btn btn-success">💾 Salvar</button>
                     <button type="button" class="btn btn-danger" onclick="closeModal('deviceModal')">❌ Cancelar</button>
@@ -1168,7 +1187,7 @@
                     <input type="text" id="editMediaName" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="editMediaDisplayTime">Tempo de Exibição (segundos) *</label>
+                    <label for="editMediaDisplayTime">Tempo de Exibício (segundos) *</label>
                     <input type="number" id="editMediaDisplayTime" class="form-control" required min="5" max="300">
                 </div>
                 <div class="form-group" id="editMediaUrlGroup">
@@ -1456,26 +1475,26 @@
             }
         }
 
-// Logout - CORRIGIDO
-async function logout() {
-    try {
-        await authenticatedFetch(`${SERVER_URL}/api/auth/logout`, {
-            method: 'POST'
-        });
-    } catch (error) {
-        // Ignorar erros no logout (pode ser que a sessão já esteja expirada)
-        console.log('Logout:', error.message);
-    } finally {
-        // Sempre limpar os dados locais
-        if (ws) ws.close();
-        authToken = null;
-        currentUser = null;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
-        
-        showLoginScreen();
-    }
-}
+        // Logout
+        async function logout() {
+            try {
+                await authenticatedFetch(`${SERVER_URL}/api/auth/logout`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                // Ignorar erros no logout (pode ser que a sessão já esteja expirada)
+                console.log('Logout:', error.message);
+            } finally {
+                // Sempre limpar os dados locais
+                if (ws) ws.close();
+                authToken = null;
+                currentUser = null;
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                showLoginScreen();
+            }
+        }
 
         function showLoginScreen() {
             document.getElementById('login-screen').classList.remove('hidden');
@@ -1522,6 +1541,7 @@ async function logout() {
             document.getElementById(modalId).classList.add('hidden');
         }
 
+        // ATUALIZADA: Abrir modal de dispositivo
         function openDeviceModal(device = null) {
             editingDeviceId = device ? device.id : null;
             const title = document.getElementById('deviceModalTitle');
@@ -1531,30 +1551,25 @@ async function logout() {
             if (device) {
                 document.getElementById('deviceId').value = device.id;
                 document.getElementById('deviceName').value = device.name;
-                document.getElementById('deviceIp').value = device.ip;
                 document.getElementById('deviceLocation').value = device.location;
                 document.getElementById('devicePlaylist').value = device.playlistId || '';
+                
+                // Para edição, mostrar MAC como informação (não editável)
+                document.getElementById('deviceIpLabel').textContent = 'MAC Address:';
+                document.getElementById('deviceIp').value = device.mac || 'N/A';
+                document.getElementById('deviceIp').readOnly = true;
+                document.getElementById('deviceIp').placeholder = 'MAC address do dispositivo';
             } else {
                 document.getElementById('deviceForm').reset();
+                // Para novo dispositivo, mostrar campo de código
+                document.getElementById('deviceIpLabel').textContent = 'Código de Ativação *';
+                document.getElementById('deviceIp').placeholder = 'Digite o código de 6 dígitos';
+                document.getElementById('deviceIp').readOnly = false;
             }
             
             loadPlaylistOptions();
             openModal('deviceModal');
         }
-
-        // Adicionar função para ver dispositivos ativos
-function showActiveDevices() {
-    console.log('📊 Dispositivos Ativos no Sistema:');
-    currentDevices.filter(d => d.status === 'active').forEach(device => {
-        console.log(`   📺 ${device.name} - IP: ${device.ip} - Local: ${device.location}`);
-    });
-    
-    const activeCount = currentDevices.filter(d => d.status === 'active').length;
-    showNotification(`${activeCount} dispositivo(s) ativo(s) no sistema`, 'info');
-}
-
-// Chamar esta função quando carregar a página
-setTimeout(showActiveDevices, 2000);
 
         function openEditMediaModal(mediaItem) {
             document.getElementById('editMediaId').value = mediaItem.id;
@@ -1601,7 +1616,7 @@ setTimeout(showActiveDevices, 2000);
 
         function openDevicePreview(device) {
             document.getElementById('devicePreviewTitle').textContent = `Visualização: ${device.name}`;
-            document.getElementById('devicePreviewInfo').textContent = `${device.location} - ${device.ip}`;
+            document.getElementById('devicePreviewInfo').textContent = `${device.location} - ${device.mac || 'N/A'}`;
             
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1700,7 +1715,7 @@ setTimeout(showActiveDevices, 2000);
                     <label for="device_${device.id}" style="flex: 1;">
                         <strong>${device.name}</strong>
                         <br>
-                        <small style="color: #666;">${device.location} - ${device.ip}</small>
+                        <small style="color: #666;">${device.location} - ${device.mac || 'N/A'}</small>
                     </label>
                 `;
                 container.appendChild(div);
@@ -1918,65 +1933,65 @@ setTimeout(showActiveDevices, 2000);
             });
         }
 
-// Função para fazer requisições autenticadas - CORRIGIDA
-async function authenticatedFetch(url, options = {}) {
-    const defaultOptions = {
-        headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            ...options.headers
+        // Função para fazer requisições autenticadas
+        async function authenticatedFetch(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+            
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
+                
+                if (response.status === 401 || response.status === 403) {
+                    // Sessão expirada - fazer logout
+                    showNotification('Sessão expirada. Faça login novamente.', 'error');
+                    setTimeout(() => {
+                        logout();
+                    }, 2000);
+                    throw new Error('Sessão expirada');
+                }
+                
+                // Verificar se a resposta é JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Resposta do servidor não é JSON');
+                }
+                
+                return response;
+            } catch (error) {
+                if (error.message === 'Sessão expirada') {
+                    throw error; // Já tratado acima
+                }
+                console.error('Erro na requisição:', error);
+                throw new Error('Erro de conexão com o servidor');
+            }
         }
-    };
-    
-    try {
-        const response = await fetch(url, { ...defaultOptions, ...options });
-        
-        if (response.status === 401 || response.status === 403) {
-            // Sessão expirada - fazer logout
-            showNotification('Sessão expirada. Faça login novamente.', 'error');
-            setTimeout(() => {
-                logout();
-            }, 2000);
-            throw new Error('Sessão expirada');
-        }
-        
-        // Verificar se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Resposta do servidor não é JSON');
-        }
-        
-        return response;
-    } catch (error) {
-        if (error.message === 'Sessão expirada') {
-            throw error; // Já tratado acima
-        }
-        console.error('Erro na requisição:', error);
-        throw new Error('Erro de conexão com o servidor');
-    }
-}
 
-// Carregar dados - CORRIGIDA
-async function loadAllData() {
-    try {
-        await loadDevices();
-        await loadMedia();
-        await loadPlaylists();
-        await loadAnnouncements();
-        if (currentUser.role === 'admin') {
-            await loadUsers();
+        // Carregar dados
+        async function loadAllData() {
+            try {
+                await loadDevices();
+                await loadMedia();
+                await loadPlaylists();
+                await loadAnnouncements();
+                if (currentUser.role === 'admin') {
+                    await loadUsers();
+                }
+                updateStats();
+                updateDevicesTable();
+            } catch (error) {
+                if (error.message === 'Sessão expirada') {
+                    // Já foi tratado no authenticatedFetch
+                    return;
+                }
+                console.error('Erro ao carregar dados:', error);
+                showNotification('Erro ao carregar dados do sistema', 'error');
+            }
         }
-        updateStats();
-        updateDevicesTable();
-    } catch (error) {
-        if (error.message === 'Sessão expirada') {
-            // Já foi tratado no authenticatedFetch
-            return;
-        }
-        console.error('Erro ao carregar dados:', error);
-        showNotification('Erro ao carregar dados do sistema', 'error');
-    }
-}
 
         async function loadDevices() {
             try {
@@ -2042,7 +2057,7 @@ async function loadAllData() {
             }
         }
 
-        // Renderizar listas
+        // ATUALIZADA: Renderizar lista de dispositivos
         function renderDevicesList() {
             const tbody = document.querySelector('#devicesListTable tbody');
             tbody.innerHTML = '';
@@ -2052,105 +2067,130 @@ async function loadAllData() {
                     currentPlaylists.find(p => p.id === device.playlistId)?.name || 'Playlist não encontrada' : 
                     'Todas as mídias';
                 
+                // Formatar última atividade
+                let lastSeenText = 'Nunca';
+                if (device.lastSeen) {
+                    const lastSeen = new Date(device.lastSeen);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+                    
+                    if (diffMinutes < 1) {
+                        lastSeenText = 'Agora mesmo';
+                    } else if (diffMinutes < 60) {
+                        lastSeenText = `Há ${diffMinutes} min`;
+                    } else {
+                        lastSeenText = lastSeen.toLocaleString();
+                    }
+                }
+                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${device.name}</td>
-                    <td>${device.ip}</td>
+                    <td>
+                        <strong>${device.name}</strong>
+                        ${device.mac ? `<br><small style="color: #666;">MAC: ${device.mac}</small>` : ''}
+                    </td>
                     <td>${device.location}</td>
-                    <td><span class="status-${device.status}">${device.status}</span></td>
-                    <td><span class="auth-code">${device.authCode}</span></td>
+                    <td><span class="status-${device.status}">${device.status === 'active' ? 'Ativo' : 'Pendente'}</span></td>
+                    <td>
+                        ${device.status === 'pending' ? 
+                            `<span class="auth-code">${device.authCode}</span><br>
+                             <small style="color: #e74c3c;">Expira: ${device.codeExpiry ? new Date(device.codeExpiry).toLocaleTimeString() : 'N/A'}</small>` : 
+                            '<span style="color: #27ae60;">✅ Ativado</span>'
+                        }
+                    </td>
                     <td>${playlistName}</td>
+                    <td>${lastSeenText}</td>
                     <td class="action-buttons">
                         <button class="btn btn-warning btn-sm" onclick="openDeviceModal(${JSON.stringify(device).replace(/"/g, '&quot;')})">
                             ✏️ Editar
                         </button>
+                        ${device.status === 'active' ? `
                         <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
                             👁️ Visualizar
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')">
-                            🗑️ Excluir
-                        </button>
-                        ${device.status === 'active' ? `
-                        <button class="btn btn-secondary btn-sm" onclick="deactivateDevice('${device.id}')">
+                        <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
                             🔌 Desconectar
                         </button>
                         ` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')">
+                            🗑️ Excluir
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-function renderPlaylistsList() {
-    const container = document.getElementById('playlistsList');
-    container.innerHTML = '';
-    
-    if (currentPlaylists.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma playlist criada</p>';
-        return;
-    }
-    
-    currentPlaylists.forEach(playlist => {
-        const playlistElement = document.createElement('div');
-        playlistElement.className = 'card';
-        playlistElement.style.marginBottom = '15px';
-        
-        const mediaCount = playlist.mediaIds.length;
-        const assignedDevices = currentDevices.filter(d => d.playlistId === playlist.id);
-        const activeDevices = assignedDevices.filter(d => d.status === 'active');
-        const hasCustomOrder = playlist.mediaOrder && playlist.mediaOrder.length > 0;
-        
-        playlistElement.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="flex: 1;">
-                    <h3 style="margin: 0 0 10px 0;">${playlist.name}</h3>
-                    <p style="margin: 0 0 10px 0; color: #666;">
-                        📁 ${mediaCount} mídia(s) • 📺 ${assignedDevices.length} dispositivo(s)
-                        ${activeDevices.length > 0 ? `• 🟢 ${activeDevices.length} ativo(s)` : ''}
-                        ${hasCustomOrder ? '• 🔀 Ordem personalizada' : ''}
-                    </p>
-                    
-                    ${activeDevices.length > 0 ? `
-                    <div class="playlist-sync-info">
-                        <strong>Dispositivos Ativos:</strong>
-                        <div style="margin-top: 5px;">
-                            ${activeDevices.map(device => 
-                                `<span class="device-tag" style="margin-right: 5px; margin-bottom: 5px;">${device.name}</span>`
-                            ).join('')}
+        function renderPlaylistsList() {
+            const container = document.getElementById('playlistsList');
+            container.innerHTML = '';
+            
+            if (currentPlaylists.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma playlist criada</p>';
+                return;
+            }
+            
+            currentPlaylists.forEach(playlist => {
+                const playlistElement = document.createElement('div');
+                playlistElement.className = 'card';
+                playlistElement.style.marginBottom = '15px';
+                
+                const mediaCount = playlist.mediaIds.length;
+                const assignedDevices = currentDevices.filter(d => d.playlistId === playlist.id);
+                const activeDevices = assignedDevices.filter(d => d.status === 'active');
+                const hasCustomOrder = playlist.mediaOrder && playlist.mediaOrder.length > 0;
+                
+                playlistElement.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 10px 0;">${playlist.name}</h3>
+                            <p style="margin: 0 0 10px 0; color: #666;">
+                                📁 ${mediaCount} mídia(s) • 📺 ${assignedDevices.length} dispositivo(s)
+                                ${activeDevices.length > 0 ? `• 🟢 ${activeDevices.length} ativo(s)` : ''}
+                                ${hasCustomOrder ? '• 🔀 Ordem personalizada' : ''}
+                            </p>
+                            
+                            ${activeDevices.length > 0 ? `
+                            <div class="playlist-sync-info">
+                                <strong>Dispositivos Ativos:</strong>
+                                <div style="margin-top: 5px;">
+                                    ${activeDevices.map(device => 
+                                        `<span class="device-tag" style="margin-right: 5px; margin-bottom: 5px;">${device.name}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                ${activeDevices.length > 0 ? `
+                                <button class="btn btn-success btn-sm sync-playlist-btn" data-playlist-id="${playlist.id}">
+                                    🔄 Sincronizar Playlist
+                                </button>
+                                ` : ''}
+                                <button class="btn btn-warning btn-sm" onclick="openPlaylistModal(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deletePlaylist('${playlist.id}')">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    ` : ''}
-                    
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        ${activeDevices.length > 0 ? `
-                        <button class="btn btn-success btn-sm sync-playlist-btn" data-playlist-id="${playlist.id}">
-                            🔄 Sincronizar Playlist
-                        </button>
-                        ` : ''}
-                        <button class="btn btn-warning btn-sm" onclick="openPlaylistModal(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deletePlaylist('${playlist.id}')">
-                            🗑️ Excluir
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(playlistElement);
-    });
-    
-    // ADICIONAR EVENT LISTENERS para os botões de sync
-    setTimeout(() => {
-        document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const playlistId = this.getAttribute('data-playlist-id');
-                console.log(`🔄 Clicou em sincronizar playlist: ${playlistId}`);
-                syncPlaylist(playlistId);
+                `;
+                container.appendChild(playlistElement);
             });
-        });
-    }, 100);
-}
+            
+            // ADICIONAR EVENT LISTENERS para os botões de sync
+            setTimeout(() => {
+                document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const playlistId = this.getAttribute('data-playlist-id');
+                        console.log(`🔄 Clicou em sincronizar playlist: ${playlistId}`);
+                        syncPlaylist(playlistId);
+                    });
+                });
+            }, 100);
+        }
 
         function renderAnnouncementsList() {
             const container = document.getElementById('announcementsList');
@@ -2226,32 +2266,57 @@ function renderPlaylistsList() {
             });
         }
 
-
         // ==================== FUNÇÕES CRUD ====================
 
-        // Dispositivos
+        // ATUALIZADA: Salvar dispositivo (agora por código)
         async function saveDevice(deviceData) {
             try {
-                const url = deviceData.id 
-                    ? `${SERVER_URL}/api/devices/${deviceData.id}`
-                    : `${SERVER_URL}/api/devices`;
-                
-                const method = deviceData.id ? 'PUT' : 'POST';
-                
-                const response = await authenticatedFetch(url, {
-                    method: method,
-                    body: JSON.stringify(deviceData)
-                });
-                
-                if (response.ok) {
-                    const device = await response.json();
-                    showNotification(`Dispositivo ${deviceData.id ? 'atualizado' : 'adicionado'} com sucesso!`);
-                    closeModal('deviceModal');
-                    await loadDevices();
-                    return device;
+                // Se é edição, usar rota normal
+                if (deviceData.id) {
+                    const url = `${SERVER_URL}/api/devices/${deviceData.id}`;
+                    const response = await authenticatedFetch(url, {
+                        method: 'PUT',
+                        body: JSON.stringify(deviceData)
+                    });
+                    
+                    if (response.ok) {
+                        const device = await response.json();
+                        showNotification('Dispositivo atualizado com sucesso!');
+                        closeModal('deviceModal');
+                        await loadDevices();
+                        return device;
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error);
+                    }
                 } else {
-                    const error = await response.json();
-                    throw new Error(error.error);
+                    // Se é novo dispositivo, usar código de ativação
+                    const authCode = document.getElementById('deviceIp').value;
+                    
+                    if (!authCode || authCode.length !== 6) {
+                        throw new Error('Código de ativação deve ter 6 dígitos');
+                    }
+                    
+                    const response = await authenticatedFetch(`${SERVER_URL}/api/devices`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            authCode: authCode,
+                            name: deviceData.name,
+                            location: deviceData.location,
+                            playlistId: deviceData.playlistId
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const device = await response.json();
+                        showNotification('Dispositivo adicionado com sucesso!');
+                        closeModal('deviceModal');
+                        await loadDevices();
+                        return device;
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error);
+                    }
                 }
             } catch (error) {
                 showNotification(error.message, 'error');
@@ -2283,29 +2348,27 @@ function renderPlaylistsList() {
             }
         }
 
-        async function deactivateDevice(deviceId) {
+        // NOVA: Função para desconectar dispositivo
+        async function disconnectDevice(deviceId) {
             const confirmed = await showConfirmation(
-                'Deseja desconectar este dispositivo? Ele precisará ser reativado com o código de autenticação.',
+                'Deseja desconectar este dispositivo? Ele precisará ser reativado com um novo código.',
                 'Desconectar Dispositivo'
             );
             
             if (!confirmed) return;
             
             try {
-                const device = currentDevices.find(d => d.id === deviceId);
-                if (device) {
-                    device.status = 'pending';
-                    device.lastSeen = null;
-                    
-                    const response = await authenticatedFetch(`${SERVER_URL}/api/devices/${deviceId}`, {
-                        method: 'PUT',
-                        body: JSON.stringify(device)
-                    });
-                    
-                    if (response.ok) {
-                        showNotification('Dispositivo desconectado com sucesso!');
-                        await loadDevices();
-                    }
+                const response = await authenticatedFetch(`${SERVER_URL}/api/devices/${deviceId}/disconnect`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Dispositivo desconectado com sucesso!');
+                    await loadDevices();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error);
                 }
             } catch (error) {
                 showNotification(error.message, 'error');
@@ -2477,60 +2540,72 @@ function renderPlaylistsList() {
             }
         }
 
-// Manipular mensagens WebSocket - CORRIGIDO
-function handleWebSocketMessage(data) {
-    console.log('📨 Mensagem WebSocket:', data.type, data);
-    
-    switch (data.type) {
-        case 'sync_command':
-            console.log('🔄 Comando de sincronização recebido:', data);
-            handleSyncCommand(data);
-            break;
+        // Sincronização por Playlist
+        async function syncPlaylist(playlistId) {
+            const now = Date.now();
             
-        case 'announcement':
-            console.log('📢 Pronunciamento recebido:', data);
-            handleAnnouncement(data);
-            break;
+            // Verificar cooldown
+            if (now - lastSyncClick < SYNC_COOLDOWN) {
+                showNotification('⏳ Aguarde antes de sincronizar novamente', 'warning');
+                return;
+            }
             
-        case 'announcement_cancelled':
-            console.log('❌ Pronunciamento cancelado:', data);
-            handleAnnouncementCancelled(data);
-            break;
+            lastSyncClick = now;
             
-        case 'send_preview':
-            console.log('📸 Preview solicitado');
-            sendPreview();
-            break;
-            
-        default:
-            console.log('📨 Mensagem não tratada:', data);
-    }
-}
+            try {
+                console.log(`🔄 Iniciando sincronização da playlist: ${playlistId}`);
+                
+                // Verificar se há dispositivos ativos primeiro
+                const devicesResponse = await authenticatedFetch(`${SERVER_URL}/api/devices`);
+                if (!devicesResponse.ok) {
+                    throw new Error('Erro ao carregar dispositivos');
+                }
+                
+                const allDevices = await devicesResponse.json();
+                const playlistDevices = allDevices.filter(d => d.playlistId === playlistId && d.status === 'active');
+                
+                console.log(`📊 Dispositivos ativos na playlist: ${playlistDevices.length}`);
+                
+                if (playlistDevices.length === 0) {
+                    showNotification('❌ Nenhum dispositivo ativo nesta playlist', 'warning');
+                    return;
+                }
+                
+                // Mostrar loading
+                showNotification('🔄 Sincronizando playlist...', 'info');
+                
+                // Fazer a sincronização
+                const response = await authenticatedFetch(`${SERVER_URL}/api/playlists/${playlistId}/sync`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        currentMediaIndex: 0
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Sincronização bem-sucedida:', result);
+                    
+                    if (result.deviceIds && result.deviceIds.length > 0) {
+                        showNotification(`🎯 Playlist sincronizada! ${result.deviceIds.length} dispositivo(s) atualizado(s)`, 'success');
+                    } else {
+                        showNotification('⚠️ Sincronização concluída, mas nenhum dispositivo foi atualizado', 'warning');
+                    }
+                    
+                } else {
+                    const error = await response.json();
+                    console.error('❌ Erro na resposta do servidor:', error);
+                    throw new Error(error.error || 'Erro ao sincronizar playlist');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro na sincronização:', error);
+                if (error.message !== 'Sessão expirada') {
+                    showNotification(error.message, 'error');
+                }
+            }
+        }
 
-// Manipular comando de sincronização - CORRIGIDO
-function handleSyncCommand(data) {
-    console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
-    
-    // PARAR tudo e aplicar sincronização IMEDIATAMENTE
-    this.clearTimers();
-    this.stopAllMedia();
-    
-    syncData = {
-        currentMediaIndex: data.currentMediaIndex || 0,
-        mediaStartTime: new Date(data.mediaStartTime),
-        syncTime: new Date(data.syncTime),
-        totalPlaylistDuration: data.totalPlaylistDuration,
-        currentMediaDuration: data.currentMediaDuration,
-        remainingTime: data.remainingTime,
-        elapsedPlaylistTime: data.elapsedPlaylistTime,
-        serverTime: data.serverTime
-    };
-    
-    console.log('🎯 Aplicando sincronização IMEDIATA:', syncData);
-    
-    // Aplicar sincronização IMEDIATAMENTE
-    applySync();
-}
         async function syncAllPlaylists() {
             const playlistsWithActiveDevices = currentPlaylists.filter(playlist => {
                 const activeDevices = currentDevices.filter(d => d.playlistId === playlist.id && d.status === 'active');
@@ -2561,71 +2636,7 @@ function handleSyncCommand(data) {
             
             showNotification(`${successCount} playlist(s) sincronizada(s) com sucesso!`);
         }
-// Sincronização por Playlist - CORRIGIDA para mostrar notificação
-async function syncPlaylist(playlistId) {
-    const now = Date.now();
-    
-    // Verificar cooldown
-    if (now - lastSyncClick < SYNC_COOLDOWN) {
-        showNotification('⏳ Aguarde antes de sincronizar novamente', 'warning');
-        return;
-    }
-    
-    lastSyncClick = now;
-    
-    try {
-        console.log(`🔄 Iniciando sincronização da playlist: ${playlistId}`);
-        
-        // Verificar se há dispositivos ativos primeiro
-        const devicesResponse = await authenticatedFetch(`${SERVER_URL}/api/devices`);
-        if (!devicesResponse.ok) {
-            throw new Error('Erro ao carregar dispositivos');
-        }
-        
-        const allDevices = await devicesResponse.json();
-        const playlistDevices = allDevices.filter(d => d.playlistId === playlistId && d.status === 'active');
-        
-        console.log(`📊 Dispositivos ativos na playlist: ${playlistDevices.length}`);
-        
-        if (playlistDevices.length === 0) {
-            showNotification('❌ Nenhum dispositivo ativo nesta playlist', 'warning');
-            return;
-        }
-        
-        // Mostrar loading
-        showNotification('🔄 Sincronizando playlist...', 'info');
-        
-        // Fazer a sincronização
-        const response = await authenticatedFetch(`${SERVER_URL}/api/playlists/${playlistId}/sync`, {
-            method: 'POST',
-            body: JSON.stringify({
-                currentMediaIndex: 0
-            })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Sincronização bem-sucedida:', result);
-            
-            if (result.deviceIds && result.deviceIds.length > 0) {
-                showNotification(`🎯 Playlist sincronizada! ${result.deviceIds.length} dispositivo(s) atualizado(s)`, 'success');
-            } else {
-                showNotification('⚠️ Sincronização concluída, mas nenhum dispositivo foi atualizado', 'warning');
-            }
-            
-        } else {
-            const error = await response.json();
-            console.error('❌ Erro na resposta do servidor:', error);
-            throw new Error(error.error || 'Erro ao sincronizar playlist');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro na sincronização:', error);
-        if (error.message !== 'Sessão expirada') {
-            showNotification(error.message, 'error');
-        }
-    }
-}
+
         // Anunciamentos
         async function createAnnouncement(announcementData) {
             try {
@@ -2749,6 +2760,7 @@ async function syncPlaylist(playlistId) {
             document.getElementById('statPlaylistsActive').textContent = `${activePlaylists} ativas`;
         }
 
+        // ATUALIZADA: Tabela de dispositivos no dashboard
         function updateDevicesTable() {
             const tbody = document.querySelector('#devicesTable tbody');
             tbody.innerHTML = '';
@@ -2764,8 +2776,10 @@ async function syncPlaylist(playlistId) {
                 const lastSeen = device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'Nunca';
                 
                 tr.innerHTML = `
-                    <td>${device.name}</td>
-                    <td>${device.ip}</td>
+                    <td>
+                        <strong>${device.name}</strong>
+                        ${device.mac ? `<br><small style="color: #666;">MAC: ${device.mac}</small>` : ''}
+                    </td>
                     <td>${device.location}</td>
                     <td><span class="status-active">Ativo</span></td>
                     <td>${lastSeen}</td>
@@ -2773,6 +2787,9 @@ async function syncPlaylist(playlistId) {
                     <td>
                         <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
                             👁️ Visualizar
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
+                            🔌 Desconectar
                         </button>
                     </td>
                 `;
@@ -2862,12 +2879,12 @@ async function syncPlaylist(playlistId) {
                 });
             });
             
+            // ATUALIZADA: Formulário de dispositivo
             document.getElementById('deviceForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const deviceData = {
                     name: document.getElementById('deviceName').value,
-                    ip: document.getElementById('deviceIp').value,
                     location: document.getElementById('deviceLocation').value,
                     playlistId: document.getElementById('devicePlaylist').value || null
                 };
@@ -3005,49 +3022,6 @@ async function syncPlaylist(playlistId) {
         updateSystemStatus();
 
         console.log('🎬 Media Indoor Admin carregado com sucesso!');
-
-        // Na função renderDevicesList - ADICIONAR informação de IP real
-function renderDevicesList() {
-    const tbody = document.querySelector('#devicesListTable tbody');
-    tbody.innerHTML = '';
-    
-    currentDevices.forEach(device => {
-        const playlistName = device.playlistId ? 
-            currentPlaylists.find(p => p.id === device.playlistId)?.name || 'Playlist não encontrada' : 
-            'Todas as mídias';
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${device.name}</td>
-            <td>
-                ${device.ip}
-                ${device.ip.includes('127.0.0.1') || device.ip === 'localhost' ? 
-                  '<br><small style="color: #e74c3c;">⚠️ IP local - verifique o IP real</small>' : ''}
-            </td>
-            <td>${device.location}</td>
-            <td><span class="status-${device.status}">${device.status}</span></td>
-            <td><span class="auth-code">${device.authCode}</span></td>
-            <td>${playlistName}</td>
-            <td class="action-buttons">
-                <button class="btn btn-warning btn-sm" onclick="openDeviceModal(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                    ✏️ Editar
-                </button>
-                <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                    👁️ Visualizar
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')">
-                    🗑️ Excluir
-                </button>
-                ${device.status === 'active' ? `
-                <button class="btn btn-secondary btn-sm" onclick="deactivateDevice('${device.id}')">
-                    🔌 Desconectar
-                </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
     </script>
 </body>
 </html>
