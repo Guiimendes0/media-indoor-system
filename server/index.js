@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 // WebSocket para sincronização e visualização
 const wss = new WebSocket.Server({ noServer: true });
 const connectedClients = new Map();
+const activeSyncs = new Map();
 
 // Middleware
 app.use(cors());
@@ -514,10 +515,33 @@ app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
 
 // ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
 
+// ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
+
+// ADICIONAR: Controle de sincronizações em andamento
+
+
 app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
     
     console.log(`🔄 Recebida solicitação de sincronização para playlist: ${playlistId}`);
+    
+    // VERIFICAR se já existe uma sincronização ativa para esta playlist
+    if (activeSyncs.has(playlistId)) {
+        const lastSync = activeSyncs.get(playlistId);
+        const timeSinceLastSync = Date.now() - lastSync;
+        
+        // Se a última sincronização foi há menos de 2 segundos, ignorar
+        if (timeSinceLastSync < 2000) {
+            console.log(`⏸️  Sincronização ignorada - muito recente (${timeSinceLastSync}ms)`);
+            return res.status(429).json({ 
+                error: 'Sincronização muito recente', 
+                message: 'Aguarde antes de sincronizar novamente' 
+            });
+        }
+    }
+    
+    // REGISTRAR nova sincronização
+    activeSyncs.set(playlistId, Date.now());
     
     const playlistIndex = playlists.findIndex(p => 
         p.id === playlistId && (p.userId === req.user.id || req.user.role === 'admin')
@@ -525,6 +549,7 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     if (playlistIndex === -1) {
         console.log(`❌ Playlist não encontrada: ${playlistId}`);
+        activeSyncs.delete(playlistId);
         return res.status(404).json({ error: 'Playlist não encontrada' });
     }
     
@@ -542,6 +567,7 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     if (deviceIds.length === 0) {
         console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
+        activeSyncs.delete(playlistId);
         return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
     }
     
@@ -586,16 +612,22 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
         serverTime: Date.now() // Timestamp de alta precisão
     };
     
-    broadcastToDevices(deviceIds, syncMessage);
+    const connectedCount = broadcastToDevices(deviceIds, syncMessage);
     
-    console.log(`✅ Playlist ${playlistId} sincronizada com alta precisão!`);
+    console.log(`✅ Playlist ${playlistId} sincronizada com alta precisão! Enviada para ${connectedCount} dispositivos`);
+    
+    // LIMPAR sincronização ativa após um tempo
+    setTimeout(() => {
+        activeSyncs.delete(playlistId);
+    }, 5000);
     
     res.json({ 
         message: `Playlist sincronizada para ${deviceIds.length} dispositivo(s)`,
         playlistId: playlistId,
         deviceIds: deviceIds,
         syncInfo: syncData,
-        serverTime: Date.now()
+        serverTime: Date.now(),
+        connectedCount: connectedCount
     });
 });
 
