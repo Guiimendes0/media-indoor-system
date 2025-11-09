@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1762424332333",
+    "name": "Meu Notebook",
+    "ip": "192.168.10.242",
+    "location": "MMG MATRIZ",
+    "playlistId": "1762442463816",
+    "userId": "1",
+    "authCode": "884071",
+    "status": "offline",
+    "lastSeen": "2025-11-07T14:19:02.975Z",
+    "createdAt": "2025-11-06T10:18:52.333Z",
+    "syncEnabled": true
+  },
+  {
+    "id": "1762426294676",
+    "name": "Notebook Douglas",
+    "ip": "192.168.10.201",
+    "location": "MMG MATRIZ",
+    "playlistId": "1762442463816",
+    "userId": "1",
+    "authCode": "717243",
+    "status": "inactive",
+    "lastSeen": "2025-11-06T20:45:03.475Z",
+    "createdAt": "2025-11-06T10:51:34.676Z",
+    "syncEnabled": true
+  },
+  {
+    "id": "1762519869307",
+    "name": "Celular Guilherme",
+    "ip": "192.168.10.156",
+    "location": "Movel",
+    "playlistId": null,
+    "userId": "1",
+    "authCode": "457325",
+    "status": "offline",
+    "lastSeen": "2025-11-07T17:25:54.103Z",
+    "createdAt": "2025-11-07T12:51:09.307Z"
+  },
+  {
+    "id": "1762558943368",
+    "name": "Celular Guilherme",
+    "ip": "192.168.3.3",
+    "location": "Casa",
+    "playlistId": null,
+    "userId": "1",
+    "authCode": "144187",
+    "status": "offline",
+    "lastSeen": "2025-11-07T23:43:51.446Z",
+    "createdAt": "2025-11-07T23:42:23.368Z"
+  }
+]

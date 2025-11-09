@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "username": "admin",
+    "password": "$2b$10$fpa8qEYmTTESKtE7fXRU2e/fbjjlbhjAeboDsNbOnY1FQ6MfAUppi",
+    "name": "Administrador",
+    "role": "admin",
+    "createdAt": "2025-11-06T10:13:48.701Z",
+    "lastLogin": "2025-11-07T23:36:58.439Z",
+    "token": "ijt5nk3xp5lmhphw5zb"
+  },
+  {
+    "id": "1762424957386",
+    "username": "Guiimendes0",
+    "password": "$2b$10$RwhWSf60UDKEwXeqJMl1cOcRO57xYIFjQZKkkUeQ0n7rRhNsR9e7S",
+    "name": "Guilherme B. Mendes",
+    "role": "user",
+    "createdAt": "2025-11-06T10:29:17.386Z",
+    "lastLogin": "2025-11-06T10:30:04.687Z",
+    "token": null
+  }
+]

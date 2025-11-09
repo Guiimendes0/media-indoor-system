@@ -1,0 +1,90 @@
+[
+  {
+    "id": "1762426686964",
+    "filename": "1762426686913-255218449.mp4",
+    "originalName": "dreamina-2025-10-06-9775-FaÃ§a um loop infinito com a imagem se mo....mp4",
+    "path": "/media/1762426686913-255218449.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 10,
+    "size": 7381719,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T10:58:06.964Z"
+  },
+  {
+    "id": "1762427111752",
+    "filename": "https://www.youtube.com/watch?v=AFfGBaa7hT0",
+    "originalName": "SBT AO VIVO",
+    "path": "https://www.youtube.com/watch?v=LLpNUqHVam8",
+    "type": "video",
+    "mediaType": "youtube",
+    "displayTime": 120,
+    "size": 0,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:05:11.752Z",
+    "isExternal": true
+  },
+  {
+    "id": "1762427260078",
+    "filename": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
+    "originalName": "Metrominas",
+    "path": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
+    "type": "video",
+    "mediaType": "youtube",
+    "displayTime": 174,
+    "size": 0,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:07:40.078Z",
+    "isExternal": true
+  },
+  {
+    "id": "1762427621931",
+    "filename": "1762427621928-976507937.png",
+    "originalName": "Captura de tela 2025-11-06 081235.png",
+    "path": "/media/1762427621928-976507937.png",
+    "type": "image",
+    "mediaType": "upload",
+    "displayTime": 30,
+    "size": 45568,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:13:41.931Z"
+  },
+  {
+    "id": "1762427655728",
+    "filename": "1762427655722-450210985.png",
+    "originalName": "Captura de tela 2025-08-13 161848.png",
+    "path": "/media/1762427655722-450210985.png",
+    "type": "image",
+    "mediaType": "upload",
+    "displayTime": 30,
+    "size": 64894,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:14:15.728Z"
+  },
+  {
+    "id": "1762429286105",
+    "filename": "https://impostometro.com.br/",
+    "originalName": "Impostometro",
+    "path": "https://impostometro.com.br/",
+    "type": "website",
+    "mediaType": "website",
+    "displayTime": 30,
+    "size": 0,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:41:26.105Z",
+    "isExternal": true
+  },
+  {
+    "id": "1762429396719",
+    "filename": "https://www.horariodebrasilia.org/",
+    "originalName": "Horario de Brasilia",
+    "path": "https://relogioonline.com.br/horario/brasilia/",
+    "type": "website",
+    "mediaType": "website",
+    "displayTime": 10,
+    "size": 0,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:43:16.719Z",
+    "isExternal": true
+  }
+]
