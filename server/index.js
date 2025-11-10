@@ -1173,6 +1173,25 @@ app.use('/', express.static('../index.html'));
 //     res.redirect('/admin');
 // });
 
+app.get("/", (req, res) => 
+   {
+    let filePath = path.join(__dirname, '..', req.url === '/' ? 'index.html' : req.url);
+    const ext = path.extname(filePath);
+
+    fs.readFile(filePath, (err, content) => {
+        if (err) {
+            res.writeHead(404);
+            res.end('Arquivo não encontrado');
+        } else {
+            let contentType = 'text/html';
+            if (ext === '.js') contentType = 'text/javascript';
+            if (ext === '.css') contentType = 'text/css';
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
+        }
+    });
+});
+
 // WebSocket server
 const server = app.listen(PORT, '0.0.0.0', async () => {
     await initializeAdminUser();
