@@ -1167,7 +1167,7 @@ app.post('/api/client/device', (req, res) => {
 app.use('/media', express.static('uploads/media'));
 app.use('/admin', express.static('../web-admin'));
 app.use('/client', express.static('../tv-client'));
-app.use('/', express.static('../index.html'));
+app.use('/', express.static('../landing-page'));
 // Rota inicial
 // app.get('/', (req, res) => {
 //     res.redirect('/admin');
