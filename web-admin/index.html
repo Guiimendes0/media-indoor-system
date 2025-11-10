@@ -1937,7 +1937,7 @@
         });
     }
 
-    // Função para fazer requisições autenticadas
+     // CORREÇÃO: Função para fazer requisições autenticadas
     async function authenticatedFetch(url, options = {}) {
         const defaultOptions = {
             headers: {
@@ -1959,10 +1959,20 @@
                 throw new Error('Sessão expirada');
             }
             
+            // CORREÇÃO: Verificar se a resposta é válida antes de tentar parsear JSON
+            if (!response.ok) {
+                // Se não for status 200-299, lançar erro
+                const errorText = await response.text();
+                console.error('❌ Erro na resposta:', response.status, errorText);
+                throw new Error(`Erro ${response.status}: ${errorText}`);
+            }
+            
             // Verificar se a resposta é JSON
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Resposta do servidor não é JSON');
+                console.warn('⚠️ Resposta não é JSON:', contentType);
+                // Se não for JSON, retornar a resposta como está
+                return response;
             }
             
             return response;
@@ -1970,7 +1980,7 @@
             if (error.message === 'Sessão expirada') {
                 throw error; // Já tratado acima
             }
-            console.error('Erro na requisição:', error);
+            console.error('❌ Erro na requisição:', error);
             throw new Error('Erro de conexão com o servidor');
         }
     }

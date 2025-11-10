@@ -758,7 +758,7 @@
             }
         }
 
-        // NOVA: Buscar informações de sincronização da playlist ao conectar
+        // CORREÇÃO: Buscar informações de sincronização da playlist ao conectar
         async fetchPlaylistSyncInfo() {
             if (!this.deviceInfo || !this.deviceInfo.playlistId) {
                 console.log('ℹ️ Dispositivo não tem playlist específica');
@@ -766,22 +766,23 @@
             }
             
             try {
-                const response = await fetch(`${this.serverUrl}/api/playlists/${this.deviceInfo.playlistId}/sync-info`, {
-                    headers: {
-                        'x-device-mac': this.deviceMac
-                    }
-                });
+                console.log(`🔍 Buscando informações de sincronização para playlist: ${this.deviceInfo.playlistId}`);
+                
+                // CORREÇÃO: Não enviar headers de autenticação para esta rota
+                const response = await fetch(`${this.serverUrl}/api/playlists/${this.deviceInfo.playlistId}/sync-info`);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('📊 Informações de sincronização da playlist:', data);
+                    console.log('📊 Informações de sincronização da playlist:', data.currentState);
                     return data.currentState;
+                } else {
+                    console.log('❌ Não foi possível obter informações de sincronização');
+                    return null;
                 }
             } catch (error) {
                 console.error('❌ Erro ao buscar informações de sincronização:', error);
+                return null;
             }
-            
-            return null;
         }
 
         showAuthScreen() {
