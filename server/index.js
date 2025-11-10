@@ -513,7 +513,7 @@ app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
 
 // ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
 
-// ATUALIZADA: Sincronização baseada no estado atual da playlist
+// ATUALIZADA: Sincronização que respeita o estado atual da playlist
 app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
     
@@ -530,15 +530,22 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     const playlist = playlists[playlistIndex];
     
-    // Buscar informações atuais de sincronização da playlist
-    const syncInfo = playlist.syncInfo || {
-        currentMediaIndex: 0,
-        mediaStartTime: new Date().toISOString(),
-        lastSync: new Date().toISOString()
-    };
+    // VERIFICAR: Se a playlist não tem syncInfo, criar um novo
+    if (!playlist.syncInfo) {
+        console.log('📝 Criando syncInfo inicial para playlist');
+        playlist.syncInfo = {
+            currentMediaIndex: 0,
+            mediaStartTime: new Date().toISOString(),
+            lastSync: new Date().toISOString(),
+            syncBy: req.user.id
+        };
+        saveData(DATA_FILES.playlists, playlists);
+    }
+    
+    const syncInfo = playlist.syncInfo;
     
     console.log(`📊 Sincronizando playlist: ${playlist.name}`);
-    console.log(`📈 Estado atual: Mídia ${syncInfo.currentMediaIndex}, Iniciada em: ${syncInfo.mediaStartTime}`);
+    console.log(`📈 Estado atual da playlist: Mídia ${syncInfo.currentMediaIndex}, Iniciada em: ${syncInfo.mediaStartTime}`);
     
     // Encontrar todos os dispositivos ativos que usam esta playlist
     const devicesUsingPlaylist = devices.filter(device => 
@@ -554,73 +561,82 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
         return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
     }
     
-    // Calcular tempo decorrido desde o início da mídia atual
+    // CALCULAR tempo decorrido desde o início da mídia atual
     const mediaStartTime = new Date(syncInfo.mediaStartTime);
     const now = new Date();
     const elapsedTime = now - mediaStartTime;
     
     console.log(`⏰ Tempo decorrido desde início da mídia: ${elapsedTime}ms`);
     
-    // Calcular informações de sincronização precisas
-    const syncData = calculateCurrentPlaylistState(playlistIndex, elapsedTime);
+    // CALCULAR estado atual baseado no tempo decorrido
+    const currentState = this.calculateCurrentPlaylistState(playlistIndex, elapsedTime);
     
-    console.log(`🎯 Dados de sincronização calculados:`, {
-        currentMediaIndex: syncData.currentMediaIndex,
-        elapsedTime: syncData.elapsedTime,
-        remainingTime: syncData.remainingTime,
-        totalMediaDuration: syncData.totalMediaDuration
+    console.log(`🎯 Estado calculado:`, {
+        currentMediaIndex: currentState.currentMediaIndex,
+        elapsedTime: currentState.elapsedTime,
+        remainingTime: currentState.remainingTime,
+        mediaDuration: currentState.mediaDuration
     });
     
-    // Atualizar informações de sincronização da playlist
+    // ATUALIZAR syncInfo com o estado calculado
     playlists[playlistIndex].syncInfo = {
-        currentMediaIndex: syncData.currentMediaIndex,
-        mediaStartTime: syncInfo.mediaStartTime, // Mantém o tempo original de início
-        lastSync: new Date().toISOString(),
+        currentMediaIndex: currentState.currentMediaIndex,
+        mediaStartTime: syncInfo.mediaStartTime, // Mantém o tempo original
+        lastSync: now.toISOString(),
         syncBy: req.user.id,
-        elapsedTime: syncData.elapsedTime,
-        remainingTime: syncData.remainingTime
+        calculatedElapsedTime: currentState.elapsedTime,
+        calculatedRemainingTime: currentState.remainingTime
     };
     
     saveData(DATA_FILES.playlists, playlists);
     
-    // Preparar mensagem de sincronização
+    // PREPARAR mensagem de sincronização
     const syncMessage = {
         type: 'sync_command',
         command: 'sync_playlist',
         playlistId: playlistId,
-        currentMediaIndex: syncData.currentMediaIndex,
-        mediaStartTime: syncInfo.mediaStartTime, // Tempo original de início
-        syncTime: now.toISOString(),
-        elapsedTime: syncData.elapsedTime,
-        remainingTime: syncData.remainingTime,
-        totalMediaDuration: syncData.totalMediaDuration,
+        currentMediaIndex: currentState.currentMediaIndex,
+        mediaStartTime: syncInfo.mediaStartTime,
+        elapsedTime: currentState.elapsedTime,
+        remainingTime: currentState.remainingTime,
+        mediaDuration: currentState.mediaDuration,
         timestamp: now.toISOString(),
         serverTime: Date.now()
     };
     
-    // Enviar para dispositivos
+    // ENVIAR para dispositivos
     const connectedCount = broadcastToDevices(deviceIds, syncMessage);
     
-    console.log(`✅ Playlist ${playlistId} sincronizada! Enviada para ${connectedCount} dispositivos`);
+    console.log(`✅ Playlist ${playlistId} sincronizada!`);
+    console.log(`📤 Enviado para ${connectedCount} dispositivos: Mídia ${currentState.currentMediaIndex}, ${Math.round(currentState.remainingTime/1000)}s restantes`);
     
     res.json({ 
         message: `Playlist sincronizada para ${deviceIds.length} dispositivo(s)`,
         playlistId: playlistId,
         deviceIds: deviceIds,
-        syncInfo: syncData,
+        syncInfo: currentState,
         connectedCount: connectedCount
     });
 });
 
-// NOVA: Função para calcular o estado atual da playlist baseado no tempo decorrido
-function calculateCurrentPlaylistState(playlistIndex, elapsedTime) {
+// CORRIGIDA: Função para calcular o estado atual da playlist
+function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
     const playlist = playlists[playlistIndex];
+    
+    if (!playlist.mediaIds || playlist.mediaIds.length === 0) {
+        return {
+            currentMediaIndex: 0,
+            elapsedTime: 0,
+            remainingTime: 0,
+            mediaDuration: 0
+        };
+    }
+    
     let accumulatedTime = 0;
     let currentMediaIndex = 0;
-    let currentElapsedTime = elapsedTime;
-    let remainingTime = 0;
+    let currentElapsedTime = totalElapsedTime;
     
-    // Encontrar a mídia atual baseada no tempo decorrido
+    // PERCORRER todas as mídias para encontrar a atual baseada no tempo total decorrido
     for (let i = 0; i < playlist.mediaIds.length; i++) {
         const mediaId = playlist.mediaIds[i];
         const mediaItem = media.find(m => m.id === mediaId);
@@ -628,37 +644,101 @@ function calculateCurrentPlaylistState(playlistIndex, elapsedTime) {
         if (mediaItem) {
             const mediaDuration = (mediaItem.displayTime || 10) * 1000;
             
-            // Se o tempo decorrido cai dentro desta mídia
+            // VERIFICAR se o tempo decorrido cai dentro desta mídia
             if (currentElapsedTime < mediaDuration) {
                 currentMediaIndex = i;
-                remainingTime = mediaDuration - currentElapsedTime;
                 break;
             } else {
-                // Subtrai o tempo desta mídia e continua para a próxima
+                // SUBTRAIR o tempo desta mídia e continuar
                 currentElapsedTime -= mediaDuration;
+            }
+        }
+        
+        // SE chegou ao final, reiniciar do início
+        if (i === playlist.mediaIds.length - 1) {
+            currentMediaIndex = 0;
+            currentElapsedTime = totalElapsedTime % this.calculateTotalPlaylistDuration(playlistIndex);
+            
+            // RECALCULAR para a mídia correta no loop reiniciado
+            for (let j = 0; j < playlist.mediaIds.length; j++) {
+                const mediaId = playlist.mediaIds[j];
+                const mediaItem = media.find(m => m.id === mediaId);
+                
+                if (mediaItem) {
+                    const mediaDuration = (mediaItem.displayTime || 10) * 1000;
+                    
+                    if (currentElapsedTime < mediaDuration) {
+                        currentMediaIndex = j;
+                        break;
+                    } else {
+                        currentElapsedTime -= mediaDuration;
+                    }
+                }
             }
         }
     }
     
-    // Se passou de todas as mídias, reinicia do início
-    if (currentMediaIndex >= playlist.mediaIds.length) {
-        currentMediaIndex = 0;
-        const firstMedia = media.find(m => m.id === playlist.mediaIds[0]);
-        remainingTime = (firstMedia?.displayTime || 10) * 1000;
-        currentElapsedTime = 0;
-    }
-    
-    const currentMedia = media.find(m => m.id === playlist.mediaIds[currentMediaIndex]);
-    const totalMediaDuration = (currentMedia?.displayTime || 10) * 1000;
+    // OBTER a mídia atual
+    const currentMediaId = playlist.mediaIds[currentMediaIndex];
+    const currentMedia = media.find(m => m.id === currentMediaId);
+    const mediaDuration = (currentMedia?.displayTime || 10) * 1000;
+    const remainingTime = Math.max(0, mediaDuration - currentElapsedTime);
     
     return {
         currentMediaIndex: currentMediaIndex,
         elapsedTime: currentElapsedTime,
         remainingTime: remainingTime,
-        totalMediaDuration: totalMediaDuration,
-        totalPlaylistDuration: calculatePlaylistDuration(playlistIndex)
+        mediaDuration: mediaDuration
     };
 }
+
+// NOVA: Função para calcular duração total da playlist
+function calculateTotalPlaylistDuration(playlistIndex) {
+    const playlist = playlists[playlistIndex];
+    let totalDuration = 0;
+    
+    playlist.mediaIds.forEach(mediaId => {
+        const mediaItem = media.find(m => m.id === mediaId);
+        if (mediaItem) {
+            totalDuration += (mediaItem.displayTime || 10) * 1000;
+        }
+    });
+    
+    return totalDuration;
+}
+
+// ATUALIZADA: Rota para obter informações da playlist (usada pelo client)
+app.get('/api/playlists/:id/sync-info', authenticateToken, (req, res) => {
+    const playlistId = req.params.id;
+    
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist) {
+        return res.status(404).json({ error: 'Playlist não encontrada' });
+    }
+    
+    // SE não tem syncInfo, criar um
+    if (!playlist.syncInfo) {
+        playlist.syncInfo = {
+            currentMediaIndex: 0,
+            mediaStartTime: new Date().toISOString(),
+            lastSync: new Date().toISOString()
+        };
+        saveData(DATA_FILES.playlists, playlists);
+    }
+    
+    // CALCULAR estado atual
+    const mediaStartTime = new Date(playlist.syncInfo.mediaStartTime);
+    const now = new Date();
+    const elapsedTime = now - mediaStartTime;
+    const currentState = calculateCurrentPlaylistState(playlists.indexOf(playlist), elapsedTime);
+    
+    res.json({
+        playlistId: playlistId,
+        syncInfo: playlist.syncInfo,
+        currentState: currentState,
+        calculatedAt: new Date().toISOString()
+    });
+});
 
 // ATUALIZADA: Quando uma playlist é criada/alterada, inicializar syncInfo
 function initializePlaylistSyncInfo(playlistIndex) {

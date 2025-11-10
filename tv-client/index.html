@@ -302,8 +302,6 @@
             this.currentMedia = null;
             this.ws = null;
             this.deviceId = null;
-            this.isSyncing = false;
-            this.mediaStartTime = null;
             this.playlistSyncInfo = null;
             
             // Elementos DOM
@@ -337,6 +335,7 @@
             this.isLoadingMedia = false;
             this.playbackLock = false;
             this.lastMediaUpdate = 0;
+            this.autoPlayAttempted = false;
             
             this.init();
         }
@@ -344,32 +343,22 @@
         async init() {
             console.log('🎬 Iniciando Media Indoor Player...');
             
-            // Gerar/recuperar MAC address
             await this.generateDeviceMac();
-            
-            // Verificar se já está autenticado
             await this.checkAuthenticationStatus();
-            
-            // Iniciar geração de códigos
             this.startCodeGeneration();
-            
-            // INICIAR verificação periódica de ativação
             this.startActivationPolling();
         }
 
-        // NOVO: Método para verificar periodicamente se o dispositivo foi ativado
         startActivationPolling() {
             console.log('🔄 Iniciando verificação periódica de ativação...');
             
             this.activationInterval = setInterval(async () => {
                 if (this.deviceId) {
-                    // Já está autenticado, parar verificação
                     clearInterval(this.activationInterval);
                     return;
                 }
                 
                 try {
-                    // Verificar se este MAC foi ativado
                     const response = await fetch(`${this.serverUrl}/api/client/check-activation`, {
                         method: 'POST',
                         headers: {
@@ -387,36 +376,30 @@
                             this.deviceId = result.device.id;
                             this.deviceInfo = result.device;
                             
-                            // Salvar autenticação
                             localStorage.setItem('deviceAuth', JSON.stringify({
                                 deviceId: this.deviceId,
                                 mac: this.deviceMac,
                                 activatedAt: new Date()
                             }));
                             
-                            // Parar geração de códigos
                             if (this.codeGenerationInterval) {
                                 clearInterval(this.codeGenerationInterval);
                                 this.codeGenerationInterval = null;
                             }
                             
-                            // Iniciar playback
                             this.startPlayback();
                         }
                     }
                 } catch (error) {
                     console.log('Verificação de ativação:', error.message);
                 }
-            }, 5000); // Verificar a cada 5 segundos
+            }, 5000);
         }
 
-        // Gerar MAC address único para o dispositivo
         async generateDeviceMac() {
-            // Tentar recuperar MAC salvo
             let savedMac = localStorage.getItem('deviceMac');
             
             if (!savedMac) {
-                // Gerar novo MAC (formato: XX:XX:XX:XX:XX:XX)
                 const macArray = new Uint8Array(6);
                 crypto.getRandomValues(macArray);
                 savedMac = Array.from(macArray)
@@ -431,10 +414,8 @@
             console.log(`📱 MAC do dispositivo: ${this.deviceMac}`);
         }
 
-        // No método checkAuthenticationStatus - CORRIGIDO
         async checkAuthenticationStatus() {
             try {
-                // Verificar se já está autenticado pelo localStorage
                 const savedAuth = localStorage.getItem('deviceAuth');
                 if (savedAuth) {
                     const authData = JSON.parse(savedAuth);
@@ -442,9 +423,7 @@
                     
                     console.log('🔍 Verificando autenticação salva:', authData);
                     
-                    // Tentar carregar informações do dispositivo
                     try {
-                        // ADICIONAR MAC no header para autorização
                         const response = await fetch(`${this.serverUrl}/api/client/device`, {
                             headers: {
                                 'x-device-mac': this.deviceMac
@@ -458,7 +437,6 @@
                             return;
                         } else if (response.status === 403) {
                             console.log('❌ Autenticação salva não é mais válida');
-                            // Limpar autenticação salva se não for mais válida
                             localStorage.removeItem('deviceAuth');
                         }
                     } catch (error) {
@@ -466,7 +444,6 @@
                     }
                 }
                 
-                // Se não está autenticado, mostrar tela de código
                 this.showAuthScreen();
                 
             } catch (error) {
@@ -475,34 +452,26 @@
             }
         }
 
-        // Iniciar geração de códigos
         startCodeGeneration() {
-            // Gerar primeiro código imediatamente
             this.generateNewAuthCode();
             
-            // Gerar novo código a cada 5 minutos
             this.codeGenerationInterval = setInterval(() => {
                 this.generateNewAuthCode();
-            }, 5 * 60 * 1000); // 5 minutos
+            }, 5 * 60 * 1000);
         }
 
-        // Gerar novo código de autenticação
         generateNewAuthCode() {
-            // Gerar código de 6 dígitos
             this.authCode = Math.floor(100000 + Math.random() * 900000).toString();
-            this.codeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
+            this.codeExpiry = new Date(Date.now() + 5 * 60 * 1000);
             
-            // Atualizar interface
             this.generatedAuthCode.textContent = this.authCode;
             this.updateCodeExpiryDisplay();
             
-            console.log(`🔐 Novo código gerado: ${this.authCode} (Válido até: ${this.codeExpiry.toLocaleTimeString()})`);
+            console.log(`🔐 Novo código gerado: ${this.authCode}`);
             
-            // Enviar código para o servidor
             this.registerAuthCodeWithServer();
         }
 
-        // Atualizar display de expiração do código
         updateCodeExpiryDisplay() {
             const now = new Date();
             const timeLeft = this.codeExpiry - now;
@@ -517,11 +486,9 @@
             
             this.codeExpiryElement.textContent = `Expira em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
             
-            // Atualizar a cada segundo
             setTimeout(() => this.updateCodeExpiryDisplay(), 1000);
         }
 
-        // Registrar código no servidor
         async registerAuthCodeWithServer() {
             try {
                 const response = await fetch(`${this.serverUrl}/api/devices/register-code`, {
@@ -546,7 +513,6 @@
             }
         }
 
-        // Conectar WebSocket
         connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}`;
@@ -560,7 +526,6 @@
                 this.wsStatusElement.textContent = 'Conectado';
                 this.wsStatusElement.style.color = '#27ae60';
                 
-                // Registrar dispositivo
                 if (this.deviceId) {
                     this.ws.send(JSON.stringify({
                         type: 'register',
@@ -586,7 +551,6 @@
                 this.wsStatusElement.textContent = 'Desconectado';
                 this.wsStatusElement.style.color = '#e74c3c';
                 
-                // Tentar reconectar após 5 segundos
                 setTimeout(() => {
                     this.connectWebSocket();
                 }, 5000);
@@ -626,73 +590,91 @@
             }
         }
 
-        // ATUALIZADA: Sincronização baseada no estado da playlist
+        // CORRIGIDA: Sincronização que respeita o estado da playlist
         handleSyncCommand(data) {
-            console.log('🔄 Processando sincronização:', data);
+            console.log('🔄 Processando sincronização da playlist:', data);
             
             this.clearTimers();
             this.stopAllMedia();
             
-            // Armazenar informações de sincronização da playlist
+            // ARMAZENAR informações de sincronização
             this.playlistSyncInfo = {
                 currentMediaIndex: data.currentMediaIndex || 0,
                 mediaStartTime: new Date(data.mediaStartTime),
                 elapsedTime: data.elapsedTime || 0,
                 remainingTime: data.remainingTime || 0,
-                totalMediaDuration: data.totalMediaDuration || 0
+                mediaDuration: data.mediaDuration || 0
             };
             
-            console.log('📊 Estado da playlist:', this.playlistSyncInfo);
+            console.log('📊 Estado da playlist recebido:', {
+                mediaIndex: this.playlistSyncInfo.currentMediaIndex,
+                elapsedTime: Math.round(this.playlistSyncInfo.elapsedTime / 1000) + 's',
+                remainingTime: Math.round(this.playlistSyncInfo.remainingTime / 1000) + 's',
+                mediaDuration: Math.round(this.playlistSyncInfo.mediaDuration / 1000) + 's'
+            });
             
-            // Se já temos a lista de mídias, aplicar sincronização
+            // VERIFICAR se temos mídias carregadas
             if (this.mediaList.length > 0) {
                 this.applyPlaylistSync();
             } else {
-                // Aguardar carregamento das mídias
                 console.log('⏳ Aguardando carregamento das mídias para aplicar sincronização...');
             }
+            
+            this.showSyncNotification();
         }
 
-        // NOVA: Aplicar sincronização baseada no estado da playlist
+        // CORRIGIDA: Aplicar sincronização
         applyPlaylistSync() {
             if (!this.playlistSyncInfo || this.mediaList.length === 0) {
                 console.log('❌ Informações de sincronização incompletas');
+                this.playNextMedia();
                 return;
             }
             
             const syncInfo = this.playlistSyncInfo;
             const targetMediaIndex = syncInfo.currentMediaIndex;
             
-            // Verificar se a mídia atual já é a correta
+            // VALIDAR índice da mídia
+            if (targetMediaIndex >= this.mediaList.length) {
+                console.log('❌ Índice de mídia inválido, usando índice 0');
+                this.currentMediaIndex = 0;
+                this.playNextMedia();
+                return;
+            }
+            
+            const targetMedia = this.mediaList[targetMediaIndex];
+            
+            console.log(`🎯 Sincronizando para mídia: ${targetMedia.originalName} (índice: ${targetMediaIndex})`);
+            
+            // VERIFICAR se já está na mídia correta
             if (this.currentMediaIndex === targetMediaIndex && this.currentMedia) {
-                console.log('🎯 Mesma mídia, atualizando tempo de execução');
-                this.updateCurrentMediaTiming(syncInfo.elapsedTime, syncInfo.remainingTime);
+                console.log('✅ Mesma mídia, atualizando tempo de execução');
+                this.updateCurrentMediaTiming(syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
             } else {
-                console.log('🔄 Mudando para mídia sincronizada:', targetMediaIndex);
-                this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime);
+                console.log('🔄 Mudando para mídia sincronizada');
+                this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
             }
         }
 
-        // NOVA: Atualizar timing da mídia atual (sem recarregar)
-        updateCurrentMediaTiming(elapsedTime, remainingTime) {
-            console.log(`⏰ Atualizando timing: ${elapsedTime}ms decorridos, ${remainingTime}ms restantes`);
+        // CORRIGIDA: Atualizar timing da mídia atual
+        updateCurrentMediaTiming(elapsedTime, remainingTime, mediaDuration) {
+            console.log(`⏰ Atualizando timing: ${Math.round(elapsedTime/1000)}s decorridos, ${Math.round(remainingTime/1000)}s restantes de ${Math.round(mediaDuration/1000)}s totais`);
             
-            // Atualizar contadores
             this.clearTimers();
             
             const remainingSeconds = Math.round(remainingTime / 1000);
-            const totalSeconds = Math.round((elapsedTime + remainingTime) / 1000);
+            const totalSeconds = Math.round(mediaDuration / 1000);
             
             this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
             this.startCountdown(remainingTime);
             
-            // Atualizar timeout para próxima mídia
+            // CONFIGURAR timeout para próxima mídia
             this.currentTimeout = setTimeout(() => {
                 console.log('⏰ Timer da mídia atual finalizado, indo para próxima...');
                 this.playNextMedia();
             }, remainingTime);
             
-            // Para vídeos, aplicar seek se necessário
+            // APLICAR seek em vídeos se necessário
             if (this.currentMedia && this.currentMedia.type === 'video' && !this.currentMedia.isExternal) {
                 this.applyVideoSeek(elapsedTime);
             }
@@ -700,8 +682,8 @@
             this.sendCurrentMedia();
         }
 
-        // NOVA: Reproduzir mídia específica com sincronização
-        playMediaWithSync(mediaIndex, elapsedTime, remainingTime) {
+        // CORRIGIDA: Reproduzir mídia específica com sincronização
+        playMediaWithSync(mediaIndex, elapsedTime, remainingTime, mediaDuration) {
             if (mediaIndex >= this.mediaList.length) {
                 console.log('❌ Índice de mídia inválido');
                 this.currentMediaIndex = 0;
@@ -713,19 +695,19 @@
             const media = this.mediaList[mediaIndex];
             
             console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}`);
-            console.log(`⏱️ ${elapsedTime}ms decorridos, ${remainingTime}ms restantes`);
+            console.log(`⏱️ ${Math.round(elapsedTime/1000)}s decorridos, ${Math.round(remainingTime/1000)}s restantes de ${Math.round(mediaDuration/1000)}s totais`);
             
             this.currentMedia = media;
             this.stopAllMedia();
             
-            const totalSeconds = Math.round((elapsedTime + remainingTime) / 1000);
             const remainingSeconds = Math.round(remainingTime / 1000);
+            const totalSeconds = Math.round(mediaDuration / 1000);
             
             this.currentMediaElement.textContent = media.originalName;
             this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
             this.debugInfo.textContent = `Sincronizado: ${media.originalName} (${remainingSeconds}s)`;
             
-            // Configurar timeout para próxima mídia
+            // CONFIGURAR timeout para próxima mídia
             this.clearTimers();
             this.currentTimeout = setTimeout(() => {
                 console.log('⏰ Timer da mídia sincronizada finalizado, indo para próxima...');
@@ -735,18 +717,16 @@
             this.startCountdown(remainingTime);
             this.sendCurrentMedia();
             
-            // Reproduzir mídia com seek se necessário
+            // REPRODUZIR mídia com seek
             this.playMediaByType(media, elapsedTime);
         }
 
-        // ATUALIZADA: Reproduzir mídia considerando tempo decorrido
+        // CORRIGIDA: Reproduzir mídia considerando tempo decorrido
         playMediaByType(media, elapsedTime = 0) {
             const totalDuration = (media.displayTime || 10) * 1000;
-            
-            // Para vídeos e YouTube, aplicar seek baseado no tempo decorrido
             const seekTime = elapsedTime > 0 ? elapsedTime : 0;
             
-            console.log(`🎬 Reproduzindo: ${media.originalName}, seek: ${seekTime}ms`);
+            console.log(`🎬 Reproduzindo: ${media.originalName}, seek: ${Math.round(seekTime/1000)}s`);
             
             switch(media.mediaType) {
                 case 'upload':
@@ -768,7 +748,6 @@
             }
         }
 
-        // NOVA: Aplicar seek em vídeo local
         applyVideoSeek(elapsedTime) {
             if (this.videoDisplay && this.videoDisplay.readyState >= 2) {
                 const seekSeconds = elapsedTime / 1000;
@@ -777,6 +756,32 @@
                     console.log(`⏩ Video seek aplicado: ${seekSeconds}s`);
                 }
             }
+        }
+
+        // NOVA: Buscar informações de sincronização da playlist ao conectar
+        async fetchPlaylistSyncInfo() {
+            if (!this.deviceInfo || !this.deviceInfo.playlistId) {
+                console.log('ℹ️ Dispositivo não tem playlist específica');
+                return null;
+            }
+            
+            try {
+                const response = await fetch(`${this.serverUrl}/api/playlists/${this.deviceInfo.playlistId}/sync-info`, {
+                    headers: {
+                        'x-device-mac': this.deviceMac
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 Informações de sincronização da playlist:', data);
+                    return data.currentState;
+                }
+            } catch (error) {
+                console.error('❌ Erro ao buscar informações de sincronização:', error);
+            }
+            
+            return null;
         }
 
         showAuthScreen() {
@@ -794,14 +799,12 @@
             this.authError.style.display = 'none';
             this.hideLoading();
             
-            // Parar geração de códigos quando autenticado
             if (this.codeGenerationInterval) {
                 clearInterval(this.codeGenerationInterval);
                 this.codeGenerationInterval = null;
             }
         }
 
-        // MODIFICAR: No método startPlayback, garantir que todas as inicializações acontecem
         async startPlayback() {
             console.log('🚀 Iniciando playback para dispositivo:', this.deviceInfo);
             
@@ -814,19 +817,27 @@
             this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
             this.deviceStatusElement.textContent = 'Autenticado';
             
-            // PARAR toda verificação de ativação
             if (this.activationInterval) {
                 clearInterval(this.activationInterval);
                 this.activationInterval = null;
             }
             
-            // PARAR geração de códigos
             if (this.codeGenerationInterval) {
                 clearInterval(this.codeGenerationInterval);
                 this.codeGenerationInterval = null;
             }
             
-            // Carregar mídias e conectar WebSocket
+            // PRIMEIRO buscar informações de sincronização da playlist
+            const playlistSyncInfo = await this.fetchPlaylistSyncInfo();
+            
+            if (playlistSyncInfo) {
+                console.log('🎯 Usando sincronização da playlist');
+                this.playlistSyncInfo = playlistSyncInfo;
+            } else {
+                console.log('ℹ️ Iniciando reprodução normal');
+            }
+            
+            // DEPOIS carregar mídias
             await this.loadMediaList();
             this.connectWebSocket();
         }
@@ -842,7 +853,6 @@
             this.stopAllMedia();
         }
 
-        // Funções de mídia (atualizadas com seek)
         playUploadedImage(media) {
             this.showLoading(`Carregando imagem: ${media.originalName}`);
             
@@ -864,29 +874,26 @@
         playUploadedVideo(media, seekTime = 0) {
             this.showLoading(`Carregando vídeo: ${media.originalName}`);
             
-            // Remover event listeners anteriores para evitar duplicação
-            this.videoDisplay.onloadeddata = null;
-            this.videoDisplay.onerror = null;
-            this.videoDisplay.onended = null;
-            
-            this.videoDisplay.onloadeddata = () => {
-                console.log('✅ Vídeo carregado');
+            // CORREÇÃO: Lidar com autoplay bloqueado
+            const handlePlay = () => {
+                console.log('✅ Vídeo carregado e pronto para reprodução');
                 this.hideLoading();
                 this.videoDisplay.classList.remove('hidden');
                 
-                // Aplicar seek se especificado
                 if (seekTime > 0) {
                     const seekSeconds = seekTime / 1000;
                     this.videoDisplay.currentTime = Math.min(seekSeconds, this.videoDisplay.duration - 1);
                     console.log(`⏩ Video seek para: ${seekSeconds}s`);
                 }
                 
+                // TENTAR reproduzir, mas não falhar se bloqueado
                 this.videoDisplay.play().catch(e => {
-                    console.error('Erro ao reproduzir vídeo:', e);
-                    setTimeout(() => this.playNextMedia(), 2000);
+                    console.log('⚠️ Autoplay bloqueado, aguardando interação ou reproduzindo sem áudio');
+                    // Não fazer nada - o vídeo pode ser reproduzido sem áudio
                 });
             };
             
+            this.videoDisplay.onloadeddata = handlePlay;
             this.videoDisplay.onerror = () => {
                 console.error('❌ Erro ao carregar vídeo');
                 this.hideLoading();
@@ -899,6 +906,8 @@
             };
             
             this.videoDisplay.src = `${this.serverUrl}${media.path}?t=${Date.now()}`;
+            this.videoDisplay.muted = true; // Mutar para evitar problemas de autoplay
+            this.videoDisplay.playsInline = true; // Importante para iOS
         }
 
         playYouTube(media, seekTime = 0) {
@@ -960,8 +969,10 @@
             this.youtubeDisplay.classList.add('hidden');
             this.webDisplay.classList.add('hidden');
             
-            this.videoDisplay.pause();
-            this.videoDisplay.currentTime = 0;
+            if (this.videoDisplay) {
+                this.videoDisplay.pause();
+                this.videoDisplay.currentTime = 0;
+            }
         }
 
         clearTimers() {
@@ -989,7 +1000,6 @@
             let timeLeft = duration / 1000;
             this.countdownTimer.textContent = Math.round(timeLeft);
             
-            // LIMPAR countdown anterior se existir
             if (this.currentCountdown) {
                 clearInterval(this.currentCountdown);
             }
@@ -1031,18 +1041,11 @@
                 
                 this.ws.send(JSON.stringify(mediaInfo));
                 this.lastMediaUpdate = now;
-                
-                console.log('📤 Enviando update de mídia:', {
-                    media: this.currentMedia.originalName,
-                    index: this.currentMediaIndex
-                });
             }
         }
 
-        // ATUALIZADA: Carregar mídias com verificação de sincronização
         async loadMediaList() {
             if (this.isLoadingMedia) {
-                console.log('⏸️  Carregamento de mídia já em andamento...');
                 return;
             }
             
@@ -1064,12 +1067,12 @@
                     if (this.mediaList.length > 0) {
                         this.hideLoading();
                         
-                        // Se temos informações de sincronização, aplicar
+                        // SE temos sincronização da playlist, aplicar
                         if (this.playlistSyncInfo) {
-                            console.log('🎯 Aplicando sincronização após carregamento de mídias');
+                            console.log('🎯 Aplicando sincronização da playlist após carregamento');
                             this.applyPlaylistSync();
                         } else {
-                            // Iniciar reprodução normal
+                            // INICIAR reprodução normal do início
                             this.currentMediaIndex = 0;
                             this.playNextMedia();
                         }
@@ -1087,10 +1090,8 @@
             }
         }
 
-        // ATUALIZADA: Reproduzir próxima mídia
         playNextMedia() {
             if (this.playbackLock) {
-                console.log('⏸️  Playback bloqueado, aguardando...');
                 return;
             }
             
@@ -1107,8 +1108,6 @@
             }
             
             const media = this.mediaList[this.currentMediaIndex];
-            const mediaDuration = (media.displayTime || 10) * 1000;
-            
             console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName}`);
             
             this.playMedia(media);
@@ -1116,7 +1115,6 @@
             this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
         }
 
-        // NOVA: Reproduzir mídia normalmente
         playMedia(media, isAnnouncement = false) {
             if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
                 console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
@@ -1128,16 +1126,17 @@
             this.playbackLock = true;
             
             this.currentMediaElement.textContent = media.originalName;
-            this.mediaTimeElement.textContent = `${media.displayTime}s`;
-            this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
             
             const displayTime = (media.displayTime || 10) * 1000;
+            const displaySeconds = Math.round(displayTime / 1000);
+            
+            this.mediaTimeElement.textContent = `${displaySeconds}s/${displaySeconds}s`;
+            this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
             
             this.mediaStartTime = new Date();
             
             this.startCountdown(displayTime);
             
-            // LIMPAR timeout anterior se existir
             if (this.currentTimeout) {
                 clearTimeout(this.currentTimeout);
             }
@@ -1151,7 +1150,6 @@
             }, displayTime);
             
             this.sendCurrentMedia();
-            
             this.playMediaByType(media, 0);
         }
 
@@ -1164,7 +1162,6 @@
             this.playMedia(data.media, true);
             
             setTimeout(() => {
-                // Após o anunciamento, voltar à programação normal
                 if (this.playlistSyncInfo) {
                     this.applyPlaylistSync();
                 } else {
@@ -1182,26 +1179,21 @@
             }
         }
         
-        // NOVO: Método para lidar com desconexão do dispositivo
         handleDeviceDisconnected(data) {
             console.log('🔌 Dispositivo desconectado pelo administrador');
             
-            // Limpar autenticação
             localStorage.removeItem('deviceAuth');
             this.deviceId = null;
             this.deviceInfo = null;
             this.playlistSyncInfo = null;
             
-            // Parar toda reprodução
             this.clearTimers();
             this.stopAllMedia();
             
-            // Reiniciar sistema de autenticação
             this.startCodeGeneration();
             this.startActivationPolling();
             this.showAuthScreen();
             
-            // Fechar WebSocket
             if (this.ws) {
                 this.ws.close();
             }
