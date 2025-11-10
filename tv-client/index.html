@@ -296,7 +296,6 @@
             this.currentMediaIndex = 0;
             this.mediaList = [];
             this.deviceInfo = null;
-            this.updateInterval = 30000;
             this.currentTimeout = null;
             this.currentCountdown = null;
             this.deviceMac = null;
@@ -305,11 +304,7 @@
             this.deviceId = null;
             this.isSyncing = false;
             this.mediaStartTime = null;
-            this.isPlaying = false;
-            this.reconnectAttempts = 0;
-            this.authCode = null;
-            this.codeExpiry = null;
-            this.codeGenerationInterval = null;
+            this.playlistSyncInfo = null;
             
             // Elementos DOM
             this.authScreen = document.getElementById('auth-screen');
@@ -338,14 +333,10 @@
             this.youtubeDisplay = document.getElementById('youtube-display');
             this.webDisplay = document.getElementById('web-display');
 
-            this.lastSyncTime = 0;
-            this.syncCooldown = 5000;
-            this.isProcessingSync = false;
-            
-            // NOVO: Controle de eventos duplicados
+            // Controles de estado
             this.isLoadingMedia = false;
             this.playbackLock = false;
-            this.mediaEndHandled = false;
+            this.lastMediaUpdate = 0;
             
             this.init();
         }
@@ -566,7 +557,6 @@
             
             this.ws.onopen = () => {
                 console.log('✅ WebSocket conectado com sucesso');
-                this.reconnectAttempts = 0;
                 this.wsStatusElement.textContent = 'Conectado';
                 this.wsStatusElement.style.color = '#27ae60';
                 
@@ -579,17 +569,6 @@
                         timestamp: Date.now()
                     }));
                 }
-                
-                // Heartbeat
-                this.heartbeatInterval = setInterval(() => {
-                    if (this.ws.readyState === WebSocket.OPEN && this.deviceId) {
-                        this.ws.send(JSON.stringify({
-                            type: 'ping',
-                            deviceId: this.deviceId,
-                            timestamp: Date.now()
-                        }));
-                    }
-                }, 25000);
             };
             
             this.ws.onmessage = (event) => {
@@ -607,17 +586,10 @@
                 this.wsStatusElement.textContent = 'Desconectado';
                 this.wsStatusElement.style.color = '#e74c3c';
                 
-                // LIMPAR interval do heartbeat
-                if (this.heartbeatInterval) {
-                    clearInterval(this.heartbeatInterval);
-                    this.heartbeatInterval = null;
-                }
-                
-                const reconnectDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+                // Tentar reconectar após 5 segundos
                 setTimeout(() => {
-                    this.reconnectAttempts++;
                     this.connectWebSocket();
-                }, reconnectDelay);
+                }, 5000);
             };
             
             this.ws.onerror = (error) => {
@@ -632,7 +604,7 @@
             
             switch(data.type) {
                 case 'sync_command':
-                    console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
+                    console.log('🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO', data);
                     this.handleSyncCommand(data);
                     break;
                 case 'announcement':
@@ -654,125 +626,157 @@
             }
         }
 
+        // ATUALIZADA: Sincronização baseada no estado da playlist
         handleSyncCommand(data) {
-            const now = Date.now();
-            
-            if (this.isProcessingSync || (now - this.lastSyncTime < this.syncCooldown)) {
-                console.log('⏸️  Sync ignorada - muito recente ou já em processamento');
-                return;
-            }
-            
-            console.log('🔄🔄🔄 COMANDO DE SINCRONIZAÇÃO RECEBIDO 🔄🔄🔄', data);
-            
-            this.isProcessingSync = true;
-            this.lastSyncTime = now;
+            console.log('🔄 Processando sincronização:', data);
             
             this.clearTimers();
             this.stopAllMedia();
             
-            this.syncData = {
+            // Armazenar informações de sincronização da playlist
+            this.playlistSyncInfo = {
                 currentMediaIndex: data.currentMediaIndex || 0,
                 mediaStartTime: new Date(data.mediaStartTime),
-                syncTime: new Date(data.syncTime),
-                totalPlaylistDuration: data.totalPlaylistDuration,
-                currentMediaDuration: data.currentMediaDuration,
-                remainingTime: data.remainingTime,
-                elapsedPlaylistTime: data.elapsedPlaylistTime,
-                serverTime: data.serverTime
+                elapsedTime: data.elapsedTime || 0,
+                remainingTime: data.remainingTime || 0,
+                totalMediaDuration: data.totalMediaDuration || 0
             };
             
-            console.log('🎯 Aplicando sincronização IMEDIATA:', this.syncData);
+            console.log('📊 Estado da playlist:', this.playlistSyncInfo);
             
-            this.applySync();
-            
-            setTimeout(() => {
-                this.isProcessingSync = false;
-            }, 1000);
-        }
-
-        applySync() {
-            console.log('🎯 Aplicando sincronização completa:', this.syncData);
-            
-            this.clearTimers();
-            this.stopAllMedia();
-            
-            this.currentMediaIndex = this.syncData.currentMediaIndex || 0;
-            this.mediaStartTime = new Date(this.syncData.mediaStartTime);
-            this.syncTime = new Date(this.syncData.syncTime);
-            this.totalPlaylistDuration = this.syncData.totalPlaylistDuration || 0;
-            
-            const now = Date.now();
-            const serverTime = this.syncData.serverTime || now;
-            const clientTime = now;
-            
-            const networkLatency = clientTime - serverTime;
-            console.log(`📡 Latência de rede: ${networkLatency}ms`);
-            
-            const adjustedNow = now - networkLatency;
-            const elapsedSinceSync = adjustedNow - this.syncTime.getTime();
-            
-            console.log(`⏰ Tempo desde sincronização (ajustado): ${elapsedSinceSync}ms`);
-            
-            let remainingTime = this.syncData.remainingTime || 0;
-            let currentMediaDuration = this.syncData.currentMediaDuration || 0;
-            
-            if (elapsedSinceSync > 0 && currentMediaDuration > 0) {
-                remainingTime = Math.max(0, currentMediaDuration - elapsedSinceSync);
-                console.log(`⏱️ Tempo restante ajustado: ${remainingTime}ms (${elapsedSinceSync}ms decorridos)`);
-            }
-            
-            console.log(`📊 Sincronização OTIMIZADA: Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes, Duração: ${currentMediaDuration}ms`);
-            
-            if (this.mediaList.length > 0 && this.currentMediaIndex < this.mediaList.length) {
-                const media = this.mediaList[this.currentMediaIndex];
-                this.playMediaWithExactSync(media, remainingTime, currentMediaDuration);
+            // Se já temos a lista de mídias, aplicar sincronização
+            if (this.mediaList.length > 0) {
+                this.applyPlaylistSync();
             } else {
-                console.log('❌ Índice de mídia inválido, reiniciando...');
-                this.currentMediaIndex = 0;
-                this.playNextMedia();
+                // Aguardar carregamento das mídias
+                console.log('⏳ Aguardando carregamento das mídias para aplicar sincronização...');
             }
-            
-            this.isSyncing = false;
         }
 
-        playMediaWithExactSync(media, remainingTime, mediaDuration) {
-            // NOVO: Verificar se já está reproduzindo esta mídia
-            if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
-                console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
+        // NOVA: Aplicar sincronização baseada no estado da playlist
+        applyPlaylistSync() {
+            if (!this.playlistSyncInfo || this.mediaList.length === 0) {
+                console.log('❌ Informações de sincronização incompletas');
                 return;
             }
+            
+            const syncInfo = this.playlistSyncInfo;
+            const targetMediaIndex = syncInfo.currentMediaIndex;
+            
+            // Verificar se a mídia atual já é a correta
+            if (this.currentMediaIndex === targetMediaIndex && this.currentMedia) {
+                console.log('🎯 Mesma mídia, atualizando tempo de execução');
+                this.updateCurrentMediaTiming(syncInfo.elapsedTime, syncInfo.remainingTime);
+            } else {
+                console.log('🔄 Mudando para mídia sincronizada:', targetMediaIndex);
+                this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime);
+            }
+        }
+
+        // NOVA: Atualizar timing da mídia atual (sem recarregar)
+        updateCurrentMediaTiming(elapsedTime, remainingTime) {
+            console.log(`⏰ Atualizando timing: ${elapsedTime}ms decorridos, ${remainingTime}ms restantes`);
+            
+            // Atualizar contadores
+            this.clearTimers();
+            
+            const remainingSeconds = Math.round(remainingTime / 1000);
+            const totalSeconds = Math.round((elapsedTime + remainingTime) / 1000);
+            
+            this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
+            this.startCountdown(remainingTime);
+            
+            // Atualizar timeout para próxima mídia
+            this.currentTimeout = setTimeout(() => {
+                console.log('⏰ Timer da mídia atual finalizado, indo para próxima...');
+                this.playNextMedia();
+            }, remainingTime);
+            
+            // Para vídeos, aplicar seek se necessário
+            if (this.currentMedia && this.currentMedia.type === 'video' && !this.currentMedia.isExternal) {
+                this.applyVideoSeek(elapsedTime);
+            }
+            
+            this.sendCurrentMedia();
+        }
+
+        // NOVA: Reproduzir mídia específica com sincronização
+        playMediaWithSync(mediaIndex, elapsedTime, remainingTime) {
+            if (mediaIndex >= this.mediaList.length) {
+                console.log('❌ Índice de mídia inválido');
+                this.currentMediaIndex = 0;
+                this.playNextMedia();
+                return;
+            }
+            
+            this.currentMediaIndex = mediaIndex;
+            const media = this.mediaList[mediaIndex];
+            
+            console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}`);
+            console.log(`⏱️ ${elapsedTime}ms decorridos, ${remainingTime}ms restantes`);
             
             this.currentMedia = media;
             this.stopAllMedia();
-            this.playbackLock = true;
-            this.mediaEndHandled = false;
             
+            const totalSeconds = Math.round((elapsedTime + remainingTime) / 1000);
             const remainingSeconds = Math.round(remainingTime / 1000);
-            const totalSeconds = Math.round(mediaDuration / 1000);
             
             this.currentMediaElement.textContent = media.originalName;
             this.mediaTimeElement.textContent = `${remainingSeconds}s/${totalSeconds}s`;
             this.debugInfo.textContent = `Sincronizado: ${media.originalName} (${remainingSeconds}s)`;
             
-            console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}, ${remainingSeconds}s restantes de ${totalSeconds}s totais`);
-            
-            // LIMPAR timeout anterior se existir
-            if (this.currentTimeout) {
-                clearTimeout(this.currentTimeout);
-                this.currentTimeout = null;
-            }
-            
+            // Configurar timeout para próxima mídia
+            this.clearTimers();
             this.currentTimeout = setTimeout(() => {
-                console.log('⏰ Timer da mídia atual finalizado, indo para próxima...');
-                this.playbackLock = false;
+                console.log('⏰ Timer da mídia sincronizada finalizado, indo para próxima...');
                 this.playNextMedia();
             }, remainingTime);
             
             this.startCountdown(remainingTime);
-            
             this.sendCurrentMedia();
             
-            this.playMediaByType(media, mediaDuration - remainingTime);
+            // Reproduzir mídia com seek se necessário
+            this.playMediaByType(media, elapsedTime);
+        }
+
+        // ATUALIZADA: Reproduzir mídia considerando tempo decorrido
+        playMediaByType(media, elapsedTime = 0) {
+            const totalDuration = (media.displayTime || 10) * 1000;
+            
+            // Para vídeos e YouTube, aplicar seek baseado no tempo decorrido
+            const seekTime = elapsedTime > 0 ? elapsedTime : 0;
+            
+            console.log(`🎬 Reproduzindo: ${media.originalName}, seek: ${seekTime}ms`);
+            
+            switch(media.mediaType) {
+                case 'upload':
+                    if (media.type === 'image') {
+                        this.playUploadedImage(media);
+                    } else {
+                        this.playUploadedVideo(media, seekTime);
+                    }
+                    break;
+                case 'youtube':
+                    this.playYouTube(media, seekTime);
+                    break;
+                case 'website':
+                    this.playWebsite(media);
+                    break;
+                default:
+                    console.warn('Tipo de mídia não suportado:', media.mediaType);
+                    setTimeout(() => this.playNextMedia(), 2000);
+            }
+        }
+
+        // NOVA: Aplicar seek em vídeo local
+        applyVideoSeek(elapsedTime) {
+            if (this.videoDisplay && this.videoDisplay.readyState >= 2) {
+                const seekSeconds = elapsedTime / 1000;
+                if (seekSeconds < this.videoDisplay.duration) {
+                    this.videoDisplay.currentTime = seekSeconds;
+                    console.log(`⏩ Video seek aplicado: ${seekSeconds}s`);
+                }
+            }
         }
 
         showAuthScreen() {
@@ -822,13 +826,10 @@
                 this.codeGenerationInterval = null;
             }
             
-            this.mediaStartTime = new Date();
-            
+            // Carregar mídias e conectar WebSocket
             await this.loadMediaList();
             this.connectWebSocket();
         }
-
-        // ... (outras funções permanecem as mesmas)
 
         showErrorScreen(message) {
             console.log('❌ Mostrando tela de erro:', message);
@@ -841,31 +842,7 @@
             this.stopAllMedia();
         }
 
-        // Funções de mídia (permanecem as mesmas)
-        playMediaByType(media, remainingTimeMs) {
-            const totalDuration = (media.displayTime || 10) * 1000;
-            const elapsedTime = totalDuration - remainingTimeMs;
-            
-            switch(media.mediaType) {
-                case 'upload':
-                    if (media.type === 'image') {
-                        this.playUploadedImage(media);
-                    } else {
-                        this.playUploadedVideo(media, elapsedTime);
-                    }
-                    break;
-                case 'youtube':
-                    this.playYouTube(media, elapsedTime);
-                    break;
-                case 'website':
-                    this.playWebsite(media);
-                    break;
-                default:
-                    console.warn('Tipo de mídia não suportado:', media.mediaType);
-                    setTimeout(() => this.playNextMedia(), 2000);
-            }
-        }
-
+        // Funções de mídia (atualizadas com seek)
         playUploadedImage(media) {
             this.showLoading(`Carregando imagem: ${media.originalName}`);
             
@@ -887,7 +864,7 @@
         playUploadedVideo(media, seekTime = 0) {
             this.showLoading(`Carregando vídeo: ${media.originalName}`);
             
-            // NOVO: Remover event listeners anteriores para evitar duplicação
+            // Remover event listeners anteriores para evitar duplicação
             this.videoDisplay.onloadeddata = null;
             this.videoDisplay.onerror = null;
             this.videoDisplay.onended = null;
@@ -897,6 +874,7 @@
                 this.hideLoading();
                 this.videoDisplay.classList.remove('hidden');
                 
+                // Aplicar seek se especificado
                 if (seekTime > 0) {
                     const seekSeconds = seekTime / 1000;
                     this.videoDisplay.currentTime = Math.min(seekSeconds, this.videoDisplay.duration - 1);
@@ -1038,31 +1016,16 @@
 
         sendCurrentMedia() {
             const now = Date.now();
-            if (now - (this.lastMediaUpdate || 0) < 10000) {
+            if (now - this.lastMediaUpdate < 10000) {
                 return;
             }
             
             if (this.ws && this.ws.readyState === WebSocket.OPEN && this.currentMedia) {
-                const mediaDuration = (this.currentMedia.displayTime || 10) * 1000;
-                
-                let elapsed = 0;
-                let remainingTime = mediaDuration;
-                
-                if (this.mediaStartTime) {
-                    elapsed = now - this.mediaStartTime.getTime();
-                    remainingTime = Math.max(0, mediaDuration - elapsed);
-                }
-                
                 const mediaInfo = {
                     type: 'current_media',
                     deviceId: this.deviceId,
                     media: this.currentMedia,
                     currentMediaIndex: this.currentMediaIndex,
-                    mediaStartTime: this.mediaStartTime ? this.mediaStartTime.toISOString() : new Date().toISOString(),
-                    syncTime: this.syncTime ? this.syncTime.toISOString() : null,
-                    remainingTime: remainingTime,
-                    mediaDuration: mediaDuration,
-                    elapsed: elapsed,
                     timestamp: new Date()
                 };
                 
@@ -1071,14 +1034,13 @@
                 
                 console.log('📤 Enviando update de mídia:', {
                     media: this.currentMedia.originalName,
-                    remainingTime: Math.round(remainingTime / 1000) + 's'
+                    index: this.currentMediaIndex
                 });
             }
         }
 
-        // ADICIONAR: Método para carregar mídias com autorização por MAC
-        async loadMediaList(forceRestart = false) {
-            // NOVO: Prevenir múltiplos carregamentos simultâneos
+        // ATUALIZADA: Carregar mídias com verificação de sincronização
+        async loadMediaList() {
             if (this.isLoadingMedia) {
                 console.log('⏸️  Carregamento de mídia já em andamento...');
                 return;
@@ -1096,20 +1058,19 @@
                 });
                 
                 if (response.ok) {
-                    const newMediaList = await response.json();
-                    const mediaChanged = JSON.stringify(newMediaList) !== JSON.stringify(this.mediaList);
-                    
-                    this.mediaList = newMediaList;
+                    this.mediaList = await response.json();
                     console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
                     
                     if (this.mediaList.length > 0) {
                         this.hideLoading();
                         
-                        if (forceRestart || mediaChanged || this.currentMediaIndex >= this.mediaList.length) {
+                        // Se temos informações de sincronização, aplicar
+                        if (this.playlistSyncInfo) {
+                            console.log('🎯 Aplicando sincronização após carregamento de mídias');
+                            this.applyPlaylistSync();
+                        } else {
+                            // Iniciar reprodução normal
                             this.currentMediaIndex = 0;
-                            this.mediaStartTime = new Date();
-                            this.playNextMedia();
-                        } else if (!this.isSyncing) {
                             this.playNextMedia();
                         }
                     } else {
@@ -1126,8 +1087,8 @@
             }
         }
 
+        // ATUALIZADA: Reproduzir próxima mídia
         playNextMedia() {
-            // NOVO: Prevenir execução múltipla
             if (this.playbackLock) {
                 console.log('⏸️  Playback bloqueado, aguardando...');
                 return;
@@ -1148,63 +1109,15 @@
             const media = this.mediaList[this.currentMediaIndex];
             const mediaDuration = (media.displayTime || 10) * 1000;
             
-            console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName} por ${mediaDuration}ms`);
+            console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName}`);
             
-            if (this.syncTime) {
-                const now = Date.now();
-                const syncElapsed = now - this.syncTime.getTime();
-                const playlistPosition = syncElapsed % this.totalPlaylistDuration;
-                
-                this.recalculateMediaIndexFromSync(playlistPosition);
-                
-                const mediaStartTime = this.calculateMediaStartTime(this.currentMediaIndex);
-                const mediaElapsed = now - mediaStartTime;
-                const remainingTime = Math.max(0, mediaDuration - mediaElapsed);
-                
-                console.log(`🔄 Recalculando sincronização: Posição ${playlistPosition}ms, Mídia ${this.currentMediaIndex}, ${remainingTime}ms restantes`);
-                
-                this.playMediaWithExactSync(media, remainingTime, mediaDuration);
-            } else {
-                this.playMedia(media);
-            }
+            this.playMedia(media);
             
             this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
         }
 
-        recalculateMediaIndexFromSync(playlistPosition) {
-            let accumulatedTime = 0;
-            
-            for (let i = 0; i < this.mediaList.length; i++) {
-                const media = this.mediaList[i];
-                const mediaDuration = (media.displayTime || 10) * 1000;
-                
-                if (playlistPosition < accumulatedTime + mediaDuration) {
-                    this.currentMediaIndex = i;
-                    console.log(`📊 Sincronização: Posição ${playlistPosition}ms → Mídia ${i}`);
-                    return;
-                }
-                
-                accumulatedTime += mediaDuration;
-            }
-            
-            this.currentMediaIndex = 0;
-        }
-
-        calculateMediaStartTime(mediaIndex) {
-            if (!this.syncTime) return Date.now();
-            
-            let accumulatedTime = 0;
-            
-            for (let i = 0; i < mediaIndex; i++) {
-                const media = this.mediaList[i];
-                accumulatedTime += (media.displayTime || 10) * 1000;
-            }
-            
-            return this.syncTime.getTime() + accumulatedTime;
-        }
-
+        // NOVA: Reproduzir mídia normalmente
         playMedia(media, isAnnouncement = false) {
-            // NOVO: Verificar se já está reproduzindo esta mídia
             if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
                 console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
                 return;
@@ -1213,7 +1126,6 @@
             this.currentMedia = media;
             this.stopAllMedia();
             this.playbackLock = true;
-            this.mediaEndHandled = false;
             
             this.currentMediaElement.textContent = media.originalName;
             this.mediaTimeElement.textContent = `${media.displayTime}s`;
@@ -1252,13 +1164,22 @@
             this.playMedia(data.media, true);
             
             setTimeout(() => {
-                this.loadMediaList(true);
+                // Após o anunciamento, voltar à programação normal
+                if (this.playlistSyncInfo) {
+                    this.applyPlaylistSync();
+                } else {
+                    this.loadMediaList();
+                }
             }, data.announcement.displayTime * 1000);
         }
         
         handleAnnouncementCancelled(data) {
             console.log('🛑 Anunciamento cancelado');
-            this.loadMediaList(true);
+            if (this.playlistSyncInfo) {
+                this.applyPlaylistSync();
+            } else {
+                this.loadMediaList();
+            }
         }
         
         // NOVO: Método para lidar com desconexão do dispositivo
@@ -1269,6 +1190,7 @@
             localStorage.removeItem('deviceAuth');
             this.deviceId = null;
             this.deviceInfo = null;
+            this.playlistSyncInfo = null;
             
             // Parar toda reprodução
             this.clearTimers();

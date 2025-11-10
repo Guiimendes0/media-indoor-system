@@ -511,37 +511,13 @@ app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
     });
 });
 
-// REMOVIDA: Rota de ativação por IP (substituída pelo sistema MAC)
-
 // ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
 
-// ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
-
-// ADICIONAR: Controle de sincronizações em andamento
-
-
+// ATUALIZADA: Sincronização baseada no estado atual da playlist
 app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
     
     console.log(`🔄 Recebida solicitação de sincronização para playlist: ${playlistId}`);
-    
-    // VERIFICAR se já existe uma sincronização ativa para esta playlist
-    if (activeSyncs.has(playlistId)) {
-        const lastSync = activeSyncs.get(playlistId);
-        const timeSinceLastSync = Date.now() - lastSync;
-        
-        // Se a última sincronização foi há menos de 2 segundos, ignorar
-        if (timeSinceLastSync < 2000) {
-            console.log(`⏸️  Sincronização ignorada - muito recente (${timeSinceLastSync}ms)`);
-            return res.status(429).json({ 
-                error: 'Sincronização muito recente', 
-                message: 'Aguarde antes de sincronizar novamente' 
-            });
-        }
-    }
-    
-    // REGISTRAR nova sincronização
-    activeSyncs.set(playlistId, Date.now());
     
     const playlistIndex = playlists.findIndex(p => 
         p.id === playlistId && (p.userId === req.user.id || req.user.role === 'admin')
@@ -549,12 +525,20 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     if (playlistIndex === -1) {
         console.log(`❌ Playlist não encontrada: ${playlistId}`);
-        activeSyncs.delete(playlistId);
         return res.status(404).json({ error: 'Playlist não encontrada' });
     }
     
-    const { currentMediaIndex = 0 } = req.body;
-    console.log(`📊 Sincronizando a partir da mídia índice: ${currentMediaIndex}`);
+    const playlist = playlists[playlistIndex];
+    
+    // Buscar informações atuais de sincronização da playlist
+    const syncInfo = playlist.syncInfo || {
+        currentMediaIndex: 0,
+        mediaStartTime: new Date().toISOString(),
+        lastSync: new Date().toISOString()
+    };
+    
+    console.log(`📊 Sincronizando playlist: ${playlist.name}`);
+    console.log(`📈 Estado atual: Mídia ${syncInfo.currentMediaIndex}, Iniciada em: ${syncInfo.mediaStartTime}`);
     
     // Encontrar todos os dispositivos ativos que usam esta playlist
     const devicesUsingPlaylist = devices.filter(device => 
@@ -567,69 +551,130 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     if (deviceIds.length === 0) {
         console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
-        activeSyncs.delete(playlistId);
         return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
     }
     
-    // SINCRONIZAÇÃO OTIMIZADA - TEMPO REAL
-    const syncTime = new Date().toISOString();
-    const syncData = calculateExactSyncData(playlistIndex, currentMediaIndex);
+    // Calcular tempo decorrido desde o início da mídia atual
+    const mediaStartTime = new Date(syncInfo.mediaStartTime);
+    const now = new Date();
+    const elapsedTime = now - mediaStartTime;
     
-    // Atualizar tempo de início para AGORA
-    syncData.mediaStartTime = syncTime;
-    syncData.syncTime = syncTime;
+    console.log(`⏰ Tempo decorrido desde início da mídia: ${elapsedTime}ms`);
     
-    console.log(`📈 Dados de sincronização otimizados:`, syncData);
+    // Calcular informações de sincronização precisas
+    const syncData = calculateCurrentPlaylistState(playlistIndex, elapsedTime);
+    
+    console.log(`🎯 Dados de sincronização calculados:`, {
+        currentMediaIndex: syncData.currentMediaIndex,
+        elapsedTime: syncData.elapsedTime,
+        remainingTime: syncData.remainingTime,
+        totalMediaDuration: syncData.totalMediaDuration
+    });
     
     // Atualizar informações de sincronização da playlist
     playlists[playlistIndex].syncInfo = {
-        currentMediaIndex: currentMediaIndex,
-        mediaStartTime: syncData.mediaStartTime,
-        syncTime: syncData.syncTime,
-        totalPlaylistDuration: syncData.totalPlaylistDuration,
+        currentMediaIndex: syncData.currentMediaIndex,
+        mediaStartTime: syncInfo.mediaStartTime, // Mantém o tempo original de início
         lastSync: new Date().toISOString(),
-        syncBy: req.user.id
+        syncBy: req.user.id,
+        elapsedTime: syncData.elapsedTime,
+        remainingTime: syncData.remainingTime
     };
     
     saveData(DATA_FILES.playlists, playlists);
     
-    // Broadcast OTIMIZADO - enviar imediatamente
-    console.log(`📤 Enviando sincronização para dispositivos: ${deviceIds.join(', ')}`);
-    
-    // Enviar com timestamp de alta precisão
+    // Preparar mensagem de sincronização
     const syncMessage = {
         type: 'sync_command',
         command: 'sync_playlist',
         playlistId: playlistId,
         currentMediaIndex: syncData.currentMediaIndex,
-        mediaStartTime: syncData.mediaStartTime,
-        syncTime: syncData.syncTime,
-        totalPlaylistDuration: syncData.totalPlaylistDuration,
-        currentMediaDuration: syncData.currentMediaDuration,
+        mediaStartTime: syncInfo.mediaStartTime, // Tempo original de início
+        syncTime: now.toISOString(),
+        elapsedTime: syncData.elapsedTime,
         remainingTime: syncData.remainingTime,
-        elapsedPlaylistTime: syncData.elapsedPlaylistTime,
-        timestamp: new Date().toISOString(),
-        serverTime: Date.now() // Timestamp de alta precisão
+        totalMediaDuration: syncData.totalMediaDuration,
+        timestamp: now.toISOString(),
+        serverTime: Date.now()
     };
     
+    // Enviar para dispositivos
     const connectedCount = broadcastToDevices(deviceIds, syncMessage);
     
-    console.log(`✅ Playlist ${playlistId} sincronizada com alta precisão! Enviada para ${connectedCount} dispositivos`);
-    
-    // LIMPAR sincronização ativa após um tempo
-    setTimeout(() => {
-        activeSyncs.delete(playlistId);
-    }, 5000);
+    console.log(`✅ Playlist ${playlistId} sincronizada! Enviada para ${connectedCount} dispositivos`);
     
     res.json({ 
         message: `Playlist sincronizada para ${deviceIds.length} dispositivo(s)`,
         playlistId: playlistId,
         deviceIds: deviceIds,
         syncInfo: syncData,
-        serverTime: Date.now(),
         connectedCount: connectedCount
     });
 });
+
+// NOVA: Função para calcular o estado atual da playlist baseado no tempo decorrido
+function calculateCurrentPlaylistState(playlistIndex, elapsedTime) {
+    const playlist = playlists[playlistIndex];
+    let accumulatedTime = 0;
+    let currentMediaIndex = 0;
+    let currentElapsedTime = elapsedTime;
+    let remainingTime = 0;
+    
+    // Encontrar a mídia atual baseada no tempo decorrido
+    for (let i = 0; i < playlist.mediaIds.length; i++) {
+        const mediaId = playlist.mediaIds[i];
+        const mediaItem = media.find(m => m.id === mediaId);
+        
+        if (mediaItem) {
+            const mediaDuration = (mediaItem.displayTime || 10) * 1000;
+            
+            // Se o tempo decorrido cai dentro desta mídia
+            if (currentElapsedTime < mediaDuration) {
+                currentMediaIndex = i;
+                remainingTime = mediaDuration - currentElapsedTime;
+                break;
+            } else {
+                // Subtrai o tempo desta mídia e continua para a próxima
+                currentElapsedTime -= mediaDuration;
+            }
+        }
+    }
+    
+    // Se passou de todas as mídias, reinicia do início
+    if (currentMediaIndex >= playlist.mediaIds.length) {
+        currentMediaIndex = 0;
+        const firstMedia = media.find(m => m.id === playlist.mediaIds[0]);
+        remainingTime = (firstMedia?.displayTime || 10) * 1000;
+        currentElapsedTime = 0;
+    }
+    
+    const currentMedia = media.find(m => m.id === playlist.mediaIds[currentMediaIndex]);
+    const totalMediaDuration = (currentMedia?.displayTime || 10) * 1000;
+    
+    return {
+        currentMediaIndex: currentMediaIndex,
+        elapsedTime: currentElapsedTime,
+        remainingTime: remainingTime,
+        totalMediaDuration: totalMediaDuration,
+        totalPlaylistDuration: calculatePlaylistDuration(playlistIndex)
+    };
+}
+
+// ATUALIZADA: Quando uma playlist é criada/alterada, inicializar syncInfo
+function initializePlaylistSyncInfo(playlistIndex) {
+    const playlist = playlists[playlistIndex];
+    
+    if (!playlist.syncInfo) {
+        playlist.syncInfo = {
+            currentMediaIndex: 0,
+            mediaStartTime: new Date().toISOString(),
+            lastSync: new Date().toISOString(),
+            elapsedTime: 0,
+            remainingTime: (media.find(m => m.id === playlist.mediaIds[0])?.displayTime || 10) * 1000
+        };
+    }
+}
+
 
 // ==================== ROTAS DE MÍDIAS ====================
 
@@ -784,6 +829,7 @@ app.get('/api/playlists', authenticateToken, (req, res) => {
     res.json(userPlaylists);
 });
 
+// ATUALIZAR as rotas de playlist para inicializar syncInfo
 app.post('/api/playlists', authenticateToken, (req, res) => {
     const { name, mediaIds, schedule, mediaOrder = [] } = req.body;
     
@@ -795,10 +841,18 @@ app.post('/api/playlists', authenticateToken, (req, res) => {
         id: Date.now().toString(),
         name,
         mediaIds: validMediaIds,
-        mediaOrder: mediaOrder, // Ordem específica da playlist
+        mediaOrder: mediaOrder,
         schedule: schedule || {},
         userId: req.user.id,
-        createdAt: new Date()
+        createdAt: new Date(),
+        syncInfo: {
+            currentMediaIndex: 0,
+            mediaStartTime: new Date().toISOString(),
+            lastSync: new Date().toISOString(),
+            elapsedTime: 0,
+            remainingTime: validMediaIds.length > 0 ? 
+                (media.find(m => m.id === validMediaIds[0])?.displayTime || 10) * 1000 : 0
+        }
     };
     
     playlists.push(playlist);
@@ -822,12 +876,24 @@ app.put('/api/playlists/:id', authenticateToken, (req, res) => {
     const userMediaIds = media.filter(m => m.userId === req.user.id).map(m => m.id);
     const validMediaIds = mediaIds ? mediaIds.filter(id => userMediaIds.includes(id)) : playlists[playlistIndex].mediaIds;
     
+    // Manter o syncInfo existente ou criar novo
+    const existingSyncInfo = playlists[playlistIndex].syncInfo;
+    const newSyncInfo = existingSyncInfo || {
+        currentMediaIndex: 0,
+        mediaStartTime: new Date().toISOString(),
+        lastSync: new Date().toISOString(),
+        elapsedTime: 0,
+        remainingTime: validMediaIds.length > 0 ? 
+            (media.find(m => m.id === validMediaIds[0])?.displayTime || 10) * 1000 : 0
+    };
+    
     playlists[playlistIndex] = {
         ...playlists[playlistIndex],
         name: name || playlists[playlistIndex].name,
         mediaIds: validMediaIds,
         mediaOrder: mediaOrder || playlists[playlistIndex].mediaOrder,
-        schedule: schedule || playlists[playlistIndex].schedule
+        schedule: schedule || playlists[playlistIndex].schedule,
+        syncInfo: newSyncInfo
     };
     
     saveData(DATA_FILES.playlists, playlists);
