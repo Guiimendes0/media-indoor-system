@@ -682,16 +682,15 @@
         // CORREÇÃO: Reproduzir mídia específica com sincronização
         playMediaWithSync(mediaIndex, elapsedTime, remainingTime, mediaDuration) {
             if (mediaIndex >= this.mediaList.length) {
-                console.log('❌ Índice de mídia inválido');
-                this.currentMediaIndex = 0;
-                this.playNextMedia();
-                return;
+                console.log('❌ Índice de mídia inválido, usando índice 0');
+                mediaIndex = 0;
             }
             
+            // CORREÇÃO: Atualizar o índice atual para a mídia sincronizada
             this.currentMediaIndex = mediaIndex;
             const media = this.mediaList[mediaIndex];
             
-            console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName}`);
+            console.log(`🎬 Reproduzindo mídia sincronizada: ${media.originalName} (índice: ${mediaIndex})`);
             console.log(`⏱️ ${Math.round(elapsedTime/1000)}s decorridos, ${Math.round(remainingTime/1000)}s restantes de ${Math.round(mediaDuration/1000)}s totais`);
             
             this.currentMedia = media;
@@ -708,6 +707,11 @@
             this.clearTimers();
             this.currentTimeout = setTimeout(() => {
                 console.log('⏰ Timer da mídia sincronizada finalizado, indo para próxima...');
+                
+                // CORREÇÃO: Calcular próximo índice corretamente
+                const nextIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
+                console.log(`📊 Próximo índice após sincronização: ${nextIndex}`);
+                this.currentMediaIndex = nextIndex;
                 this.playNextMedia();
             }, remainingTime);
             
@@ -716,6 +720,9 @@
             
             // REPRODUZIR mídia com seek
             this.playMediaByType(media, elapsedTime);
+            
+            // DEBUG: Log do estado após sincronização
+            console.log(`🔍 DEBUG SYNCMEDIA: Índice definido: ${this.currentMediaIndex}, Próxima mídia será: ${(this.currentMediaIndex + 1) % this.mediaList.length}`);
         }
 
         // NOVO: Método para debug - verificar estado da sincronização
@@ -1053,6 +1060,18 @@
             }
         }
 
+ // NOVO: Método para verificar e corrigir estado do índice
+        validateMediaIndex() {
+            if (this.currentMediaIndex >= this.mediaList.length) {
+                console.warn('⚠️ Índice de mídia inválido, corrigindo para 0');
+                this.currentMediaIndex = 0;
+            }
+            
+            console.log(`🔍 VALIDAÇÃO: Índice atual: ${this.currentMediaIndex}, Total de mídias: ${this.mediaList.length}`);
+            return this.currentMediaIndex;
+        }
+
+        // ATUALIZAR: Carregar mídias com validação de índice
         async loadMediaList() {
             if (this.isLoadingMedia) {
                 return;
@@ -1076,13 +1095,16 @@
                     if (this.mediaList.length > 0) {
                         this.hideLoading();
                         
+                        // CORREÇÃO: Validar índice antes de usar
+                        this.validateMediaIndex();
+                        
                         // SE temos sincronização da playlist, aplicar
                         if (this.playlistSyncInfo) {
                             console.log('🎯 Aplicando sincronização da playlist após carregamento');
                             this.applyPlaylistSync();
                         } else {
-                            // INICIAR reprodução normal do início
-                            this.currentMediaIndex = 0;
+                            // CORREÇÃO: Iniciar reprodução com índice validado
+                            console.log(`🎬 Iniciando reprodução normal do índice: ${this.currentMediaIndex}`);
                             this.playNextMedia();
                         }
                     } else {
@@ -1099,8 +1121,10 @@
             }
         }
 
+        // CORREÇÃO: Reproduzir próxima mídia com controle correto de índice
         playNextMedia() {
             if (this.playbackLock) {
+                console.log('⏸️  Playback bloqueado, aguardando...');
                 return;
             }
             
@@ -1111,19 +1135,24 @@
             
             this.clearTimers();
             
+            // CORREÇÃO: Verificar se chegou ao final da playlist
             if (this.currentMediaIndex >= this.mediaList.length) {
                 this.currentMediaIndex = 0;
-                console.log('🔄 Fim da playlist, reiniciando...');
+                console.log('🔄 Fim da playlist, reiniciando do índice 0...');
             }
             
             const media = this.mediaList[this.currentMediaIndex];
             console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName}`);
             
+            // CORREÇÃO: Reproduzir a mídia atual ANTES de incrementar o índice
             this.playMedia(media);
             
+            // CORREÇÃO: Incrementar índice APÓS reproduzir a mídia atual
             this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
+            console.log(`📊 Próximo índice será: ${this.currentMediaIndex}`);
         }
 
+        // CORREÇÃO: Reproduzir mídia normalmente
         playMedia(media, isAnnouncement = false) {
             if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
                 console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
@@ -1160,6 +1189,9 @@
             
             this.sendCurrentMedia();
             this.playMediaByType(media, 0);
+            
+            // DEBUG: Log do estado atual
+            console.log(`🔍 DEBUG PLAYMEDIA: Índice atual: ${this.currentMediaIndex}, Mídia: ${media.originalName}`);
         }
 
         handleAnnouncement(data) {
