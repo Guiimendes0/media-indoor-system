@@ -1167,11 +1167,11 @@ app.post('/api/client/device', (req, res) => {
 app.use('/media', express.static('uploads/media'));
 app.use('/admin', express.static('../web-admin'));
 app.use('/client', express.static('../tv-client'));
-
+app.use('/', express.static('../index.html'));
 // Rota inicial
-app.get('/', (req, res) => {
-    res.redirect('/admin');
-});
+// app.get('/', (req, res) => {
+//     res.redirect('/admin');
+// });
 
 // WebSocket server
 const server = app.listen(PORT, '0.0.0.0', async () => {
