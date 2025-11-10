@@ -623,7 +623,7 @@
             this.showSyncNotification();
         }
 
-        // CORRIGIDA: Aplicar sincronização
+         // CORREÇÃO: Aplicar sincronização
         applyPlaylistSync() {
             if (!this.playlistSyncInfo || this.mediaList.length === 0) {
                 console.log('❌ Informações de sincronização incompletas');
@@ -645,15 +645,12 @@
             const targetMedia = this.mediaList[targetMediaIndex];
             
             console.log(`🎯 Sincronizando para mídia: ${targetMedia.originalName} (índice: ${targetMediaIndex})`);
+            console.log(`⏱️ ${Math.round(syncInfo.elapsedTime/1000)}s decorridos, ${Math.round(syncInfo.remainingTime/1000)}s restantes`);
             
-            // VERIFICAR se já está na mídia correta
-            if (this.currentMediaIndex === targetMediaIndex && this.currentMedia) {
-                console.log('✅ Mesma mídia, atualizando tempo de execução');
-                this.updateCurrentMediaTiming(syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
-            } else {
-                console.log('🔄 Mudando para mídia sincronizada');
-                this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
-            }
+            // SEMPRE trocar para a mídia especificada pela playlist
+            // Não verificar se já está na mesma mídia - a playlist é a verdade absoluta
+            console.log('🔄 Forçando mudança para mídia da playlist');
+            this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
         }
 
         // CORRIGIDA: Atualizar timing da mídia atual
@@ -682,7 +679,7 @@
             this.sendCurrentMedia();
         }
 
-        // CORRIGIDA: Reproduzir mídia específica com sincronização
+        // CORREÇÃO: Reproduzir mídia específica com sincronização
         playMediaWithSync(mediaIndex, elapsedTime, remainingTime, mediaDuration) {
             if (mediaIndex >= this.mediaList.length) {
                 console.log('❌ Índice de mídia inválido');
@@ -719,6 +716,17 @@
             
             // REPRODUZIR mídia com seek
             this.playMediaByType(media, elapsedTime);
+        }
+
+        // NOVO: Método para debug - verificar estado da sincronização
+        debugSyncState() {
+            console.log('🐛 DEBUG - Estado da Sincronização:');
+            console.log('📊 Playlist Sync Info:', this.playlistSyncInfo);
+            console.log('🎬 Mídia Atual:', this.currentMedia?.originalName);
+            console.log('📈 Índice Atual:', this.currentMediaIndex);
+            console.log('📋 Total de Mídias:', this.mediaList.length);
+            console.log('⏰ Timeout Ativo:', !!this.currentTimeout);
+            console.log('🔒 Playback Lock:', this.playbackLock);
         }
 
         // CORRIGIDA: Reproduzir mídia considerando tempo decorrido

@@ -619,7 +619,7 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     });
 });
 
-// CORREÇÃO: Função para calcular o estado atual da playlist (sem 'this')
+// CORREÇÃO COMPLETA: Função para calcular o estado atual da playlist
 function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
     const playlist = playlists[playlistIndex];
     
@@ -632,11 +632,21 @@ function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
         };
     }
     
+    console.log(`🔍 Calculando estado para playlist com ${playlist.mediaIds.length} mídias, tempo decorrido: ${totalElapsedTime}ms`);
+    
+    // CALCULAR duração total da playlist
+    const totalPlaylistDuration = calculateTotalPlaylistDuration(playlistIndex);
+    console.log(`📊 Duração total da playlist: ${totalPlaylistDuration}ms`);
+    
+    // SE o tempo decorrido é maior que a duração total, usar módulo para reiniciar
+    const effectiveElapsedTime = totalElapsedTime % totalPlaylistDuration;
+    console.log(`⏰ Tempo efetivo decorrido: ${effectiveElapsedTime}ms`);
+    
     let accumulatedTime = 0;
     let currentMediaIndex = 0;
-    let currentElapsedTime = totalElapsedTime;
+    let currentElapsedTime = effectiveElapsedTime;
     
-    // PERCORRER todas as mídias para encontrar a atual baseada no tempo total decorrido
+    // PERCORRER mídias para encontrar a atual
     for (let i = 0; i < playlist.mediaIds.length; i++) {
         const mediaId = playlist.mediaIds[i];
         const mediaItem = media.find(m => m.id === mediaId);
@@ -644,38 +654,17 @@ function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
         if (mediaItem) {
             const mediaDuration = (mediaItem.displayTime || 10) * 1000;
             
-            // VERIFICAR se o tempo decorrido cai dentro desta mídia
-            if (currentElapsedTime < mediaDuration) {
-                currentMediaIndex = i;
-                break;
-            } else {
-                // SUBTRAIR o tempo desta mídia e continuar
-                currentElapsedTime -= mediaDuration;
-            }
-        }
-        
-        // SE chegou ao final, reiniciar do início
-        if (i === playlist.mediaIds.length - 1) {
-            currentMediaIndex = 0;
-            // CORREÇÃO: Usar calculateTotalPlaylistDuration diretamente
-            currentElapsedTime = totalElapsedTime % calculateTotalPlaylistDuration(playlistIndex);
+            console.log(`🎬 Mídia ${i}: ${mediaItem.originalName}, Duração: ${mediaDuration}ms, Acumulado: ${accumulatedTime}ms`);
             
-            // RECALCULAR para a mídia correta no loop reiniciado
-            for (let j = 0; j < playlist.mediaIds.length; j++) {
-                const mediaId = playlist.mediaIds[j];
-                const mediaItem = media.find(m => m.id === mediaId);
-                
-                if (mediaItem) {
-                    const mediaDuration = (mediaItem.displayTime || 10) * 1000;
-                    
-                    if (currentElapsedTime < mediaDuration) {
-                        currentMediaIndex = j;
-                        break;
-                    } else {
-                        currentElapsedTime -= mediaDuration;
-                    }
-                }
+            // VERIFICAR se o tempo efetivo cai dentro desta mídia
+            if (effectiveElapsedTime < accumulatedTime + mediaDuration) {
+                currentMediaIndex = i;
+                currentElapsedTime = effectiveElapsedTime - accumulatedTime;
+                console.log(`✅ Mídia atual encontrada: índice ${i}, tempo na mídia: ${currentElapsedTime}ms`);
+                break;
             }
+            
+            accumulatedTime += mediaDuration;
         }
     }
     
@@ -684,6 +673,8 @@ function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
     const currentMedia = media.find(m => m.id === currentMediaId);
     const mediaDuration = (currentMedia?.displayTime || 10) * 1000;
     const remainingTime = Math.max(0, mediaDuration - currentElapsedTime);
+    
+    console.log(`🎯 Resultado final: Mídia ${currentMediaIndex} (${currentMedia?.originalName}), ${Math.round(currentElapsedTime/1000)}s decorridos, ${Math.round(remainingTime/1000)}s restantes`);
     
     return {
         currentMediaIndex: currentMediaIndex,
