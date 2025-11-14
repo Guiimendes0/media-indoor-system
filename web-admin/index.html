@@ -822,16 +822,49 @@
                     <label for="password">Senha</label>
                     <input type="password" id="password" required placeholder="Digite sua senha">
                 </div>
-                <button type="submit" class="login-btn">🔐 Entrar</button>
+                <button type="submit" class="login-btn">Entrar</button>
+                <!-- No login-form, após o botão de login -->
+                <div style="margin-top: 15px; text-align: center;">
+                    <button type="button" class="btn btn-link" onclick="openResetPasswordModal()" 
+                            style="background: none; border: none; color: #3498db; cursor: pointer; text-decoration: underline;">
+                        Esqueci minha senha
+                    </button>
+                </div>
             </form>
         </div>
     </div>
-
+<!-- Adicionar este modal após o modal de login -->
+<div id="resetPasswordModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Redefinir Senha</h2>
+            <button class="close-btn" onclick="closeModal('resetPasswordModal')">×</button>
+        </div>
+        <form id="resetPasswordForm">
+            <div class="form-group">
+                <label for="resetUsername">Usuário</label>
+                <input type="text" id="resetUsername" class="form-control" required placeholder="Digite seu usuário">
+            </div>
+            <div class="form-group">
+                <label for="resetNewPassword">Nova Senha</label>
+                <input type="password" id="resetNewPassword" class="form-control" required placeholder="Digite a nova senha">
+            </div>
+            <div class="form-group">
+                <label for="resetConfirmPassword">Confirmar Nova Senha</label>
+                <input type="password" id="resetConfirmPassword" class="form-control" required placeholder="Confirme a nova senha">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button type="submit" class="btn btn-warning">Redefinir Senha</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal('resetPasswordModal')">❌ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
     <!-- Sistema Principal -->
     <div class="container hidden" id="main-system">
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>🎬 Media Indoor</h2>
+                <h2>Pantaneira Media Indoor</h2>
                 <p>Sistema de Gerenciamento</p>
             </div>
             
@@ -841,13 +874,13 @@
             </div>
             
             <ul class="sidebar-menu">
-                <li class="active" data-tab="dashboard">📊 Dashboard</li>
-                <li data-tab="devices">📺 Dispositivos</li>
-                <li data-tab="media">🖼️ Mídias</li>
-                <li data-tab="playlists">📋 Playlists</li>
-                <li data-tab="announcements">📢 Anunciamentos</li>
-                <li data-tab="users" id="users-tab" class="hidden">👥 Usuários</li>
-                <li data-tab="backup">💾 Backup</li>
+                <li class="active" data-tab="dashboard">Dashboard</li>
+                <li data-tab="devices">Dispositivos</li>
+                <li data-tab="media">Mídias</li>
+                <li data-tab="playlists">Playlists</li>
+                <li data-tab="announcements">Anunciamentos</li>
+                <li data-tab="users" id="users-tab" class="hidden">Usuários</li>
+                <li data-tab="backup">Backup</li>
             </ul>
         </div>
         
@@ -857,10 +890,10 @@
                 <h1 id="page-title">Dashboard</h1>
                 <div class="header-actions">
                     <button class="refresh-btn" onclick="loadAllData()">
-                        🔄 Atualizar
+                        Atualizar
                     </button>
                     <button class="logout-btn" onclick="logout()">
-                        🚪 Sair
+                        Sair
                     </button>
                 </div>
             </div>
@@ -916,7 +949,7 @@
                     <div class="card-header">
                         <h2>Gerenciar Dispositivos</h2>
                         <button class="btn btn-primary" id="addDeviceBtn">
-                            ➕ Adicionar Dispositivo
+                            Adicionar Dispositivo
                         </button>
                     </div>
                     <table class="table" id="devicesListTable">
@@ -943,17 +976,17 @@
                         <h2>Gerenciar Mídias</h2>
                         <div>
                             <button class="btn btn-primary" id="addMediaBtn">
-                                📁 Upload de Mídia
+                                Upload de Mídia
                             </button>
                             <button class="btn btn-success" id="addExternalMediaBtn">
-                                🌐 Adicionar Externa
+                                Adicionar Externa
                             </button>
                         </div>
                     </div>
                     
                     <div class="card" style="margin-top: 20px;">
                         <div class="card-header">
-                            <h3>📋 Lista de Mídias (Arraste para reordenar)</h3>
+                            <h3>Lista de Mídias (Arraste para reordenar)</h3>
                         </div>
                         <div class="media-list" id="mediaList">
                             <!-- Itens serão preenchidos via JavaScript -->
@@ -969,10 +1002,10 @@
                         <h2>Gerenciar Playlists</h2>
                         <div>
                             <button class="btn btn-success" onclick="syncAllPlaylists()">
-                                🔄 Sincronizar Todas
+                                Sincronizar Todas
                             </button>
                             <button class="btn btn-primary" id="addPlaylistBtn">
-                                ➕ Criar Playlist
+                                Criar Playlist
                             </button>
                         </div>
                     </div>
@@ -984,9 +1017,9 @@
             <div id="announcements" class="tab-content">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📢 Pronunciamentos Gerais</h2>
+                        <h2>Pronunciamentos Gerais</h2>
                         <button class="btn btn-warning" id="addAnnouncementBtn">
-                            🚀 Criar Pronunciamento
+                            Criar Pronunciamento
                         </button>
                     </div>
                     
@@ -1007,7 +1040,7 @@
                     <div class="card-header">
                         <h2>Gerenciar Usuários</h2>
                         <button class="btn btn-primary" id="addUserBtn">
-                            👤 Adicionar Usuário
+                            Adicionar Usuário
                         </button>
                     </div>
                     <table class="table" id="usersTable">
@@ -1029,11 +1062,11 @@
             <!-- Backup -->
             <div id="backup" class="tab-content">
                 <div class="card">
-                    <h2 style="margin-bottom: 20px;">💾 Dados do Sistema</h2>
+                    <h2 style="margin-bottom: 20px;">Dados do Sistema</h2>
                     <div class="form-group">
                         <label>Exportar Dados</label>
                         <button class="btn btn-primary" id="exportBtn">
-                            📥 Exportar Backup
+                            Exportar Backup
                         </button>
                         <p style="margin-top: 8px; color: #666; font-size: 14px;">
                             Exporta todos os dados para um arquivo JSON
@@ -1060,8 +1093,8 @@
             <h3 id="confirmationTitle">Confirmar Ação</h3>
             <p id="confirmationMessage">Tem certeza que deseja realizar esta ação?</p>
             <div class="confirmation-buttons">
-                <button class="btn btn-danger" id="confirmButton">✅ Confirmar</button>
-                <button class="btn btn-primary" id="cancelButton">❌ Cancelar</button>
+                <button class="btn btn-danger" id="confirmButton">Confirmar</button>
+                <button class="btn btn-primary" id="cancelButton">Cancelar</button>
             </div>
         </div>
     </div>
@@ -1097,7 +1130,7 @@
                 </div>
 
                 <div class="device-instructions">
-                    <strong>📋 Como adicionar um dispositivo:</strong><br>
+                    <strong>Como adicionar um dispositivo:</strong><br>
                     1. Acesse o dispositivo na TV/Player<br>
                     2. Anote o código de 6 dígitos exibido<br>
                     3. Digite o código acima<br>
@@ -1105,8 +1138,8 @@
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('deviceModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('deviceModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1121,7 +1154,7 @@
             </div>
             <form id="mediaForm">
                 <div class="upload-area" id="uploadArea">
-                    <p>📁 Arraste arquivos aqui ou clique para selecionar</p>
+                    <p>Arraste arquivos aqui ou clique para selecionar</p>
                     <p style="font-size: 0.8rem; color: #777;">
                         Formatos: JPG, PNG, GIF, BMP, MP4, AVI, MOV, MKV, WEBM<br>
                         Máx: 100MB por arquivo
@@ -1166,8 +1199,8 @@
                     <input type="number" id="externalMediaDisplayTime" class="form-control" value="30" min="5" max="300">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-success">💾 Adicionar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('externalMediaModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-success">Adicionar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('externalMediaModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1195,8 +1228,8 @@
                     <input type="url" id="editMediaUrl" class="form-control" required>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('editMediaModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('editMediaModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1222,8 +1255,8 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('playlistModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('playlistModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1233,7 +1266,7 @@
     <div id="announcementModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🚀 Criar Pronunciamento Geral</h2>
+                <h2>Criar Pronunciamento Geral</h2>
                 <button class="close-btn" onclick="closeModal('announcementModal')">×</button>
             </div>
             <form id="announcementForm">
@@ -1258,8 +1291,8 @@
                     <input type="number" id="announcementDisplayTime" class="form-control" value="30" min="5" max="300" required>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-warning">🚀 Iniciar Pronunciamento</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('announcementModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Iniciar Pronunciamento</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('announcementModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1316,8 +1349,8 @@
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('userModal')">❌ Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('userModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -1521,20 +1554,42 @@
         loadAllData();
     }
 
-    // Verificar autenticação
-    function checkAuthentication() {
-        const savedToken = localStorage.getItem('authToken');
-        const savedUser = localStorage.getItem('userData');
-        
-        if (savedToken && savedUser) {
+// ATUALIZADA: Verificar autenticação
+function checkAuthentication() {
+    const savedToken = localStorage.getItem('authToken');
+    const savedUser = localStorage.getItem('userData');
+    
+    if (savedToken && savedUser) {
+        try {
             authToken = savedToken;
             currentUser = JSON.parse(savedUser);
-            showMainSystem();
-            connectWebSocket();
-        } else {
+            
+            // VERIFICAR se o token ainda é válido
+            fetch(`${SERVER_URL}/api/auth/verify`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            }).then(response => {
+                if (response.ok) {
+                    showMainSystem();
+                    connectWebSocket();
+                } else {
+                    // Token inválido - fazer logout
+                    logout();
+                }
+            }).catch(() => {
+                // Erro de conexão - mostrar login
+                showLoginScreen();
+            });
+            
+        } catch (error) {
+            console.error('Erro ao verificar autenticação:', error);
             showLoginScreen();
         }
+    } else {
+        showLoginScreen();
     }
+}
 
     // Funções para modais
     function openModal(modalId) {
@@ -1773,14 +1828,14 @@
             </div>
             <div class="media-list-info">
                 <h4>${mediaItem.originalName}</h4>
-                <p>${mediaTypeIcon} ${mediaItem.mediaType || 'upload'} • ⏱️ ${mediaItem.displayTime}s</p>
+                <p>${mediaTypeIcon} ${mediaItem.mediaType || 'upload'} • ${mediaItem.displayTime}s</p>
             </div>
             <div class="action-buttons">
                 <button class="btn btn-warning btn-sm" onclick="openEditMediaModal(${JSON.stringify(mediaItem).replace(/"/g, '&quot;')})">
-                    ✏️ Editar
+                    Editar
                 </button>
                 <button class="btn btn-danger btn-sm" onclick="deleteMedia('${mediaItem.id}')">
-                    🗑️ Excluir
+                    Excluir
                 </button>
             </div>
         `;
@@ -1875,9 +1930,9 @@
             div.dataset.id = mediaItem.id;
             
             const isChecked = selectedMediaIds.includes(mediaItem.id);
-            const mediaTypeIcon = mediaItem.mediaType === 'youtube' ? '📺' : 
-                               mediaItem.mediaType === 'website' ? '🌐' : 
-                               mediaItem.type === 'image' ? '🖼️' : '🎥';
+            const mediaTypeIcon = mediaItem.mediaType === 'youtube' ? '' : 
+                               mediaItem.mediaType === 'website' ? '' : 
+                               mediaItem.type === 'image' ? '' : '';
             
             div.innerHTML = `
                 <input type="checkbox" value="${mediaItem.id}" ${isChecked ? 'checked' : ''}>
@@ -1937,75 +1992,92 @@
         });
     }
 
-     // CORREÇÃO: Função para fazer requisições autenticadas
-    async function authenticatedFetch(url, options = {}) {
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        };
+// CORRIGIDA: Função para fazer requisições autenticadas
+async function authenticatedFetch(url, options = {}) {
+    // VERIFICAR se está autenticado
+    if (!authToken) {
+        console.log('Token não disponível para requisição autenticada');
+        throw new Error('Sessão expirada');
+    }
+    
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${authToken}`,
+            ...options.headers
+        }
+    };
+    
+    try {
+        const response = await fetch(url, { ...defaultOptions, ...options });
         
-        try {
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            
-            if (response.status === 401 || response.status === 403) {
-                // Sessão expirada - fazer logout
+        if (response.status === 401 || response.status === 403) {
+            // Sessão expirada - fazer logout UMA VEZ
+            console.log('Sessão expirada, fazendo logout...');
+            if (!window.logoutInProgress) {
+                window.logoutInProgress = true;
                 showNotification('Sessão expirada. Faça login novamente.', 'error');
                 setTimeout(() => {
                     logout();
+                    window.logoutInProgress = false;
                 }, 2000);
-                throw new Error('Sessão expirada');
             }
-            
-            // CORREÇÃO: Verificar se a resposta é válida antes de tentar parsear JSON
-            if (!response.ok) {
-                // Se não for status 200-299, lançar erro
-                const errorText = await response.text();
-                console.error('❌ Erro na resposta:', response.status, errorText);
-                throw new Error(`Erro ${response.status}: ${errorText}`);
-            }
-            
-            // Verificar se a resposta é JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.warn('⚠️ Resposta não é JSON:', contentType);
-                // Se não for JSON, retornar a resposta como está
-                return response;
-            }
-            
+            throw new Error('Sessão expirada');
+        }
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erro na resposta:', response.status, errorText);
+            throw new Error(`Erro ${response.status}: ${errorText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.warn('⚠️ Resposta não é JSON:', contentType);
             return response;
-        } catch (error) {
-            if (error.message === 'Sessão expirada') {
-                throw error; // Já tratado acima
-            }
-            console.error('❌ Erro na requisição:', error);
-            throw new Error('Erro de conexão com o servidor');
         }
+        
+        return response;
+    } catch (error) {
+        if (error.message === 'Sessão expirada') {
+            throw error; // Já tratado acima
+        }
+        console.error('❌ Erro na requisição:', error);
+        throw new Error('Erro de conexão com o servidor');
     }
+}
 
-    // Carregar dados
-    async function loadAllData() {
-        try {
-            await loadDevices();
-            await loadMedia();
-            await loadPlaylists();
-            await loadAnnouncements();
-            if (currentUser.role === 'admin') {
-                await loadUsers();
-            }
-            updateStats();
-            updateDevicesTable();
-        } catch (error) {
-            if (error.message === 'Sessão expirada') {
-                // Já foi tratado no authenticatedFetch
-                return;
-            }
-            console.error('Erro ao carregar dados:', error);
-            showNotification('Erro ao carregar dados do sistema', 'error');
-        }
+// NOVA: Função para verificar se está autenticado antes de carregar dados
+function shouldLoadData() {
+    return authToken && currentUser;
+}
+
+// ATUALIZAR: Função loadAllData para verificar autenticação
+async function loadAllData() {
+    // VERIFICAR se está autenticado antes de carregar
+    if (!shouldLoadData()) {
+        console.log('⏳ Aguardando autenticação para carregar dados...');
+        return;
     }
+    
+    try {
+        await loadDevices();
+        await loadMedia();
+        await loadPlaylists();
+        await loadAnnouncements();
+        if (currentUser.role === 'admin') {
+            await loadUsers();
+        }
+        updateStats();
+        updateDevicesTable();
+    } catch (error) {
+        if (error.message === 'Sessão expirada') {
+            // Já foi tratado no authenticatedFetch
+            return;
+        }
+        console.error('Erro ao carregar dados:', error);
+        showNotification('Erro ao carregar dados do sistema', 'error');
+    }
+}
 
     async function loadDevices() {
         try {
@@ -2109,25 +2181,25 @@
                     ${device.status === 'pending' ? 
                         `<span class="auth-code">${device.authCode}</span><br>
                          <small style="color: #e74c3c;">Expira: ${device.codeExpiry ? new Date(device.codeExpiry).toLocaleTimeString() : 'N/A'}</small>` : 
-                        '<span style="color: #27ae60;">✅ Ativado</span>'
+                        '<span style="color: #27ae60;">Ativado</span>'
                     }
                 </td>
                 <td>${playlistName}</td>
                 <td>${lastSeenText}</td>
                 <td class="action-buttons">
                     <button class="btn btn-warning btn-sm" onclick="openDeviceModal(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        ✏️ Editar
+                        Editar
                     </button>
                     ${device.status === 'active' ? `
                     <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        👁️ Visualizar
+                        Visualizar
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
-                        🔌 Desconectar
+                        Desconectar
                     </button>
                     ` : ''}
                     <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')">
-                        🗑️ Excluir
+                        Excluir
                     </button>
                 </td>
             `;
@@ -2159,9 +2231,9 @@
                     <div style="flex: 1;">
                         <h3 style="margin: 0 0 10px 0;">${playlist.name}</h3>
                         <p style="margin: 0 0 10px 0; color: #666;">
-                            📁 ${mediaCount} mídia(s) • 📺 ${assignedDevices.length} dispositivo(s)
-                            ${activeDevices.length > 0 ? `• 🟢 ${activeDevices.length} ativo(s)` : ''}
-                            ${hasCustomOrder ? '• 🔀 Ordem personalizada' : ''}
+                            📁 ${mediaCount} mídia(s) • ${assignedDevices.length} dispositivo(s)
+                            ${activeDevices.length > 0 ? `• ${activeDevices.length} ativo(s)` : ''}
+                            ${hasCustomOrder ? '• Ordem personalizada' : ''}
                         </p>
                         
                         ${activeDevices.length > 0 ? `
@@ -2178,14 +2250,14 @@
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             ${activeDevices.length > 0 ? `
                             <button class="btn btn-success btn-sm sync-playlist-btn" data-playlist-id="${playlist.id}">
-                                🔄 Sincronizar Playlist
+                                Sincronizar Playlist
                             </button>
                             ` : ''}
                             <button class="btn btn-warning btn-sm" onclick="openPlaylistModal(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
-                                ✏️ Editar
+                                Editar
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="deletePlaylist('${playlist.id}')">
-                                🗑️ Excluir
+                                Excluir
                             </button>
                         </div>
                     </div>
@@ -2205,7 +2277,7 @@
             document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const playlistId = this.getAttribute('data-playlist-id');
-                    console.log(`🔄 Clicou em sincronizar playlist: ${playlistId}`);
+                    console.log(`Clicou em sincronizar playlist: ${playlistId}`);
                     syncPlaylist(playlistId);
                 });
             });
@@ -2243,7 +2315,7 @@
             announcementElement.innerHTML = `
                 <div class="announcement-header">
                     <h4 style="margin: 0;">${announcement.name}</h4>
-                    <span style="color: var(--warning); font-weight: bold;">⏱️ ${announcement.displayTime}s</span>
+                    <span style="color: var(--warning); font-weight: bold;">${announcement.displayTime}s</span>
                 </div>
                 <p style="margin: 0 0 10px 0;">
                     <strong>Mídia:</strong> ${media ? media.originalName : 'Não encontrada'}
@@ -2253,7 +2325,7 @@
                 </div>
                 <div style="margin-top: 15px; display: flex; gap: 10px;">
                     <button class="btn btn-danger btn-sm" onclick="cancelAnnouncement('${announcement.id}')">
-                        🛑 Cancelar
+                        Cancelar
                     </button>
                 </div>
             `;
@@ -2279,7 +2351,7 @@
                 <td>
                     ${user.id !== currentUser.id ? `
                     <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">
-                        🗑️ Excluir
+                        Excluir
                     </button>
                     ` : '<em>Usuário atual</em>'}
                 </td>
@@ -2568,14 +2640,14 @@
         
         // Verificar cooldown
         if (now - lastSyncClick < SYNC_COOLDOWN) {
-            showNotification('⏳ Aguarde antes de sincronizar novamente', 'warning');
+            showNotification('Aguarde antes de sincronizar novamente', 'warning');
             return;
         }
         
         lastSyncClick = now;
         
         try {
-            console.log(`🔄 Iniciando sincronização da playlist: ${playlistId}`);
+            console.log(`Iniciando sincronização da playlist: ${playlistId}`);
             
             // Verificar se há dispositivos ativos primeiro
             const devicesResponse = await authenticatedFetch(`${SERVER_URL}/api/devices`);
@@ -2586,10 +2658,10 @@
             const allDevices = await devicesResponse.json();
             const playlistDevices = allDevices.filter(d => d.playlistId === playlistId && d.status === 'active');
             
-            console.log(`📊 Dispositivos ativos na playlist: ${playlistDevices.length}`);
+            console.log(`Dispositivos ativos na playlist: ${playlistDevices.length}`);
             
             if (playlistDevices.length === 0) {
-                showNotification('❌ Nenhum dispositivo ativo nesta playlist', 'warning');
+                showNotification('Nenhum dispositivo ativo nesta playlist', 'warning');
                 return;
             }
             
@@ -2609,19 +2681,19 @@
                 console.log('✅ Sincronização bem-sucedida:', result);
                 
                 if (result.deviceIds && result.deviceIds.length > 0) {
-                    showNotification(`🎯 Playlist sincronizada! ${result.deviceIds.length} dispositivo(s) atualizado(s)`, 'success');
+                    showNotification(`Playlist sincronizada! ${result.deviceIds.length} dispositivo(s) atualizado(s)`, 'success');
                 } else {
-                    showNotification('⚠️ Sincronização concluída, mas nenhum dispositivo foi atualizado', 'warning');
+                    showNotification('Sincronização concluída, mas nenhum dispositivo foi atualizado', 'warning');
                 }
                 
             } else {
                 const error = await response.json();
-                console.error('❌ Erro na resposta do servidor:', error);
+                console.error('Erro na resposta do servidor:', error);
                 throw new Error(error.error || 'Erro ao sincronizar playlist');
             }
             
         } catch (error) {
-            console.error('❌ Erro na sincronização:', error);
+            console.error('Erro na sincronização:', error);
             if (error.message !== 'Sessão expirada') {
                 showNotification(error.message, 'error');
             }
@@ -2808,10 +2880,10 @@
                 <td>${playlistName}</td>
                 <td>
                     <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        👁️ Visualizar
+                        Visualizar
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
-                        🔌 Desconectar
+                        Desconectar
                     </button>
                 </td>
             `;
@@ -2856,8 +2928,8 @@
         const now = new Date();
         
         const status = {
-            servidor: '🟢 Online',
-            websocket: ws && ws.readyState === WebSocket.OPEN ? '🟢 Conectado' : '🔴 Desconectado',
+            servidor: 'Online',
+            websocket: ws && ws.readyState === WebSocket.OPEN ? 'Conectado' : 'Desconectado',
             dispositivos: `${currentDevices.filter(d => d.status === 'active').length} online`,
             ultimaAtualizacao: now.toLocaleString()
         };
@@ -2873,8 +2945,20 @@
 
     // ==================== EVENT LISTENERS ====================
 
-    document.addEventListener('DOMContentLoaded', function() {
-        checkAuthentication();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Media Indoor Admin inicializando...');
+    
+    // SÓ adicionar event listeners uma vez
+    if (!eventListenersAdded) {
+        setupEventListeners();
+        eventListenersAdded = true;
+    }
+    
+    // Verificar autenticação MAS não carregar dados automaticamente
+    checkAuthentication();
+});
+
+function setupEventListeners() {
         
         // ADICIONAR event listeners apenas uma vez
         if (!eventListenersAdded) {
@@ -3042,13 +3126,83 @@
             
             eventListenersAdded = true;
         }
+
+            document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('resetUsername').value;
+        const newPassword = document.getElementById('resetNewPassword').value;
+        const confirmPassword = document.getElementById('resetConfirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            showNotification('As senhas não coincidem', 'error');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            showNotification('A senha deve ter pelo menos 6 caracteres', 'error');
+            return;
+        }
+        
+        resetPassword(username, newPassword);
     });
+    }
+
+// NOVA: Funções para redefinir senha
+function openResetPasswordModal() {
+    closeModal('login-screen');
+    openModal('resetPasswordModal');
+}
+
+async function resetPassword(username, newPassword) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/auth/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, newPassword })
+        });
+
+        if (response.ok) {
+            showNotification('Senha redefinida com sucesso!', 'success');
+            closeModal('resetPasswordModal');
+            showLoginScreen();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error);
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+// Adicionar event listener para o formulário de redefinição
+document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('resetUsername').value;
+    const newPassword = document.getElementById('resetNewPassword').value;
+    const confirmPassword = document.getElementById('resetConfirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showNotification('As senhas não coincidem', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showNotification('A senha deve ter pelo menos 6 caracteres', 'error');
+        return;
+    }
+    
+    resetPassword(username, newPassword);
+});
 
     // Atualizar status periodicamente
     setInterval(updateSystemStatus, 30000);
     updateSystemStatus();
 
-    console.log('🎬 Media Indoor Admin carregado com sucesso!');
+    console.log('Media Indoor Admin carregado com sucesso!');
 </script>
 </body>
 </html>

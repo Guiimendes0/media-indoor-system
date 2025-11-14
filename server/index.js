@@ -44,9 +44,9 @@ function loadData(fileName) {
 function saveData(fileName, data) {
     try {
         fs.writeFileSync(fileName, JSON.stringify(data, null, 2));
-        console.log(`💾 ${fileName} salvo com sucesso`);
+        console.log(`${fileName} salvo com sucesso`);
     } catch (error) {
-        console.error(`❌ Erro ao salvar ${fileName}:`, error);
+        console.error(`Erro ao salvar ${fileName}:`, error);
     }
 }
 
@@ -57,7 +57,7 @@ const media = loadData(DATA_FILES.media);
 const playlists = loadData(DATA_FILES.playlists);
 const announcements = loadData(DATA_FILES.announcements);
 
-console.log('📂 Dados carregados:', {
+console.log('Dados carregados:', {
     users: users.length,
     devices: devices.length,
     media: media.length,
@@ -96,8 +96,22 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 }
 });
 
-// Middleware de autenticação
+// ATUALIZADA: Middleware de autenticação
 function authenticateToken(req, res, next) {
+    // EXCEÇÕES: Rotas públicas
+    const publicRoutes = [
+        '/api/auth/login',
+        '/api/auth/reset-password',
+        '/api/client/',
+        '/api/devices/register-code',
+        '/media/'
+    ];
+    
+    const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
+    if (isPublicRoute) {
+        return next();
+    }
+    
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -999,7 +1013,9 @@ app.delete('/api/playlists/:id', authenticateToken, (req, res) => {
 // ==================== ROTAS DE PRONUNCIAMENTOS ====================
 
 app.get('/api/announcements', authenticateToken, (req, res) => {
-    const userAnnouncements = announcements.filter(a => a.userId === req.user.id);
+    const userAnnouncements = req.user.role === 'admin' 
+        ? announcements 
+        : announcements.filter(a => a.userId === req.user.id);
     res.json(userAnnouncements);
 });
 
@@ -1107,7 +1123,7 @@ app.get('/api/client/media', (req, res) => {
 app.post('/api/client/check-activation', (req, res) => {
     const { mac } = req.body;
     
-    console.log(`🔍 Verificando ativação para MAC: ${mac}`);
+    console.log(`Verificando ativação para MAC: ${mac}`);
     
     if (!mac) {
         return res.status(400).json({ error: 'MAC é obrigatório' });
@@ -1130,7 +1146,7 @@ app.post('/api/client/check-activation', (req, res) => {
             }
         });
     } else {
-        console.log(`❌ Dispositivo com MAC ${mac} não está ativado`);
+        console.log(`Dispositivo com MAC ${mac} não está ativado`);
         res.json({
             activated: false
         });
@@ -1190,6 +1206,45 @@ app.get("/", (req, res) =>
             res.end(content);
         }
     });
+});
+
+// NOVA: Rota para verificar token
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+    res.json({ 
+        valid: true, 
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            name: req.user.name,
+            role: req.user.role
+        }
+    });
+});
+
+// NOVA: Rota para redefinir senha
+app.post('/api/auth/reset-password', async (req, res) => {
+    const { username, newPassword } = req.body;
+    
+    if (!username || !newPassword) {
+        return res.status(400).json({ error: 'Usuário e nova senha são obrigatórios' });
+    }
+    
+    const user = users.find(u => u.username === username);
+    if (!user) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.token = null; // Invalidar tokens existentes
+        
+        saveData(DATA_FILES.users, users);
+        
+        res.json({ message: 'Senha redefinida com sucesso' });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao redefinir senha' });
+    }
 });
 
 // WebSocket server
