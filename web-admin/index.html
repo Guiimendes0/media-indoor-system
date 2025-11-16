@@ -811,7 +811,7 @@
     <!-- Tela de Login -->
     <div id="login-screen">
         <div class="login-container">
-            <h1>Pantaneira Media Indoor</h1>
+            <h1>Media Staff</h1>
             <p>Sistema de Gerenciamento</p>
             <form class="login-form" id="loginForm">
                 <div class="form-group">
@@ -864,7 +864,7 @@
     <div class="container hidden" id="main-system">
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>Pantaneira Media Indoor</h2>
+                <h2>Media Staff</h2>
                 <p>Sistema de Gerenciamento</p>
             </div>
             
@@ -1993,58 +1993,68 @@ function checkAuthentication() {
     }
 
 // CORRIGIDA: Função para fazer requisições autenticadas
+
 async function authenticatedFetch(url, options = {}) {
     // VERIFICAR se está autenticado
     if (!authToken) {
         console.log('Token não disponível para requisição autenticada');
         throw new Error('Sessão expirada');
     }
-    
-    const defaultOptions = {
-        headers: {
-            'Authorization': `Bearer ${authToken}`,
-            ...options.headers
+
+    // Criar cabeçalhos a partir dos passados (evitar sobrescrever)
+    const headers = new Headers(options.headers || {});
+    headers.set('Authorization', `Bearer ${authToken}`);
+
+    // Se o corpo for FormData, NÃO definir Content-Type (o browser define o boundary)
+    const body = options.body;
+    if (!(body instanceof FormData)) {
+        // Se o caller não definiu Content-Type, assumir JSON para objetos/string
+        if (!headers.has('Content-Type')) {
+            headers.set('Content-Type', 'application/json');
         }
+    } else {
+        // Garantir que não forçamos Content-Type
+        headers.delete('Content-Type');
+    }
+
+    const fetchOptions = {
+        method: options.method || 'GET',
+        headers,
+        body: body === undefined ? undefined : body,
+        credentials: options.credentials || 'same-origin'
     };
-    
+
     try {
-        const response = await fetch(url, { ...defaultOptions, ...options });
-        
+        const response = await fetch(url, fetchOptions);
+
         if (response.status === 401 || response.status === 403) {
-            // Sessão expirada - fazer logout UMA VEZ
-            console.log('Sessão expirada, fazendo logout...');
+            // Sessão expirada - logout controlado
+            console.log('Sessão expirada, fazendo logout.');
             if (!window.logoutInProgress) {
                 window.logoutInProgress = true;
                 showNotification('Sessão expirada. Faça login novamente.', 'error');
                 setTimeout(() => {
                     logout();
                     window.logoutInProgress = false;
-                }, 2000);
+                }, 1200);
             }
             throw new Error('Sessão expirada');
         }
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Erro na resposta:', response.status, errorText);
             throw new Error(`Erro ${response.status}: ${errorText}`);
         }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.warn('⚠️ Resposta não é JSON:', contentType);
-            return response;
-        }
-        
+
         return response;
-    } catch (error) {
-        if (error.message === 'Sessão expirada') {
-            throw error; // Já tratado acima
-        }
-        console.error('❌ Erro na requisição:', error);
+    } catch (err) {
+        if (err.message === 'Sessão expirada') throw err;
+        console.error('❌ Erro na requisição:', err);
         throw new Error('Erro de conexão com o servidor');
     }
 }
+
 
 // NOVA: Função para verificar se está autenticado antes de carregar dados
 function shouldLoadData() {
