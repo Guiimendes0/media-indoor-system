@@ -292,7 +292,7 @@
     class MediaPlayer {
         constructor() {
             this.serverUrl = window.location.origin;
-            this.wsUrl = `ws://${window.location.host}`;
+            this.wsUrl = `wss://${window.location.host}`;
             this.currentMediaIndex = 0;
             this.mediaList = [];
             this.deviceInfo = null;

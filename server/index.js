@@ -1253,7 +1253,7 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
     console.log(`📊 Admin: http://localhost:${PORT}/admin`);
     console.log(`📺 Client: http://localhost:${PORT}/client`);
-    console.log(`🔗 WebSocket: ws://localhost:${PORT}`);
+    console.log(`🔗 WebSocket: wss://localhost:${PORT}`);
     console.log(`💾 Arquivos de dados: ${Object.values(DATA_FILES).join(', ')}`);
 });
 
