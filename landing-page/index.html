@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Indoor - Sistema de Gerenciamento de Mídia Indoor em Tempo Real</title>
+    <title>MEDIA STAFF - Plataforma Completa de Gerenciamento de Mídias.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+
+
         :root {
             --white: #ffffff;
             --light-bg: #f8fafc;
@@ -169,8 +172,11 @@
             display: flex;
             align-items: center;
             transition: color 0.3s;
+            gap: 10px;
         }
-
+        .logo-img {
+            width: 2.5vw;
+        }
         .logo i {
             margin-right: 10px;
             color: var(--accent);
@@ -632,7 +638,7 @@
 
         /* Footer */
         footer {
-            background-color: var(--text);
+            background-color: black;
             color: var(--white);
             padding: 60px 0 30px;
         }
@@ -829,8 +835,8 @@
         <div class="container">
             <nav class="navbar">
                 <div class="logo">
-                    <i class="fas fa-tv"></i>
-                    Media Staff
+                    <img class="logo-img" src="assets/logo.png">
+                    MEDIA STAFF
                 </div>
                 <ul class="nav-links">
                     <li><a href="#features">Funcionalidades</a></li>
@@ -849,7 +855,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <video autoplay muted loop class="hero-video">
-            <source src="/assets/nyt2.mp4" type="video/mp4">
+            <source src="https://mediastaff.com.br/assets/nyt2.mp4" type="video/mp4">
             Seu navegador não suporta vídeos HTML5.
         </video>
         <div class="hero-overlay"></div>
@@ -866,7 +872,7 @@
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">🚀 Tudo o que você precisa para controlar suas telas indoor</h2>
+            <h2 class="section-title">Tudo o que você precisa para controlar suas telas indoor</h2>
             <div class="features-grid">
                 <div class="feature-card fade-in">
                     <div class="feature-icon">
@@ -936,7 +942,7 @@
     <section id="admin" class="admin-interface">
         <div class="container">
             <div class="admin-content fade-in">
-                <h2 class="section-title">💻 Painel de Controle Moderno e Intuitivo</h2>
+                <h2 class="section-title">Painel de Controle Moderno e Intuitivo</h2>
                 <p>Gerencie tudo em um único lugar com uma interface simples e completa. Acompanhe estatísticas, gerencie usuários, conteúdos e dispositivos com poucos cliques.</p>
                 <ul class="admin-highlights">
                     <li><i class="fas fa-chart-line"></i> Visualização clara de estatísticas em tempo real</li>
@@ -959,7 +965,7 @@
                     <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1142&q=80" alt="Player Inteligente para Dispositivos Indoor">
                 </div>
                 <div class="player-content fade-in">
-                    <h2 class="section-title">📺 Player Inteligente para Dispositivos Indoor</h2>
+                    <h2 class="section-title">Player Inteligente para Dispositivos Indoor</h2>
                     <p>Exibição moderna e automática em dispositivos como TVs e totens. Interface simplificada que funciona automaticamente sem necessidade de intervenção constante.</p>
                     <div class="player-features">
                         <div class="player-feature">
@@ -988,7 +994,7 @@
     <section id="security" class="security">
         <div class="container">
             <div class="security-content fade-in">
-                <h2 class="section-title">🔒 Segurança e Controle Total</h2>
+                <h2 class="section-title">Segurança e Controle Total</h2>
                 <p>Mantenha seu sistema protegido com camadas de segurança que garantem o acesso apenas para pessoas autorizadas.</p>
                 <ul class="security-points">
                     <li><i class="fas fa-lock"></i> Acesso seguro com senhas protegidas</li>
@@ -1011,7 +1017,7 @@
                     <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Persistência e Backup de Dados">
                 </div>
                 <div class="data-content fade-in">
-                    <h2 class="section-title">💾 Seus dados sempre protegidos</h2>
+                    <h2 class="section-title">Seus dados sempre protegidos</h2>
                     <p>Todas as informações do sistema são armazenadas de forma segura, com opções de backup e restauração simples.</p>
                     <ul class="data-highlights">
                         <li><i class="fas fa-database"></i> Armazenamento seguro de dados</li>
@@ -1026,13 +1032,13 @@
     <!-- Clients Section - Nuvem de Logos -->
     <section id="clients" class="clients">
         <div class="container">
-            <h2 class="section-title">🤝 Empresas que confiam na nossa tecnologia</h2>
+            <h2 class="section-title">Empresas que confiam na nossa tecnologia</h2>
             <div class="clients-cloud fade-in">
-                <img src="/assets/allpfit.png" alt="Media Staff" class="client-logo large">
-                <img src="/assets/TODOSEMPREENDIMENTOS.png" alt="Media Staff" class="client-logo large">
-                <img src="/assets/METROMINAS.jpg" alt="Media Staff" class="client-logo large">
-                <img src="/assets/USIMINAS.png" alt="Media Staff" class="client-logo large">
-                <img src="/assets/VALE.png" alt="Media Staff" class="client-logo large">
+                <!-- <img src="/assets/allpfit.png" alt="Media Staff" class="client-logo large"> -->
+                <!-- <img src="/assets/TODOSEMPREENDIMENTOS.png" alt="Media Staff" class="client-logo large"> -->
+                <img src="/assets/METROMINAS.jpg" alt="METROMINAS" class="client-logo large">
+                <!-- <img src="/assets/USIMINAS.png" alt="Media Staff" class="client-logo large"> -->
+                <!-- <img src="/assets/VALE.png" alt="Media Staff" class="client-logo large"> -->
             </div>
         </div>
     </section>
@@ -1040,7 +1046,7 @@
     <!-- Contact Form Section -->
     <section id="contact" class="contact">
         <div class="container">
-            <h2 class="section-title">📞 Entre em Contato Conosco</h2>
+            <h2 class="section-title">Entre em Contato Conosco</h2>
             <div class="contact-container">
                 <div class="contact-form fade-in">
                     <form id="contactForm">
@@ -1076,8 +1082,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Media Indoor</h3>
-                    <p>Plataforma completa de gerenciamento de mídia para ambientes indoor. Controle, sincronize e exiba seus conteúdos em tempo real.</p>
+                    <h3>MEDIA STAFF</h3>
+                    <p>Plataforma completa de gerenciamento de mídias. Controle, sincronize e exiba seus conteúdos em tempo real.</p>
                 </div>
                 <div class="footer-column">
                     <h3>Links Rápidos</h3>
@@ -1091,22 +1097,22 @@
                 <div class="footer-column">
                     <h3>Contato</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-envelope"></i> contato@mediaindoor.com</li>
-                        <li><i class="fas fa-phone"></i> (11) 9999-9999</li>
-                        <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
+                        <li><i class="fas fa-envelope"></i> contato@mediastaff.com.br</li>
+                        <li><i class="fas fa-phone"></i> (31) 9 9929-5017</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Timóteo, MG</li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h3>Redes Sociais</h3>
                     <ul class="footer-links">
-                        <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
-                        <li><a href="#"><i class="fab fa-instagram"></i> Instagram</a></li>
-                        <li><a href="#"><i class="fab fa-facebook"></i> Facebook</a></li>
+                        <!-- <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li> -->
+                        <li><a href="https://www.instagram.com/mediastaffoficial/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a></li>
+                        <!-- <li><a href="#"><i class="fab fa-facebook"></i> Facebook</a></li> -->
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 Media Indoor. Todos os direitos reservados.</p>
+                <p>&copy; 2025 Media Staff. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
