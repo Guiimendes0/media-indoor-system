@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEDIA STAFF - Plataforma Completa de Gerenciamento de Mídias.</title>
+    <title>MEDIA STAFF | Plataforma Completa de Gerenciamento de Mídias.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link rel="icon" href="assets/logo.png" type="image/png">
     <style>
 
 
@@ -860,7 +860,7 @@
         </video>
         <div class="hero-overlay"></div>
         <div class="hero-content fade-in">
-            <h1>Plataforma Completa de Gerenciamento de Mídia para Ambientes Indoor</h1>
+            <h1>Plataforma Completa de Gerenciamento de Mídias</h1>
             <p>Controle, sincronize e exiba seus conteúdos em tempo real em TVs, totens e painéis digitais com um sistema inteligente e totalmente integrado.</p>
             <div class="hero-buttons">
                 <a href="#contact" class="btn btn-primary">Entre em Contato Conosco</a>
@@ -872,7 +872,7 @@
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">Tudo o que você precisa para controlar suas telas indoor</h2>
+            <h2 class="section-title">Tudo o que você precisa para controlar suas telas</h2>
             <div class="features-grid">
                 <div class="feature-card fade-in">
                     <div class="feature-icon">
@@ -952,7 +952,7 @@
                 </ul>
             </div>
             <div class="admin-image fade-in">
-                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Interface do Painel Administrativo">
+                <img src="assets/admin.png" alt="Interface do Painel Administrativo">
             </div>
         </div>
     </section>
@@ -962,10 +962,10 @@
         <div class="container">
             <div class="player-container">
                 <div class="player-image fade-in">
-                    <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1142&q=80" alt="Player Inteligente para Dispositivos Indoor">
+                    <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1142&q=80" alt="Player Inteligente para Dispositivos">
                 </div>
                 <div class="player-content fade-in">
-                    <h2 class="section-title">Player Inteligente para Dispositivos Indoor</h2>
+                    <h2 class="section-title">Player Inteligente para Multidispositivos</h2>
                     <p>Exibição moderna e automática em dispositivos como TVs e totens. Interface simplificada que funciona automaticamente sem necessidade de intervenção constante.</p>
                     <div class="player-features">
                         <div class="player-feature">
@@ -1118,6 +1118,8 @@
     </footer>
 
     <script>
+
+        const serverUrl = window.location.origin;
         // Header scroll effect
         window.addEventListener('scroll', () => {
             const header = document.getElementById('header');
@@ -1183,24 +1185,34 @@
         });
         
         // Contact form submission
-        const contactForm = document.getElementById('contactForm');
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const company = document.getElementById('company').value;
-            const phone = document.getElementById('phone').value;
-            const message = document.getElementById('message').value;
-            
-            // In a real application, you would send this data to a server
-            // For this example, we'll just show an alert
-            alert(`Obrigado, ${name}! Sua mensagem foi enviada com sucesso. Entraremos em contato em breve.`);
-            
-            // Reset form
-            contactForm.reset();
-        });
+const contactForm = document.getElementById('contactForm');
+
+contactForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        company: document.getElementById('company').value,
+        phone: document.getElementById('phone').value,
+        message: document.getElementById('message').value
+    };
+
+const response = await fetch(`${serverUrl}/sendemail`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.text();
+
+    if (result.trim() === "OK") {
+        alert(`Obrigado, ${data.name}! Sua mensagem foi enviada com sucesso.`);
+        contactForm.reset();
+    } else {
+        alert("Ocorreu um erro ao enviar sua mensagem. Tente novamente.");
+    }
+});
         
         // Adjust nav on resize
         window.addEventListener('resize', () => {

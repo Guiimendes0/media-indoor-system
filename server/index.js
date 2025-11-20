@@ -5,6 +5,8 @@ const fs = require('fs');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const WebSocket = require('ws');
+const nodemailer = require('nodemailer');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -102,7 +104,7 @@ function authenticateToken(req, res, next) {
     const publicRoutes = [
         '/api/auth/login',
         '/api/auth/reset-password',
-        '/api/client/',
+        '/api/player/',
         '/api/devices/register-code',
         '/media/'
     ];
@@ -209,7 +211,7 @@ function checkDeviceAuthorization(req, res, next) {
     console.log(`🔍 Verificando autorização para MAC: ${deviceMac} - Rota: ${req.path}`);
     
     // Aplicar verificação APENAS para rotas de API do cliente
-    if (req.path.startsWith('/api/client/')) {
+    if (req.path.startsWith('/api/player/')) {
         console.log('🔐 Rota cliente detectada, verificando dispositivos por MAC...');
         
         if (!deviceMac) {
@@ -1092,7 +1094,7 @@ app.put('/api/announcements/:id/cancel', authenticateToken, (req, res) => {
 
 // ==================== ROTAS CLIENT TV ====================
 
-app.get('/api/client/media', (req, res) => {
+app.get('/api/player/media', (req, res) => {
     const device = req.authorizedDevice;
     let mediaList = [];
     
@@ -1120,7 +1122,7 @@ app.get('/api/client/media', (req, res) => {
 });
 
 // ADICIONAR: Rota para verificar se dispositivo foi ativado
-app.post('/api/client/check-activation', (req, res) => {
+app.post('/api/player/check-activation', (req, res) => {
     const { mac } = req.body;
     
     console.log(`Verificando ativação para MAC: ${mac}`);
@@ -1154,7 +1156,7 @@ app.post('/api/client/check-activation', (req, res) => {
 });
 
 // ATUALIZAR: Rota client device para aceitar MAC no body também
-app.get('/api/client/device', (req, res) => {
+app.get('/api/player/device', (req, res) => {
     if (!req.authorizedDevice) {
         return res.status(403).json({ error: 'Dispositivo não autorizado' });
     }
@@ -1163,7 +1165,7 @@ app.get('/api/client/device', (req, res) => {
 });
 
 // ADICIONAR: Rota alternativa para client device com MAC no body
-app.post('/api/client/device', (req, res) => {
+app.post('/api/player/device', (req, res) => {
     const { mac } = req.body;
     
     if (!mac) {
@@ -1182,7 +1184,7 @@ app.post('/api/client/device', (req, res) => {
 // Servir arquivos
 app.use('/media', express.static('uploads/media'));
 app.use('/admin', express.static('../web-admin'));
-app.use('/client', express.static('../tv-client'));
+app.use('/player', express.static('../tv-client'));
 app.use('/', express.static('../landing-page'));
 // Rota inicial
 // app.get('/', (req, res) => {
@@ -1207,6 +1209,25 @@ app.get("/", (req, res) =>
         }
     });
 });
+
+// app.get("/player", (req, res) => 
+//    {
+//     let filePath = path.join(__dirname, '..', req.url === '/player' ? 'index.html' : req.url);
+//     const ext = path.extname(filePath);
+
+//     fs.readFile(filePath, (err, content) => {
+//         if (err) {
+//             res.writeHead(404);
+//             res.end('Arquivo não encontrado');
+//         } else {
+//             let contentType = 'text/html';
+//             if (ext === '.js') contentType = 'text/javascript';
+//             if (ext === '.css') contentType = 'text/css';
+//             res.writeHead(200, { 'Content-Type': contentType });
+//             res.end(content);
+//         }
+//     });
+// });
 
 // NOVA: Rota para verificar token
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
@@ -1252,7 +1273,7 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     await initializeAdminUser();
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
     console.log(`📊 Admin: http://localhost:${PORT}/admin`);
-    console.log(`📺 Client: http://localhost:${PORT}/client`);
+    console.log(`📺 Client: http://localhost:${PORT}/player`);
     console.log(`🔗 WebSocket: wss://localhost:${PORT}`);
     console.log(`💾 Arquivos de dados: ${Object.values(DATA_FILES).join(', ')}`);
 });
@@ -1549,4 +1570,49 @@ app.get('/api/debug/devices-mac', (req, res) => {
             lastSeen: d.lastSeen
         }))
     });
+});
+
+
+
+
+
+// ==================== FUNÇÕES AUXILIARES PARA ENVIO DE E-MAIL LANDING PAGE ====================
+
+
+app.post("/sendemail", async (req, res) => {
+    const { name, email, company, phone, message } = req.body;
+
+    // Configuração SMTP Hostinger
+    const transporter = nodemailer.createTransport({
+        host: "smtp.hostinger.com",
+        port: 465,
+        secure: true,
+        auth: {
+            user: "contato@mediastaff.com.br", 
+            pass: "Benicio-120725"      
+        }
+    });
+
+    const mailOptions = {
+        from: "contato@mediastaff.com.br",
+        replyTo: email,
+        to: "contato@mediastaff.com.br",
+    subject: `Formulario mediastaff.com.br | ${company} - ${name}`,
+        text: `
+            Nome: ${name}
+            Email: ${email}
+            Empresa: ${company}
+            Telefone: ${phone}
+            Mensagem:
+            ${message}
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.send("OK");
+    } catch (err) {
+        console.error(err);
+        res.send("ERRO");
+    }
 });

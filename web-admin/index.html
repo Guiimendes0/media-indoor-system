@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Indoor - Admin</title>
+    <title>MEDIA STAFF - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
     <style>
-        :root {
+        /* :root {
             --primary: #3498db;
             --secondary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #17a2b8;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        } */
+
+        :root {
+            --primary: #f59e0b;
+            --secondary: #18181a;
+            /* --secondary: #ea580c; */
             --success: #27ae60;
             --danger: #e74c3c;
             --warning: #f39c12;
@@ -35,51 +48,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background:
-                        /* Camada 1 – vermelho quente no topo */
-                        radial-gradient(
-                            circle at 50% 0%,
-                            rgba(255, 60, 60, 1) 0%,
-                            rgba(255, 60, 60, 0) 60%
-                        ),
-
-                        /* Camada 2 – laranja intenso na diagonal */
-                        radial-gradient(
-                            circle at 30% 70%,
-                            rgba(255, 140, 40, 1) 0%,
-                            rgba(255, 140, 40, 0) 70%
-                        ),
-
-                        /* Camada 3 – amarelo suave na base */
-                        radial-gradient(
-                            circle at 50% 95%,
-                            rgba(255, 200, 80, 1) 0%,
-                            rgba(255, 200, 80, 0) 70%
-                        ),
-
-                        /* Camada 4 – roxo/azul no canto superior direito */
-                        radial-gradient(
-                            circle at 90% 20%,
-                            rgba(90, 60, 200, 0.9) 0%,
-                            rgba(90, 60, 200, 0) 60%
-                        ),
-
-                        /* Camada 5 – laranja-avermelhado central */
-                        radial-gradient(
-                            circle at 50% 50%,
-                            rgba(255, 100, 50, 0.85) 0%,
-                            rgba(255, 100, 50, 0) 65%
-                        ),
-
-                        /* Camada final – gradient base */
-                        linear-gradient(
-                            135deg,
-                            #ff3c3c 0%,
-                            #ff7b2e 25%,
-                            #ffc44b 55%,
-                            #6a46d4 85%,
-                            #ff5a2e 100%
-                        );
+            background:#f5f7fa;
 
             /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
             display: flex;
@@ -92,10 +61,11 @@
             background: white;
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            /* box-shadow: 0 20px 40px rgba(0,0,0,0.1); */
             width: 90%;
             max-width: 400px;
             text-align: center;
+            border: 1px solid #0000001a;
         }
 
         .login-container h1 {
@@ -148,7 +118,7 @@
         }
 
         .login-btn:hover {
-            background: #2980b9;
+            background: var(--secondary);
         }
 
         .hidden {
@@ -162,18 +132,36 @@
         
         .sidebar {
             width: 280px;
-            background: var(--secondary);
-            color: white;
+                        background: white;
+            color: black;
             padding: 20px 0;
+            border-right: 1px solid #0000001a;
         }
         
         .sidebar-header {
             padding: 0 20px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+
         }
         
         .sidebar-header h2 {
             margin-bottom: 5px;
+        }
+    .sidebar-header > p {
+        align-self: center;
+    }
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo > img {
+            width: 5vw;
+        }
+        .logo > h2 {
+            margin-bottom: 0;
         }
 
         .user-info {
@@ -182,6 +170,7 @@
             margin: 15px 20px;
             border-radius: 8px;
             font-size: 14px;
+            border: 1px solid #0000001a;
         }
 
         .user-info strong {
@@ -191,22 +180,32 @@
         
         .sidebar-menu {
             list-style: none;
-            margin-top: 20px;
+            /* margin-top: 20px; */
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
         
         .sidebar-menu li {
             padding: 15px 20px;
             cursor: pointer;
             transition: all 0.3s;
-            border-left: 4px solid transparent;
+            /* border-left: 4px solid transparent; */
             display: flex;
             align-items: center;
             gap: 12px;
+            border-radius: 8px;
+            color: #799780;
         }
-        
+        .sidebar-menu > li > i {
+            font-size: 20px;
+        }
+
         .sidebar-menu li:hover, .sidebar-menu li.active {
-            background: rgba(255,255,255,0.1);
-            border-left-color: var(--primary);
+            background: #0000000d;
+            /* border-left-color: var(--primary); */
+            color: #18181a;
         }
         
         .main-content {
@@ -231,9 +230,7 @@
         }
 
         .refresh-btn {
-            background: var(--info);
-            color: white;
-            border: none;
+
             padding: 10px 15px;
             border-radius: 6px;
             cursor: pointer;
@@ -241,11 +238,18 @@
             align-items: center;
             gap: 8px;
         }
-
+        .butn {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid #0000001a;
+        }
+        .butn > i {
+            font-size: 20px;
+        }
         .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
+            /* background: var(--danger);
+            color: white; */
+            /* border: none; */
             padding: 10px 15px;
             border-radius: 6px;
             cursor: pointer;
@@ -265,9 +269,10 @@
             background: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 4px solid var(--primary);
+            /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
+            /* text-align: center; */
+            /* border-left: 4px solid var(--primary); */
+            border: 1px solid #0000001a;
         }
         
         .stat-card h3 {
@@ -286,18 +291,20 @@
         .card {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
             padding: 25px;
             margin-bottom: 25px;
+            border: 1px solid #0000001a;
         }
         
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            /* margin-bottom: 20px; */
+            /* padding-bottom: 15px; */
             border-bottom: 1px solid #eee;
+            padding: 12px 24px;
         }
         
         .card-header h2 {
@@ -358,13 +365,13 @@
         }
         
         .table th, .table td {
-            padding: 15px;
+            padding: 12px 24px;
             text-align: left;
             border-bottom: 1px solid #eee;
         }
         
         .table th {
-            background: #f8f9fa;
+            /* background: #f8f9fa; */
             font-weight: 600;
             color: var(--secondary);
         }
@@ -857,7 +864,10 @@
     <!-- Tela de Login -->
     <div id="login-screen">
         <div class="login-container">
-            <h1>Media Staff</h1>
+                <div class="logo">
+                    <img src="https://www.mediastaff.com.br/assets/logo.png" alt="">
+                    <h2>MEDIA STAFF</h2>
+                </div>
             <p>Sistema de Gerenciamento</p>
             <form class="login-form" id="loginForm">
                 <div class="form-group">
@@ -871,8 +881,8 @@
                 <button type="submit" class="login-btn">Entrar</button>
                 <!-- No login-form, após o botão de login -->
                 <div style="margin-top: 15px; text-align: center;">
-                    <button type="button" class="btn btn-link" onclick="openResetPasswordModal()" 
-                            style="background: none; border: none; color: #3498db; cursor: pointer; text-decoration: underline;">
+                    <button type="button" class="butn btn-link" onclick="openResetPasswordModal()" 
+                            style="background: none; border: none; color: #000000; cursor: pointer; ">
                         Esqueci minha senha
                     </button>
                 </div>
@@ -910,7 +920,10 @@
     <div class="container hidden" id="main-system">
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>Media Staff</h2>
+                <div class="logo">
+                    <img src="https://www.mediastaff.com.br/assets/logo.png" alt="">
+                    <h2>MEDIA STAFF</h2>
+                </div>
                 <p>Sistema de Gerenciamento</p>
             </div>
             
@@ -920,13 +933,13 @@
             </div>
             
             <ul class="sidebar-menu">
-                <li class="active" data-tab="dashboard">Dashboard</li>
-                <li data-tab="devices">Dispositivos</li>
-                <li data-tab="media">Mídias</li>
-                <li data-tab="playlists">Playlists</li>
-                <li data-tab="announcements">Anunciamentos</li>
-                <li data-tab="users" id="users-tab" class="hidden">Usuários</li>
-                <li data-tab="backup">Backup</li>
+                <li class="active" data-tab="dashboard"><i class="ti ti-chart-column"></i> Dashboard</li>
+                <li data-tab="devices"><i class="ti ti-device-desktop"></i> Dispositivos</li>
+                <li data-tab="media"><i class="ti ti-photo-video"></i> Mídias</li>
+                <li data-tab="playlists"><i class="ti ti-list"></i> Playlists</li>
+                <li data-tab="announcements"><i class="ti ti-speakerphone"></i> Anunciamentos</li>
+                <li data-tab="users" id="users-tab" class="hidden"><i class="ti ti-users"></i> Usuários</li>
+                <li data-tab="backup"><i class="ti ti-database-export"></i> Backup</li>
             </ul>
         </div>
         
@@ -935,11 +948,11 @@
             <div class="header">
                 <h1 id="page-title">Dashboard</h1>
                 <div class="header-actions">
-                    <button class="refresh-btn" onclick="loadAllData()">
-                        Atualizar
+                    <button class="butn refresh-btn" onclick="loadAllData()">
+                        <i class="ti ti-refresh"></i>
                     </button>
-                    <button class="logout-btn" onclick="logout()">
-                        Sair
+                    <button class="butn logout-btn" onclick="logout()">
+                        <i class="ti ti-logout"></i>
                     </button>
                 </div>
             </div>
@@ -962,11 +975,11 @@
                         <div class="number" id="statPlaylists">0</div>
                         <div id="statPlaylistsActive">- ativas</div>
                     </div>
-                    <div class="stat-card">
+                    <!-- <div class="stat-card">
                         <h3>Sistema</h3>
                         <div class="number">🟢</div>
                         <div>Online</div>
-                    </div>
+                    </div> -->
                 </div>
                 
                 <div class="card">
@@ -1405,7 +1418,6 @@
  <script>
     // Variáveis globais
     const SERVER_URL = window.location.origin;
-    const WS_URL = `wss://${window.location.host}`;
     let currentUser = null;
     let authToken = null;
     let currentDevices = [];
@@ -1483,8 +1495,12 @@
 
     // WebSocket para funcionalidades em tempo real
     function connectWebSocket() {
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+
         try {
-            ws = new WebSocket(WS_URL);
+            ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
                 console.log('🔗 WebSocket conectado');

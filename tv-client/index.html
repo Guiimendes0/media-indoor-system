@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Indoor Player</title>
+    <title>MEDIA STAFF | Player</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
     <style>
         * {
             margin: 0;
@@ -50,7 +51,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f7fa;
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -64,12 +66,24 @@
             background: white;
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            /* box-shadow: 0 20px 40px rgba(0,0,0,0.1); */
             width: 90%;
             max-width: 500px;
             color: #333;
+            border: 1px solid #0000001a;
         }
-
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .logo > img {
+            width: 5vw;
+        }
+        .logo > h2 {
+            margin-bottom: 0;
+        }
         .logo-container {
             margin-bottom: 20px;
         }
@@ -93,7 +107,7 @@
 
         .auth-code-display {
             background: #f8f9fa;
-            border: 2px dashed #3498db;
+            border: 1px solid #0000001a;
             border-radius: 10px;
             padding: 25px;
             margin: 20px 0;
@@ -123,6 +137,7 @@
             border-radius: 8px;
             font-size: 14px;
             text-align: left;
+            border: 1px solid #0000001a;    
         }
 
         .device-info strong {
@@ -220,13 +235,10 @@
         <!-- Tela de Autenticação Atualizada -->
         <div id="auth-screen">
             <div class="auth-container">
-                <div class="logo-container">
-                    <!-- Espaço para logo - substitua o src pela URL da sua logo -->
-                    <img src="../tv-client/assets/Pantanera-logo.png" 
-                         alt="Media Indoor Logo" class="logo-image">
+                <div class="logo">
+                    <img src="assets/logo.png" alt="">
+                    <h2>MEDIA STAFF</h2>
                 </div>
-                
-                <h1>Media Staff</h1>
                 <p>Use o código abaixo para cadastrar este dispositivo no painel administrativo</p>
                 
                 <div class="auth-code-display">
@@ -359,7 +371,7 @@
                 }
                 
                 try {
-                    const response = await fetch(`${this.serverUrl}/api/client/check-activation`, {
+                    const response = await fetch(`${this.serverUrl}/api/player/check-activation`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -424,7 +436,7 @@
                     console.log('🔍 Verificando autenticação salva:', authData);
                     
                     try {
-                        const response = await fetch(`${this.serverUrl}/api/client/device`, {
+                        const response = await fetch(`${this.serverUrl}/api/player/device`, {
                             headers: {
                                 'x-device-mac': this.deviceMac
                             }
@@ -1082,7 +1094,7 @@
             try {
                 this.showLoading('Carregando conteúdo...');
                 
-                const response = await fetch(`${this.serverUrl}/api/client/media`, {
+                const response = await fetch(`${this.serverUrl}/api/player/media`, {
                     headers: {
                         'x-device-mac': this.deviceMac
                     }
