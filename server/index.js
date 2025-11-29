@@ -667,7 +667,7 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
         connectedCount: connectedCount
     });
 });
-
+//
 // VERIFICAR: Função para calcular o estado atual da playlist
 function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
     const playlist = playlists[playlistIndex];
