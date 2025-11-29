@@ -27,7 +27,8 @@ const DATA_FILES = {
     devices: 'devices.json',
     media: 'media.json',
     playlists: 'playlists.json',
-    announcements: 'announcements.json'
+    announcements: 'announcements.json',
+    campaigns: 'campaigns.json'
 };
 
 // Funções para persistência
@@ -58,6 +59,7 @@ const devices = loadData(DATA_FILES.devices);
 const media = loadData(DATA_FILES.media);
 const playlists = loadData(DATA_FILES.playlists);
 const announcements = loadData(DATA_FILES.announcements);
+const campaigns = loadData(DATA_FILES.campaigns);
 
 console.log('Dados carregados:', {
     users: users.length,
@@ -155,20 +157,25 @@ app.post('/api/devices/register-code', (req, res) => {
         device.lastCodeUpdate = new Date();
     } else {
         // Criar novo dispositivo pendente
-        device = {
-            id: Date.now().toString(),
-            mac: mac,
-            authCode: authCode,
-            codeExpiry: expiry,
-            lastCodeUpdate: new Date(),
-            status: 'pending',
-            name: `Dispositivo ${mac}`,
-            location: 'Não definido',
-            playlistId: null,
-            userId: null, // Será definido na ativação
-            lastSeen: null,
-            createdAt: new Date()
-        };
+// Substituir o bloco de criação do device pendente por este
+device = {
+    id: Date.now().toString(),
+    mac: mac,
+    authCode: authCode,
+    codeExpiry: expiry,
+    lastCodeUpdate: new Date(),
+    status: 'pending',
+    name: `Dispositivo ${mac}`,
+    location: 'Não definido',
+    playlistId: null,
+    userId: null, // Será definido na ativação
+    lastSeen: null,
+    createdAt: new Date(),
+    audioEnabled: false,    // NOVO: Padrão sem áudio
+    rotation: 'horizontal', // NOVO: Padrão horizontal
+    developer: false        // NOVO: Padrão developer DESATIVADO
+};
+
         devices.push(device);
     }
     
@@ -427,7 +434,10 @@ app.post('/api/devices', authenticateToken, (req, res) => {
     pendingDevice.lastSeen = new Date();
     pendingDevice.activatedAt = new Date();
     pendingDevice.activatedBy = req.user.id;
-    
+    // NOVO: Manter configurações padrão
+    pendingDevice.audioEnabled = false;
+    pendingDevice.rotation = 'horizontal';
+    pendingDevice.developer = false;
     saveData(DATA_FILES.devices, devices);
     
     console.log(`✅ Dispositivo ativado: ${pendingDevice.name} (MAC: ${pendingDevice.mac})`);
@@ -438,9 +448,10 @@ app.post('/api/devices', authenticateToken, (req, res) => {
     });
 });
 
+// ATUALIZADA: Rota para atualizar dispositivo com novas configurações
 app.put('/api/devices/:id', authenticateToken, (req, res) => {
     const deviceId = req.params.id;
-    const { name, location, playlistId } = req.body;
+    const { name, location, playlistId, audioEnabled, rotation, developer  } = req.body;
     
     const deviceIndex = devices.findIndex(device => 
         device.id === deviceId && (device.userId === req.user.id || req.user.role === 'admin')
@@ -454,10 +465,28 @@ app.put('/api/devices/:id', authenticateToken, (req, res) => {
         ...devices[deviceIndex],
         name: name || devices[deviceIndex].name,
         location: location || devices[deviceIndex].location,
-        playlistId: playlistId !== undefined ? playlistId : devices[deviceIndex].playlistId
+        playlistId: playlistId !== undefined ? playlistId : devices[deviceIndex].playlistId,
+        audioEnabled: audioEnabled !== undefined ? audioEnabled : devices[deviceIndex].audioEnabled,
+        rotation: rotation || devices[deviceIndex].rotation,
+        developer: developer !== undefined ? developer : (devices[deviceIndex].developer || false)
     };
     
     saveData(DATA_FILES.devices, devices);
+    
+    // NOVO: Enviar configurações atualizadas para o dispositivo via WebSocket
+    const config = {
+        audioEnabled: devices[deviceIndex].audioEnabled,
+        rotation: devices[deviceIndex].rotation,
+        developer: devices[deviceIndex].developer || false
+    };
+    
+    // Tentar enviar via WebSocket
+    const configSent = sendDeviceConfig(deviceId, config);
+    
+    if (!configSent) {
+        console.log(`⚠️ Configurações salvas, mas dispositivo ${deviceId} não está conectado`);
+    }
+    
     res.json(devices[deviceIndex]);
 });
 
@@ -513,7 +542,11 @@ app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
             message: 'Dispositivo desconectado pelo administrador',
             timestamp: new Date()
         }));
-        client.ws.close();
+        setTimeout(() => {
+            if (client.ws.readyState === WebSocket.OPEN) {
+                client.ws.close();
+            }
+        }, 1000);
     }
     
     res.json({ 
@@ -529,7 +562,7 @@ app.post('/api/devices/:id/disconnect', authenticateToken, (req, res) => {
 
 // ==================== ROTAS DE SINCRONIZAÇÃO POR PLAYLIST ====================
 
-// CORRIGIDA: Sincronização que respeita o estado atual da playlist
+// ATUALIZAR: Sincronização que considera mudanças na playlist
 app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
     
@@ -562,20 +595,6 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     
     console.log(`📊 Sincronizando playlist: ${playlist.name}`);
     console.log(`📈 Estado atual da playlist: Mídia ${syncInfo.currentMediaIndex}, Iniciada em: ${syncInfo.mediaStartTime}`);
-    
-    // Encontrar todos os dispositivos ativos que usam esta playlist
-    const devicesUsingPlaylist = devices.filter(device => 
-        device.playlistId === playlistId && device.status === 'active'
-    );
-    
-    const deviceIds = devicesUsingPlaylist.map(device => device.id);
-    
-    console.log(`📺 Dispositivos ativos encontrados: ${deviceIds.length}`);
-    
-    if (deviceIds.length === 0) {
-        console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
-        return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
-    }
     
     // CALCULAR tempo decorrido desde o início da mídia atual
     const mediaStartTime = new Date(syncInfo.mediaStartTime);
@@ -620,6 +639,20 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
         serverTime: Date.now()
     };
     
+    // Encontrar todos os dispositivos ativos que usam esta playlist
+    const devicesUsingPlaylist = devices.filter(device => 
+        device.playlistId === playlistId && device.status === 'active'
+    );
+    
+    const deviceIds = devicesUsingPlaylist.map(device => device.id);
+    
+    console.log(`📺 Dispositivos ativos encontrados: ${deviceIds.length}`);
+    
+    if (deviceIds.length === 0) {
+        console.log(`❌ Nenhum dispositivo ativo usando a playlist: ${playlistId}`);
+        return res.status(400).json({ error: 'Nenhum dispositivo ativo usando esta playlist' });
+    }
+    
     // ENVIAR para dispositivos
     const connectedCount = broadcastToDevices(deviceIds, syncMessage);
     
@@ -635,7 +668,7 @@ app.post('/api/playlists/:id/sync', authenticateToken, (req, res) => {
     });
 });
 
-// CORREÇÃO COMPLETA: Função para calcular o estado atual da playlist
+// VERIFICAR: Função para calcular o estado atual da playlist
 function calculateCurrentPlaylistState(playlistIndex, totalElapsedTime) {
     const playlist = playlists[playlistIndex];
     
@@ -926,29 +959,34 @@ app.get('/api/playlists', authenticateToken, (req, res) => {
     res.json(userPlaylists);
 });
 
-// ATUALIZAR as rotas de playlist para inicializar syncInfo
+// ATUALIZAR: Criar playlist com campanhas
 app.post('/api/playlists', authenticateToken, (req, res) => {
-    const { name, mediaIds, schedule, mediaOrder = [] } = req.body;
+    const { name, mediaIds, campaignIds, contentOrder, schedule } = req.body;
     
     // Verificar se as mídias pertencem ao usuário
     const userMediaIds = media.filter(m => m.userId === req.user.id).map(m => m.id);
     const validMediaIds = mediaIds.filter(id => userMediaIds.includes(id));
     
+    // Verificar se as campanhas pertencem ao usuário
+    const userCampaignIds = campaigns.filter(c => c.userId === req.user.id).map(c => c.id);
+    const validCampaignIds = campaignIds.filter(id => userCampaignIds.includes(id));
+    
     const playlist = {
         id: Date.now().toString(),
         name,
         mediaIds: validMediaIds,
-        mediaOrder: mediaOrder,
+        campaignIds: validCampaignIds,
+        contentOrder: contentOrder || [],
         schedule: schedule || {},
         userId: req.user.id,
         createdAt: new Date(),
+        updatedAt: new Date(),
         syncInfo: {
             currentMediaIndex: 0,
             mediaStartTime: new Date().toISOString(),
             lastSync: new Date().toISOString(),
             elapsedTime: 0,
-            remainingTime: validMediaIds.length > 0 ? 
-                (media.find(m => m.id === validMediaIds[0])?.displayTime || 10) * 1000 : 0
+            remainingTime: 0
         }
     };
     
@@ -957,9 +995,34 @@ app.post('/api/playlists', authenticateToken, (req, res) => {
     res.json(playlist);
 });
 
+// Função para notificar dispositivos sobre atualização de playlist
+function notifyPlaylistDevices(playlistId) {
+    // Encontrar dispositivos que usam esta playlist
+    const devicesUsingPlaylist = devices.filter(device => 
+        device.playlistId === playlistId && device.status === 'active'
+    );
+    
+    console.log(`🔄 Notificando ${devicesUsingPlaylist.length} dispositivo(s) sobre atualização da playlist ${playlistId}`);
+    
+    if (devicesUsingPlaylist.length === 0) {
+        return;
+    }
+    
+    const deviceIds = devicesUsingPlaylist.map(device => device.id);
+    
+    // Enviar comando para recarregar mídias
+    broadcastToDevices(deviceIds,{
+        type: 'playlist_updated',
+        playlistId: playlistId,
+        message: 'Playlist foi atualizada, recarregando mídias...',
+        timestamp: new Date()
+    });
+}
+
+// ATUALIZAR: Editar playlist com campanhas
 app.put('/api/playlists/:id', authenticateToken, (req, res) => {
     const playlistId = req.params.id;
-    const { name, mediaIds, schedule, mediaOrder } = req.body;
+    const { name, mediaIds, campaignIds, contentOrder, schedule } = req.body;
     
     const playlistIndex = playlists.findIndex(p => 
         p.id === playlistId && (p.userId === req.user.id || req.user.role === 'admin')
@@ -973,27 +1036,29 @@ app.put('/api/playlists/:id', authenticateToken, (req, res) => {
     const userMediaIds = media.filter(m => m.userId === req.user.id).map(m => m.id);
     const validMediaIds = mediaIds ? mediaIds.filter(id => userMediaIds.includes(id)) : playlists[playlistIndex].mediaIds;
     
-    // Manter o syncInfo existente ou criar novo
+    // Verificar se as campanhas pertencem ao usuário
+    const userCampaignIds = campaigns.filter(c => c.userId === req.user.id).map(c => c.id);
+    const validCampaignIds = campaignIds ? campaignIds.filter(id => userCampaignIds.includes(id)) : playlists[playlistIndex].campaignIds;
+    
+    // Manter o syncInfo existente
     const existingSyncInfo = playlists[playlistIndex].syncInfo;
-    const newSyncInfo = existingSyncInfo || {
-        currentMediaIndex: 0,
-        mediaStartTime: new Date().toISOString(),
-        lastSync: new Date().toISOString(),
-        elapsedTime: 0,
-        remainingTime: validMediaIds.length > 0 ? 
-            (media.find(m => m.id === validMediaIds[0])?.displayTime || 10) * 1000 : 0
-    };
     
     playlists[playlistIndex] = {
         ...playlists[playlistIndex],
         name: name || playlists[playlistIndex].name,
         mediaIds: validMediaIds,
-        mediaOrder: mediaOrder || playlists[playlistIndex].mediaOrder,
+        campaignIds: validCampaignIds,
+        contentOrder: contentOrder || playlists[playlistIndex].contentOrder,
         schedule: schedule || playlists[playlistIndex].schedule,
-        syncInfo: newSyncInfo
+        syncInfo: existingSyncInfo,
+        updatedAt: new Date()
     };
     
+
     saveData(DATA_FILES.playlists, playlists);
+
+    notifyPlaylistDevices(playlistId);
+        
     res.json(playlists[playlistIndex]);
 });
 
@@ -1094,6 +1159,7 @@ app.put('/api/announcements/:id/cancel', authenticateToken, (req, res) => {
 
 // ==================== ROTAS CLIENT TV ====================
 
+// ATUALIZAR: Rota do player para expandir campanhas
 app.get('/api/player/media', (req, res) => {
     const device = req.authorizedDevice;
     let mediaList = [];
@@ -1101,15 +1167,15 @@ app.get('/api/player/media', (req, res) => {
     if (device.playlistId) {
         const playlist = playlists.find(p => p.id === device.playlistId);
         if (playlist) {
-            // Usar ordem específica da playlist ou ordem padrão
-            if (playlist.mediaOrder && playlist.mediaOrder.length > 0) {
-                mediaList = playlist.mediaOrder.map(mediaId => 
-                    media.find(m => m.id === mediaId)
-                ).filter(Boolean);
+            // Expandir conteúdo baseado na contentOrder
+            if (playlist.contentOrder && playlist.contentOrder.length > 0) {
+                mediaList = expandPlaylistContent(playlist);
             } else {
-                mediaList = media.filter(m => playlist.mediaIds.includes(m.id));
-                // Ordenar pela ordem definida
-                mediaList.sort((a, b) => (a.order || 0) - (b.order || 0));
+                // Ordem padrão: primeiro mídias, depois campanhas
+                mediaList = expandPlaylistContent({
+                    mediaIds: playlist.mediaIds || [],
+                    campaignIds: playlist.campaignIds || []
+                });
             }
         }
     } else {
@@ -1118,8 +1184,60 @@ app.get('/api/player/media', (req, res) => {
         mediaList.sort((a, b) => (a.order || 0) - (b.order || 0));
     }
     
+    console.log(`🎬 Player recebeu ${mediaList.length} mídias para reprodução`);
     res.json(mediaList);
 });
+
+// NOVA: Função para expandir conteúdo da playlist (mídias + campanhas)
+function expandPlaylistContent(playlist) {
+    const expandedMedia = [];
+    
+    if (playlist.contentOrder && playlist.contentOrder.length > 0) {
+        // Usar ordem definida pelo contentOrder
+        playlist.contentOrder.forEach(item => {
+            if (item.type === 'media') {
+                const mediaItem = media.find(m => m.id === item.id);
+                if (mediaItem) {
+                    expandedMedia.push(mediaItem);
+                }
+            } else if (item.type === 'campaign') {
+                const campaign = campaigns.find(c => c.id === item.id);
+                if (campaign) {
+                    // Expandir campanha para suas mídias
+                    campaign.mediaIds.forEach(mediaId => {
+                        const campaignMedia = media.find(m => m.id === mediaId);
+                        if (campaignMedia) {
+                            expandedMedia.push(campaignMedia);
+                        }
+                    });
+                }
+            }
+        });
+    } else {
+        // Ordem padrão: mídias primeiro, depois campanhas
+        playlist.mediaIds.forEach(mediaId => {
+            const mediaItem = media.find(m => m.id === mediaId);
+            if (mediaItem) {
+                expandedMedia.push(mediaItem);
+            }
+        });
+        
+        playlist.campaignIds.forEach(campaignId => {
+            const campaign = campaigns.find(c => c.id === campaignId);
+            if (campaign) {
+                campaign.mediaIds.forEach(mediaId => {
+                    const campaignMedia = media.find(m => m.id === mediaId);
+                    if (campaignMedia) {
+                        expandedMedia.push(campaignMedia);
+                    }
+                });
+            }
+        });
+    }
+    
+    console.log(`📦 Playlist expandida: ${expandedMedia.length} mídias totais`);
+    return expandedMedia;
+}
 
 // ADICIONAR: Rota para verificar se dispositivo foi ativado
 app.post('/api/player/check-activation', (req, res) => {
@@ -1144,7 +1262,9 @@ app.post('/api/player/check-activation', (req, res) => {
                 mac: device.mac,
                 location: device.location,
                 playlistId: device.playlistId,
-                status: device.status
+                status: device.status,
+                audioEnabled: device.audioEnabled, // NOVO: Incluir configuração de áudio
+                rotation: device.rotation // NOVO: Incluir configuração de rotação
             }
         });
     } else {
@@ -1285,7 +1405,7 @@ server.on('upgrade', (request, socket, head) => {
     });
 });
 
-// WebSocket connection - ATUALIZADO para MAC
+// WebSocket connection - ATUALIZADO para enviar configurações na conexão
 wss.on('connection', (ws, req) => {
     const clientIp = req.socket.remoteAddress.replace('::ffff:', '');
     console.log('🔗 WebSocket conectado:', clientIp);
@@ -1321,6 +1441,23 @@ wss.on('connection', (ws, req) => {
                     device.lastSeen = new Date();
                     saveData(DATA_FILES.devices, devices);
                     console.log(`✅ Status do dispositivo ${device.name} atualizado para ativo`);
+                    
+                    // NOVO: Enviar configurações atuais para o dispositivo
+                    setTimeout(() => {
+                        const config = {
+                            audioEnabled: device.audioEnabled || false,
+                            rotation: device.rotation || 'horizontal'
+                        };
+                        
+                        if (ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({
+                                type: 'device_config_update',
+                                config: config,
+                                timestamp: new Date()
+                            }));
+                            console.log(`⚙️ Configurações iniciais enviadas para ${device.name}:`, config);
+                        }
+                    }, 1000); // Pequeno delay para garantir que o dispositivo está pronto
                 }
             }
             
@@ -1567,11 +1704,12 @@ app.get('/api/debug/devices-mac', (req, res) => {
             authCode: d.authCode,
             codeExpiry: d.codeExpiry,
             location: d.location,
-            lastSeen: d.lastSeen
+            lastSeen: d.lastSeen,
+            audioEnabled: d.audioEnabled, // NOVO
+            rotation: d.rotation // NOVO
         }))
     });
 });
-
 
 
 
@@ -1616,3 +1754,164 @@ app.post("/sendemail", async (req, res) => {
         res.send("ERRO");
     }
 });
+
+// NOVA: Função para enviar configurações para dispositivos específicos
+function sendDeviceConfig(deviceId, config) {
+    const client = connectedClients.get(deviceId);
+    if (client && client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(JSON.stringify({
+            type: 'device_config_update',
+            config: config,
+            timestamp: new Date()
+        }));
+        console.log(`⚙️ Configurações enviadas para dispositivo ${deviceId}:`, config);
+        return true;
+    } else {
+        console.log(`❌ Dispositivo ${deviceId} não está conectado para receber configurações`);
+        return false;
+    }
+}
+
+// ==================== ROTAS DE CAMPANHAS ====================
+
+app.get('/api/campaigns', authenticateToken, (req, res) => {
+    const userCampaigns = req.user.role === 'admin' 
+        ? campaigns 
+        : campaigns.filter(c => c.userId === req.user.id);
+    res.json(userCampaigns);
+});
+
+app.post('/api/campaigns', authenticateToken, (req, res) => {
+    const { name, mediaIds, mediaOrder = [] } = req.body;
+    
+    // Verificar se as mídias pertencem ao usuário
+    const userMediaIds = media.filter(m => m.userId === req.user.id).map(m => m.id);
+    const validMediaIds = mediaIds.filter(id => userMediaIds.includes(id));
+    
+    const campaign = {
+        id: Date.now().toString(),
+        name,
+        mediaIds: validMediaIds,
+        mediaOrder: mediaOrder,
+        userId: req.user.id,
+        createdAt: new Date()
+    };
+    
+    campaigns.push(campaign);
+    saveData(DATA_FILES.campaigns, campaigns);
+    res.json(campaign);
+});
+
+app.put('/api/campaigns/:id', authenticateToken, (req, res) => {
+    const campaignId = req.params.id;
+    const { name, mediaIds, mediaOrder } = req.body;
+    
+    const campaignIndex = campaigns.findIndex(c => 
+        c.id === campaignId && (c.userId === req.user.id || req.user.role === 'admin')
+    );
+    
+    if (campaignIndex === -1) {
+        return res.status(404).json({ error: 'Campanha não encontrada' });
+    }
+    
+    // Verificar se as mídias pertencem ao usuário
+    const userMediaIds = media.filter(m => m.userId === req.user.id).map(m => m.id);
+    const validMediaIds = mediaIds ? mediaIds.filter(id => userMediaIds.includes(id)) : campaigns[campaignIndex].mediaIds;
+    
+    campaigns[campaignIndex] = {
+        ...campaigns[campaignIndex],
+        name: name || campaigns[campaignIndex].name,
+        mediaIds: validMediaIds,
+        mediaOrder: mediaOrder || campaigns[campaignIndex].mediaOrder,
+        updatedAt: new Date()
+    };
+    
+    saveData(DATA_FILES.campaigns, campaigns);
+
+    notifyCampaignPlaylists(campaignId);
+
+    res.json(campaigns[campaignIndex]);
+});
+
+app.delete('/api/campaigns/:id', authenticateToken, (req, res) => {
+    const campaignId = req.params.id;
+    const campaignIndex = campaigns.findIndex(c => 
+        c.id === campaignId && (c.userId === req.user.id || req.user.role === 'admin')
+    );
+    
+    if (campaignIndex === -1) {
+        return res.status(404).json({ error: 'Campanha não encontrada' });
+    }
+    
+    campaigns.splice(campaignIndex, 1);
+    saveData(DATA_FILES.campaigns, campaigns);
+    res.json({ message: 'Campanha removida com sucesso' });
+});
+
+function notifyCampaignPlaylists(campaignId) {
+    // Encontrar playlists que usam esta campanha
+    const playlistsUsingCampaign = playlists.filter(playlist => 
+        playlist.campaignIds && playlist.campaignIds.includes(campaignId)
+    );
+    
+    console.log(`🔄 Notificando ${playlistsUsingCampaign.length} playlist(s) sobre atualização da campanha ${campaignId}`);
+    
+    playlistsUsingCampaign.forEach(playlist => {
+        notifyPlaylistDevices(playlist.id);
+    });
+}
+// NOVA: Função para expandir conteúdo da playlist (mídias + campanhas)
+function expandPlaylistContent(playlist) {
+    const expandedMedia = [];
+    
+    // Garantir que as propriedades existam
+    const mediaIds = playlist.mediaIds || [];
+    const campaignIds = playlist.campaignIds || [];
+    const contentOrder = playlist.contentOrder || [];
+    
+    if (contentOrder.length > 0) {
+        // Usar ordem definida pelo contentOrder
+        contentOrder.forEach(item => {
+            if (item.type === 'media') {
+                const mediaItem = media.find(m => m.id === item.id);
+                if (mediaItem) {
+                    expandedMedia.push(mediaItem);
+                }
+            } else if (item.type === 'campaign') {
+                const campaign = campaigns.find(c => c.id === item.id);
+                if (campaign) {
+                    // Expandir campanha para suas mídias
+                    campaign.mediaIds.forEach(mediaId => {
+                        const campaignMedia = media.find(m => m.id === mediaId);
+                        if (campaignMedia) {
+                            expandedMedia.push(campaignMedia);
+                        }
+                    });
+                }
+            }
+        });
+    } else {
+        // Ordem padrão: mídias primeiro, depois campanhas
+        mediaIds.forEach(mediaId => {
+            const mediaItem = media.find(m => m.id === mediaId);
+            if (mediaItem) {
+                expandedMedia.push(mediaItem);
+            }
+        });
+        
+        campaignIds.forEach(campaignId => {
+            const campaign = campaigns.find(c => c.id === campaignId);
+            if (campaign) {
+                campaign.mediaIds.forEach(mediaId => {
+                    const campaignMedia = media.find(m => m.id === mediaId);
+                    if (campaignMedia) {
+                        expandedMedia.push(campaignMedia);
+                    }
+                });
+            }
+        });
+    }
+    
+    console.log(`📦 Playlist expandida: ${expandedMedia.length} mídias totais`);
+    return expandedMedia;
+}

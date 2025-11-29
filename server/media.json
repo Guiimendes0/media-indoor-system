@@ -9,7 +9,8 @@
     "displayTime": 10,
     "size": 7381719,
     "userId": "1",
-    "uploadedAt": "2025-11-06T10:58:06.964Z"
+    "uploadedAt": "2025-11-06T10:58:06.964Z",
+    "order": 1
   },
   {
     "id": "1762427111752",
@@ -22,20 +23,22 @@
     "size": 0,
     "userId": "1",
     "uploadedAt": "2025-11-06T11:05:11.752Z",
-    "isExternal": true
+    "isExternal": true,
+    "order": 2
   },
   {
-    "id": "1762427260078",
-    "filename": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
-    "originalName": "Metrominas",
-    "path": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
+    "id": "1763933233448",
+    "filename": "1763933233317-440022716.mp4",
+    "originalName": "101048-video-1080.mp4",
+    "path": "/media/1763933233317-440022716.mp4",
     "type": "video",
-    "mediaType": "youtube",
-    "displayTime": 174,
-    "size": 0,
+    "mediaType": "upload",
+    "displayTime": 5,
+    "size": 21462260,
     "userId": "1",
-    "uploadedAt": "2025-11-06T11:07:40.078Z",
-    "isExternal": true
+    "order": 3,
+    "uploadedAt": "2025-11-23T21:27:13.448Z",
+    "isExternal": false
   },
   {
     "id": "1762427621931",
@@ -47,7 +50,8 @@
     "displayTime": 30,
     "size": 45568,
     "userId": "1",
-    "uploadedAt": "2025-11-06T11:13:41.931Z"
+    "uploadedAt": "2025-11-06T11:13:41.931Z",
+    "order": 4
   },
   {
     "id": "1762427655728",
@@ -59,7 +63,8 @@
     "displayTime": 30,
     "size": 64894,
     "userId": "1",
-    "uploadedAt": "2025-11-06T11:14:15.728Z"
+    "uploadedAt": "2025-11-06T11:14:15.728Z",
+    "order": 5
   },
   {
     "id": "1762429286105",
@@ -72,7 +77,8 @@
     "size": 0,
     "userId": "1",
     "uploadedAt": "2025-11-06T11:41:26.105Z",
-    "isExternal": true
+    "isExternal": true,
+    "order": 6
   },
   {
     "id": "1762429396719",
@@ -85,6 +91,105 @@
     "size": 0,
     "userId": "1",
     "uploadedAt": "2025-11-06T11:43:16.719Z",
-    "isExternal": true
+    "isExternal": true,
+    "order": 7
+  },
+  {
+    "id": "1762427260078",
+    "filename": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
+    "originalName": "Metrominas",
+    "path": "https://www.youtube.com/watch?v=5ZC6-ouhzks",
+    "type": "video",
+    "mediaType": "youtube",
+    "displayTime": 174,
+    "size": 0,
+    "userId": "1",
+    "uploadedAt": "2025-11-06T11:07:40.078Z",
+    "isExternal": true,
+    "order": 8
+  },
+  {
+    "id": "1763933004433",
+    "filename": "1763933004412-553216599.jpg",
+    "originalName": "e3a68d94-c10e-4b4f-b350-ab1e074febad.jpg",
+    "path": "/media/1763933004412-553216599.jpg",
+    "type": "image",
+    "mediaType": "upload",
+    "displayTime": 10,
+    "size": 1838582,
+    "userId": "1",
+    "order": 9,
+    "uploadedAt": "2025-11-23T21:23:24.433Z",
+    "isExternal": false
+  },
+  {
+    "id": "1763935546378",
+    "filename": "1763935546364-209174544.mp4",
+    "originalName": "CartÃ£o de Todos Vertical 1.mp4",
+    "path": "/media/1763935546364-209174544.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 15,
+    "size": 2059094,
+    "userId": "1",
+    "order": 10,
+    "uploadedAt": "2025-11-23T22:05:46.378Z",
+    "isExternal": false
+  },
+  {
+    "id": "1763933237412",
+    "filename": "1763933237226-801033877.mp4",
+    "originalName": "mixkit-red-frog-on-a-log-1487-full-hd.mp4",
+    "path": "/media/1763933237226-801033877.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 13,
+    "size": 38797515,
+    "userId": "1",
+    "order": 11,
+    "uploadedAt": "2025-11-23T21:27:17.412Z",
+    "isExternal": false
+  },
+  {
+    "id": "1763933938266",
+    "filename": "1763933938101-705086712.mp4",
+    "originalName": "vecteezy_vertical-timelapse-video-illuminated-of-the-street-road-in_17197668.mp4",
+    "path": "/media/1763933938101-705086712.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 10,
+    "size": 14016626,
+    "userId": "1",
+    "order": 12,
+    "uploadedAt": "2025-11-23T21:38:58.266Z",
+    "isExternal": false
+  },
+  {
+    "id": "1763935317942",
+    "filename": "1763935317911-751148191.mp4",
+    "originalName": "allpfit vertical 1.mp4",
+    "path": "/media/1763935317911-751148191.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 30,
+    "size": 1652668,
+    "userId": "1",
+    "order": 13,
+    "uploadedAt": "2025-11-23T22:01:57.942Z",
+    "isExternal": false
+  },
+  {
+    "id": "1764289948943",
+    "filename": "1764289948894-901676602.mp4",
+    "originalName": "ad 1.mp4",
+    "path": "/media/1764289948894-901676602.mp4",
+    "type": "video",
+    "mediaType": "upload",
+    "displayTime": 10,
+    "size": 7682541,
+    "userId": "1",
+    "order": 14,
+    "uploadedAt": "2025-11-28T00:32:28.943Z",
+    "isExternal": false
   }
 ]

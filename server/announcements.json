@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "id": "1764179110561",
+    "name": "Teste",
+    "mediaId": "1763933233448",
+    "deviceIds": [
+      "1764152854362"
+    ],
+    "displayTime": 5,
+    "userId": "1",
+    "status": "active",
+    "createdAt": "2025-11-26T17:45:10.562Z",
+    "scheduledFor": "2025-11-26T17:45:10.562Z"
+  },
+  {
+    "id": "1764185346673",
+    "name": "Anuncio de Teste",
+    "mediaId": "1763933233448",
+    "deviceIds": [
+      "1764152854362"
+    ],
+    "displayTime": 5,
+    "userId": "1",
+    "status": "active",
+    "createdAt": "2025-11-26T19:29:06.673Z",
+    "scheduledFor": "2025-11-26T19:29:06.673Z"
+  }
+]

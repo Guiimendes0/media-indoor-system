@@ -5,860 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEDIA STAFF - Admin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-    <style>
-        /* :root {
-            --primary: #3498db;
-            --secondary: #2c3e50;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #17a2b8;
-            --light: #ecf0f1;
-            --dark: #34495e;
-        } */
-
-        :root {
-            --primary: #f59e0b;
-            --secondary: #18181a;
-            /* --secondary: #ea580c; */
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #17a2b8;
-            --light: #ecf0f1;
-            --dark: #34495e;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-        }
-
-        /* Tela de Login */
-        #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:#f5f7fa;
-
-            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            /* box-shadow: 0 20px 40px rgba(0,0,0,0.1); */
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            border: 1px solid #0000001a;
-        }
-
-        .login-container h1 {
-            color: var(--secondary);
-            margin-bottom: 10px;
-        }
-
-        .login-container p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .login-form .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .login-form label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-
-        .login-form input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border 0.3s;
-        }
-
-        .login-form input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .login-btn:hover {
-            background: var(--secondary);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-        
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        .sidebar {
-            width: 280px;
-                        background: white;
-            color: black;
-            padding: 20px 0;
-            border-right: 1px solid #0000001a;
-        }
-        
-        .sidebar-header {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-
-        }
-        
-        .sidebar-header h2 {
-            margin-bottom: 5px;
-        }
-    .sidebar-header > p {
-        align-self: center;
-    }
-        .logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .logo > img {
-            width: 5vw;
-        }
-        .logo > h2 {
-            margin-bottom: 0;
-        }
-
-        .user-info {
-            padding: 15px 20px;
-            background: rgba(255,255,255,0.1);
-            margin: 15px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            border: 1px solid #0000001a;
-        }
-
-        .user-info strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            /* margin-top: 20px; */
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .sidebar-menu li {
-            padding: 15px 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            /* border-left: 4px solid transparent; */
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-radius: 8px;
-            color: #799780;
-        }
-        .sidebar-menu > li > i {
-            font-size: 20px;
-        }
-
-        .sidebar-menu li:hover, .sidebar-menu li.active {
-            background: #0000000d;
-            /* border-left-color: var(--primary); */
-            color: #18181a;
-        }
-        
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .refresh-btn {
-
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .butn {
-            background: white;
-            color: var(--secondary);
-            border: 1px solid #0000001a;
-        }
-        .butn > i {
-            font-size: 20px;
-        }
-        .logout-btn {
-            /* background: var(--danger);
-            color: white; */
-            /* border: none; */
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
-            /* text-align: center; */
-            /* border-left: 4px solid var(--primary); */
-            border: 1px solid #0000001a;
-        }
-        
-        .stat-card h3 {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        
-        .stat-card .number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--secondary);
-        }
-        
-        .card {
-            background: white;
-            border-radius: 10px;
-            /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid #0000001a;
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            /* margin-bottom: 20px; */
-            /* padding-bottom: 15px; */
-            border-bottom: 1px solid #eee;
-            padding: 12px 24px;
-        }
-        
-        .card-header h2 {
-            color: var(--secondary);
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-        
-        .btn-info {
-            background: var(--info);
-            color: white;
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        
-        .btn-sm {
-            padding: 8px 15px;
-            font-size: 14px;
-        }
-        
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        .table th, .table td {
-            padding: 12px 24px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .table th {
-            /* background: #f8f9fa; */
-            font-weight: 600;
-            color: var(--secondary);
-        }
-        
-        .table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .status-pending {
-            color: var(--warning);
-            font-weight: bold;
-        }
-        
-        .status-active {
-            color: var(--success);
-            font-weight: bold;
-        }
-        
-        .status-inactive {
-            color: var(--danger);
-            font-weight: bold;
-        }
-
-        .auth-code {
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-        
-        .media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .media-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .media-list-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            transition: all 0.3s;
-            cursor: move;
-        }
-
-        .media-list-item:hover {
-            border-color: var(--primary);
-            background: white;
-        }
-
-        .media-list-item.dragging {
-            opacity: 0.5;
-            background: #e3f2fd;
-        }
-
-        .media-list-item .drag-handle {
-            cursor: grab;
-            padding: 5px;
-            color: #666;
-        }
-
-        .media-list-item .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .media-preview {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-
-        .media-list-info {
-            flex: 1;
-        }
-
-        .media-list-info h4 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-        }
-
-        .media-list-info p {
-            margin: 0;
-            color: #666;
-            font-size: 12px;
-        }
-        
-        .media-item {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            position: relative;
-            background: white;
-        }
-        
-        .media-item img, .media-item video {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-        }
-        
-        .media-info {
-            padding: 15px;
-        }
-        
-        .media-type {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        
-        .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: all 0.3s;
-            background: #fafafa;
-        }
-        
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--primary);
-            background: rgba(52, 152, 219, 0.05);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .modal-header h2 {
-            color: var(--secondary);
-            margin: 0;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border 0.3s;
-        }
-        
-        .form-control:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        /* Sistema de Notificação */
-        .notification-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 400px;
-        }
-
-        .notification {
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideInRight 0.3s ease-out;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification.success {
-            background: var(--success);
-        }
-
-        .notification.error {
-            background: var(--danger);
-        }
-
-        .notification.warning {
-            background: var(--warning);
-        }
-
-        .notification.info {
-            background: var(--info);
-        }
-
-        .notification .close-notification {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            opacity: 0.8;
-        }
-
-        .notification .close-notification:hover {
-            opacity: 1;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* Sistema de Confirmação */
-        .confirmation-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-        }
-
-        .confirmation-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .confirmation-content h3 {
-            margin-bottom: 15px;
-            color: var(--secondary);
-        }
-
-        .confirmation-content p {
-            margin-bottom: 25px;
-            color: #666;
-        }
-
-        .confirmation-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        /* Visualização de Dispositivo */
-        .device-preview-modal {
-            max-width: 800px;
-        }
-
-        .device-preview {
-            width: 100%;
-            height: 400px;
-            background: #000;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            margin-bottom: 20px;
-        }
-
-        .device-preview.live {
-            background: #2c3e50;
-        }
-
-        .device-preview-placeholder {
-            text-align: center;
-        }
-
-        .device-preview-placeholder i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .sync-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .sync-enabled {
-            background: #e8f5e8;
-            color: var(--success);
-        }
-
-        .sync-disabled {
-            background: #fef0e8;
-            color: var(--warning);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .media-checkboxes {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            background: #fafafa;
-        }
-        
-        .media-checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .media-checkbox-item:last-child {
-            border-bottom: none;
-        }
-
-        .edit-time-btn {
-            background: var(--info);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 8px;
-        }
-
-        /* Anunciamentos */
-        .announcement-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--warning);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .announcement-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .announcement-devices {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .device-tag {
-            background: #e3f2fd;
-            color: var(--primary);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .sync-btn {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .playlist-sync-info {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .device-instructions {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-size: 14px;
-            border-left: 4px solid var(--info);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Tela de Login -->
@@ -936,11 +83,16 @@
                 <li class="active" data-tab="dashboard"><i class="ti ti-chart-column"></i> Dashboard</li>
                 <li data-tab="devices"><i class="ti ti-device-desktop"></i> Dispositivos</li>
                 <li data-tab="media"><i class="ti ti-photo-video"></i> Mídias</li>
+                <li data-tab="campaigns"><i class="ti ti-mountain"></i> Campanha</li>
                 <li data-tab="playlists"><i class="ti ti-list"></i> Playlists</li>
                 <li data-tab="announcements"><i class="ti ti-speakerphone"></i> Anunciamentos</li>
+                <li data-tab="integrations"><i class="ti ti-circles-relation"></i> Integrações</li>
                 <li data-tab="users" id="users-tab" class="hidden"><i class="ti ti-users"></i> Usuários</li>
                 <li data-tab="backup"><i class="ti ti-database-export"></i> Backup</li>
             </ul>
+            <div class="mobile-menu">
+                <i class="ti ti-menu-2"></i>
+            </div>
         </div>
         
         <div class="main-content">
@@ -989,12 +141,12 @@
                     <table class="table" id="devicesTable">
                         <thead>
                             <tr>
-                                <th>Nome</th>
-                                <th>Localização</th>
-                                <th>Status</th>
-                                <th>Última Atividade</th>
-                                <th>Playlist</th>
-                                <th>Ações</th>
+                                <th id="tNome">Nome</th>
+                                <th id="tLocation">Localização</th>
+                                <th id="tStatus">Status</th>
+                                <th id="tLastSeen">Última Atividade</th>
+                                <th id="tPlaylist">Playlist</th>
+                                <!-- <th id="tActionButtons">Ações</th> -->
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -1007,24 +159,144 @@
                 <div class="card">
                     <div class="card-header">
                         <h2>Gerenciar Dispositivos</h2>
-                        <button class="btn btn-primary" id="addDeviceBtn">
-                            Adicionar Dispositivo
+                        <button class="butn btn-primary" id="addDeviceBtn">
+                            <i class="ti ti-plus"></i> Adicionar
                         </button>
                     </div>
                     <table class="table" id="devicesListTable">
                         <thead>
                             <tr>
-                                <th>Nome</th>
-                                <th>Localização</th>
-                                <th>Status</th>
-                                <th>Código Auth</th>
-                                <th>Playlist</th>
-                                <th>Última Atividade</th>
-                                <th>Ações</th>
+                                <th id="tNome">Nome</th>
+                                <th id="tLocation">Localização</th>
+                                <th id="tStatus">Status</th>
+                                <th id="tCode">Código Auth</th>
+                                <th id="tPlaylist">Playlist</th>
+                                <th id="tLastSeen">Última Atividade</th>
+                                <th id="tActionButtons">Ações</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Configuração do Dispositivo -->
+            <div id="device-config" class="tab-content">
+                <button class="back-button" onclick="showDevicesList()">
+                    <i class="ti ti-arrow-left"></i> Voltar para Lista
+                </button>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="device-config-title">Configuração do Dispositivo</h2>
+                    </div>
+                    
+                    <div class="device-config-layout">
+                        <!-- Preview da Tela -->
+                        <div class="device-screen-preview">
+                            <div class="device-screen-content" id="deviceScreenContent">
+                                <div class="current-media-info">
+                                    <div class="current-media-name" id="currentMediaName">Nenhuma mídia em reprodução</div>
+                                    <div class="current-media-time" id="currentMediaTime">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulário de Configuração -->
+                        <div class="device-config-form">
+                            <div class="config-section">
+                                <h3>Informações do Dispositivo</h3>
+                                <div class="form-group">
+                                    <label for="configDeviceName">Nome do Dispositivo</label>
+                                    <input type="text" id="configDeviceName" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="configDeviceLocation">Localização</label>
+                                    <input type="text" id="configDeviceLocation" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="configDevicePlaylist">Playlist</label>
+                                    <select id="configDevicePlaylist" class="form-control">
+                                        <option value="">Todas as mídias</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>MAC Address</label>
+                                    <div class="form-control" style="background: #f8f9fa; font-family: monospace;" id="configDeviceMac">
+                                        -
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <div class="form-control" style="background: #f8f9fa;" id="configDeviceStatus">
+                                        -
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="config-section">
+                                <h3>Configurações de Áudio</h3>
+                                <div class="toggle-label">
+                                    <span>Áudio Habilitado</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="configDeviceAudio">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                                    Quando habilitado, o dispositivo reproduzirá mídias com áudio. 
+                                    Por padrão, o áudio é desabilitado.
+                                </p>
+                            </div>
+
+                            <div class="config-section">
+                                <h3>Configurações de Desenvolvedor</h3>
+                                <div class="toggle-label">
+                                    <span>Modo Desenvolvedo</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="configDeviceDeveloper">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                                    Quando habilitado, o dispositivo terá varias informações na tela para depuração. 
+                                    Por padrão, o modo developer é desabilitado.
+                                </p>
+                            </div>
+                            
+                            <div class="config-section">
+                                <h3>Orientação da Tela</h3>
+                                <div class="rotation-options">
+                                    <div class="rotation-option" data-rotation="horizontal" onclick="selectRotation('horizontal')">
+                                        <i class="ti ti-device-desktop"></i>
+                                        <span>Horizontal</span>
+                                    </div>
+                                    <div class="rotation-option" data-rotation="vertical" onclick="selectRotation('vertical')">
+                                        <i class="ti ti-device-mobile"></i>
+                                        <span>Vertical</span>
+                                    </div>
+                                    <div class="rotation-option" data-rotation="horizontal-inverted" onclick="selectRotation('horizontal-inverted')">
+                                        <i class="ti ti-device-desktop"></i>
+                                        <span>Horizontal Invertido</span>
+                                    </div>
+                                    <div class="rotation-option" data-rotation="vertical-inverted" onclick="selectRotation('vertical-inverted')">
+                                        <i class="ti ti-device-mobile"></i>
+                                        <span>Vertical Invertido</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="configDeviceRotation" value="horizontal">
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button class="btn btn-success" onclick="saveDeviceConfig()">
+                                    <i class="ti ti-device-floppy"></i> Salvar Configurações
+                                </button>
+                                <button class="btn btn-danger" onclick="disconnectConfigDevice()">
+                                    <i class="ti ti-device-desktop-x"></i> Desconectar Dispositivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1033,12 +305,12 @@
                 <div class="card">
                     <div class="card-header">
                         <h2>Gerenciar Mídias</h2>
-                        <div>
-                            <button class="btn btn-primary" id="addMediaBtn">
-                                Upload de Mídia
+                        <div style="display: flex; gap: 10px;">
+                            <button class="butn btn-primary" id="addMediaBtn">
+                                <i class="ti ti-photo-up"></i>
                             </button>
-                            <button class="btn btn-success" id="addExternalMediaBtn">
-                                Adicionar Externa
+                            <button class="butn btn-success" id="addExternalMediaBtn">
+                                <i class="ti ti-world-upload"></i>
                             </button>
                         </div>
                     </div>
@@ -1046,6 +318,12 @@
                     <div class="card" style="margin-top: 20px;">
                         <div class="card-header">
                             <h3>Lista de Mídias (Arraste para reordenar)</h3>
+                            <div class="media-tabs">
+                                <button class="media-tab active" data-type="all">Todas</button>
+                                <button class="media-tab" data-type="image">Imagens</button>
+                                <button class="media-tab" data-type="video">Vídeos</button>
+                                <button class="media-tab" data-type="external">Externas</button>
+                            </div>
                         </div>
                         <div class="media-list" id="mediaList">
                             <!-- Itens serão preenchidos via JavaScript -->
@@ -1053,17 +331,30 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Campanhas -->
+            <div id="campaigns" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Gerenciar Campanhas</h2>
+                        <button class="butn btn-primary" id="addCampaignBtn">
+                            <i class="ti ti-plus"></i> Criar Campanha
+                        </button>
+                    </div>
+                    <div id="campaignsList"></div>
+                </div>
+            </div>
+
             <!-- Playlists -->
             <div id="playlists" class="tab-content">
                 <div class="card">
                     <div class="card-header">
                         <h2>Gerenciar Playlists</h2>
-                        <div>
-                            <button class="btn btn-success" onclick="syncAllPlaylists()">
+                        <div style="display: flex;gap: 10px;"">
+                            <button class="butn btn-success" onclick="syncAllPlaylists()">
                                 Sincronizar Todas
                             </button>
-                            <button class="btn btn-primary" id="addPlaylistBtn">
+                            <button class="butn btn-primary" id="addPlaylistBtn">
                                 Criar Playlist
                             </button>
                         </div>
@@ -1076,9 +367,9 @@
             <div id="announcements" class="tab-content">
                 <div class="card">
                     <div class="card-header">
-                        <h2>Pronunciamentos Gerais</h2>
+                        <h2>Anunciamentos Gerais</h2>
                         <button class="btn btn-warning" id="addAnnouncementBtn">
-                            Criar Pronunciamento
+                            Criar Anunciamento
                         </button>
                     </div>
                     
@@ -1088,6 +379,47 @@
                         </div>
                         <div id="announcementsList">
                             <!-- Anunciamentos serão preenchidos via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrações -->
+            <div id="integrations" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Gerenciar Integrações</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Sankhya</h3>
+                            <img src="https://play-lh.googleusercontent.com/FSeNTle3VBLxnFmsoaIboQlsr3Lyg5f8urVrqkTvsZvoHg8_hZTqFprRbYmOYPX_C_E" alt="Captura de tela 2025-11-06 081235.png" class="media-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- <div class="number" id="statDevices">0</div> -->
+                            <div id="statDevicesOnline">Ativa</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>FeeGow</h3>
+                            <img src="https://media.glassdoor.com/sqll/2866355/feegow-squareLogo-1660071078043.png" alt="Captura de tela 2025-11-06 081235.png" class="media-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- <div class="number" id="statMedia">0</div> -->
+                            <div id="statMediaTypes">Ativa</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>MerCloud</h3>
+                            <img src="mercloud.png" alt="Captura de tela 2025-11-06 081235.png" class="media-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- <div class="number" id="statPlaylists">0</div> -->
+                            <div id="statPlaylistsActive">Não Integrada</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>SAP</h3>
+                            <img src="https://cdn.iconscout.com/icon/free/png-256/free-sap-logo-icon-svg-download-png-2945134.png" alt="Captura de tela 2025-11-06 081235.png" class="media-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- <div class="number" id="statPlaylists">0</div> -->
+                            <div id="statPlaylistsActive">Não Integrada</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>TOTVS</h3>
+                            <img src="https://images.icon-icons.com/2148/PNG/512/totvs_icon_131953.png" alt="Captura de tela 2025-11-06 081235.png" class="media-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- <div class="number" id="statPlaylists">0</div> -->
+                            <div id="statPlaylistsActive">Não Integrada</div>
                         </div>
                     </div>
                 </div>
@@ -1163,7 +495,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="deviceModalTitle">Adicionar Dispositivo</h2>
-                <button class="close-btn" onclick="closeModal('deviceModal')">×</button>
+                <button class="close-btn" onclick="closeModal('deviceModal')"><i class="ti ti-x"></i></button>
             </div>
             <form id="deviceForm">
                 <input type="hidden" id="deviceId">
@@ -1294,33 +626,83 @@
         </div>
     </div>
 
-    <!-- Modal Playlist -->
-    <div id="playlistModal" class="modal hidden">
+<!-- Modal Playlist -->
+<div id="playlistModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="playlistModalTitle">Criar Playlist</h2>
+            <button class="close-btn" onclick="closeModal('playlistModal')">×</button>
+        </div>
+        <form id="playlistForm">
+            <input type="hidden" id="playlistId">
+            <div class="form-group">
+                <label for="playlistName">Nome da Playlist *</label>
+                <input type="text" id="playlistName" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Conteúdo da Playlist (Arraste para ordenar)</label>
+                
+                <!-- Tabs para escolher entre Mídias e Campanhas -->
+                <div class="content-tabs">
+                    <button type="button" class="content-tab active" data-content="media">Mídias Individuais</button>
+                    <button type="button" class="content-tab" data-content="campaigns">Campanhas</button>
+                </div>
+                
+                <!-- Container para Mídias -->
+                <div id="playlistMediaContent" class="playlist-content active">
+                    <div class="media-checkboxes" id="mediaCheckboxes">
+                        <!-- Checkboxes de mídias individuais -->
+                    </div>
+                </div>
+                
+                <!-- Container para Campanhas -->
+                <div id="playlistCampaignsContent" class="playlist-content">
+                    <div class="campaign-checkboxes" id="campaignCheckboxes">
+                        <!-- Checkboxes de campanhas -->
+                    </div>
+                </div>
+                
+                <!-- Preview da ordem da playlist -->
+                <div class="playlist-order-preview" id="playlistOrderPreview">
+                    <h4 style="margin: 15px 0 10px 0;">Ordem da Playlist:</h4>
+                    <div id="playlistOrderList"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button type="submit" class="btn btn-success">Salvar</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal('playlistModal')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+    <!-- Modal Campanha -->
+    <div id="campaignModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="playlistModalTitle">Criar Playlist</h2>
-                <button class="close-btn" onclick="closeModal('playlistModal')">×</button>
+                <h2 id="campaignModalTitle">Criar Campanha</h2>
+                <button class="close-btn" onclick="closeModal('campaignModal')">×</button>
             </div>
-            <form id="playlistForm">
-                <input type="hidden" id="playlistId">
+            <form id="campaignForm">
+                <input type="hidden" id="campaignId">
                 <div class="form-group">
-                    <label for="playlistName">Nome da Playlist *</label>
-                    <input type="text" id="playlistName" class="form-control" required>
+                    <label for="campaignName">Nome da Campanha *</label>
+                    <input type="text" id="campaignName" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Mídias na Playlist (Arraste para ordenar)</label>
-                    <div class="media-checkboxes" id="mediaCheckboxes">
+                    <label>Mídias na Campanha (Arraste para ordenar)</label>
+                    <div class="media-checkboxes" id="campaignMediaCheckboxes">
                         <!-- Checkboxes serão preenchidos via JavaScript -->
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
                     <button type="submit" class="btn btn-success">Salvar</button>
-                    <button type="button" class="btn btn-danger" onclick="closeModal('playlistModal')">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal('campaignModal')">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
-
     <!-- Modal Anunciamento -->
     <div id="announcementModal" class="modal hidden">
         <div class="modal-content">
@@ -1422,6 +804,8 @@
     let authToken = null;
     let currentDevices = [];
     let currentMedia = [];
+    let currentCampaigns = [];
+    let editingCampaignId = null;
     let currentPlaylists = [];
     let currentUsers = [];
     let currentAnnouncements = [];
@@ -1436,6 +820,9 @@
     // NOVO: Controle de event listeners já adicionados
     let eventListenersAdded = false;
     let syncButtonsInitialized = false;
+
+    // NOVO: Dispositivo atualmente em configuração
+    let currentConfigDevice = null;
 
     // Sistema de notificações
     function showNotification(message, type = 'success', duration = 5000) {
@@ -1533,6 +920,10 @@
         switch (data.type) {
             case 'device_media_update':
                 updateDevicePreview(data);
+                // NOVO: Atualizar informações da mídia atual na tela de configuração
+                if (currentConfigDevice && data.deviceId === currentConfigDevice.id) {
+                    updateCurrentMediaInfo(data);
+                }
                 break;
             case 'sync_command':
                 showNotification(`Comando de sincronização recebido: ${data.command}`, 'info');
@@ -1541,6 +932,14 @@
                 showNotification(`Pronunciamento iniciado: ${data.announcement.name}`, 'warning');
                 break;
         }
+    }
+
+    // NOVO: Atualizar informações da mídia atual
+    function updateCurrentMediaInfo(data) {
+        document.getElementById('currentMediaName').textContent = data.media.originalName;
+        
+        const displayTime = data.media.displayTime || 10;
+        document.getElementById('currentMediaTime').textContent = `${displayTime}s`;
     }
 
     // Sistema de autenticação
@@ -1594,7 +993,43 @@
             showLoginScreen();
         }
     }
-
+            //  Função para carregar dados específicos de cada aba
+function loadTabSpecificData(tab) {
+    switch(tab) {
+        case 'dashboard':
+            loadDevices();
+            updateStats();
+            updateDevicesTable();
+            break;
+        case 'devices':
+            loadDevices();
+            break;
+        case 'media':
+            loadMedia();
+            break;
+        case 'playlists':
+            loadPlaylists();
+            loadCampaigns(); // Para mostrar campanhas disponíveis
+            break;
+        case 'campaigns':
+            loadCampaigns();
+            loadMedia(); // Para mostrar mídias disponíveis
+            break;
+        case 'announcements':
+            loadAnnouncements();
+            loadMedia();
+            loadDevices();
+            break;
+        case 'users':
+            if (currentUser.role === 'admin') {
+                loadUsers();
+            }
+            break;
+        case 'backup':
+            updateSystemStatus();
+            break;
+    }
+}
     function showLoginScreen() {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('main-system').classList.add('hidden');
@@ -1613,7 +1048,10 @@
             document.getElementById('users-tab').classList.add('hidden');
         }
         
-        loadAllData();
+        loadAllData().then(() => {
+        // E depois carregar dados específicos da aba atual (Dashboard)
+        loadTabSpecificData('dashboard');
+    });
     }
 
 // ATUALIZADA: Verificar autenticação
@@ -1660,6 +1098,9 @@ function checkAuthentication() {
 
     function closeModal(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+        // if(modalId === 'resetPasswordModal') {
+        //     document.getElementById('login-screen').classList.remove('hidden');
+        // }
     }
 
     // ATUALIZADA: Abrir modal de dispositivo
@@ -1692,6 +1133,168 @@ function checkAuthentication() {
         openModal('deviceModal');
     }
 
+    // NOVO: Mostrar página de configuração do dispositivo
+    function showDeviceConfig(device) {
+        loadAllData ();
+        currentConfigDevice = device;
+        
+        // Atualizar título
+        document.getElementById('device-config-title').textContent = `Configuração: ${device.name}`;
+        
+        // Preencher informações do dispositivo
+        document.getElementById('configDeviceName').value = device.name;
+        document.getElementById('configDeviceLocation').value = device.location;
+        document.getElementById('configDeviceMac').textContent = device.mac || 'N/A';
+        document.getElementById('configDeviceStatus').textContent = device.status === 'active' ? 'Ativo' : 'Pendente';
+        
+        // Carregar opções de playlist
+        loadConfigPlaylistOptions(device.playlistId);
+        
+        // Configurar áudio (padrão: desligado)
+        document.getElementById('configDeviceAudio').checked = device.audioEnabled || false;
+
+        // Configurar developer (padrão: desligado)
+        document.getElementById('configDeviceDeveloper').checked = device.developer|| false;
+        
+        // Configurar rotação (padrão: horizontal)
+        const rotation = device.rotation || 'horizontal';
+        document.getElementById('configDeviceRotation').value = rotation;
+        selectRotation(rotation);
+        
+        // Mostrar página de configuração
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById('device-config').classList.add('active');
+        
+        // document.getElementById('page-title').textContent = `Configuração: ${device.name}`;
+        
+        // Solicitar informações atuais do dispositivo
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'request_preview',
+                deviceId: device.id
+            }));
+        }
+    }
+
+    // NOVO: Voltar para lista de dispositivos
+    function showDevicesList() {
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById('devices').classList.add('active');
+        
+        document.getElementById('page-title').textContent = 'Dispositivos';
+        currentConfigDevice = null;
+    }
+
+    // NOVO: Carregar opções de playlist para configuração
+async function loadConfigPlaylistOptions(selectedPlaylistId = null) {
+        const select = document.getElementById('configDevicePlaylist');
+
+        // GARANTIR que as playlists estão carregadas
+        if (currentPlaylists.length === 0) {
+            await loadPlaylists();
+        }
+        
+
+        select.innerHTML = '<option value="">Todas as mídias</option>';
+        
+        currentPlaylists.forEach(playlist => {
+            const option = document.createElement('option');
+            option.value = playlist.id;
+            option.textContent = playlist.name;
+            option.selected = (playlist.id === selectedPlaylistId);
+            select.appendChild(option);
+        });
+    }
+
+    // NOVO: Selecionar rotação
+    function selectRotation(rotation) {
+        // Remover seleção anterior
+        document.querySelectorAll('.rotation-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Adicionar seleção atual
+        const selectedOption = document.querySelector(`.rotation-option[data-rotation="${rotation}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+        
+        // Atualizar valor oculto
+        document.getElementById('configDeviceRotation').value = rotation;
+        
+        // Aplicar rotação na tela de preview
+        const screenContent = document.querySelector('.current-media-info');
+        screenContent.className = 'current-media-info';
+        screenContent.classList.add(`rotation-${rotation}`);
+    }
+
+// NOVO: Salvar configurações do dispositivo - CORRIGIDO
+async function saveDeviceConfig() {
+    if (!currentConfigDevice) return;
+    
+    const deviceData = {
+        name: document.getElementById('configDeviceName').value,
+        location: document.getElementById('configDeviceLocation').value,
+        playlistId: document.getElementById('configDevicePlaylist').value || null,
+        audioEnabled: document.getElementById('configDeviceAudio').checked,
+        rotation: document.getElementById('configDeviceRotation').value,
+        developer: document.getElementById('configDeviceDeveloper').checked
+    };
+    
+    try {
+        const response = await authenticatedFetch(`${SERVER_URL}/api/devices/${currentConfigDevice.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(deviceData)
+        });
+        
+        if (response.ok) {
+            const updatedDevice = await response.json();
+            showNotification('Configurações do dispositivo salvas com sucesso!');
+            
+            // Atualizar dispositivo na lista local
+            const deviceIndex = currentDevices.findIndex(d => d.id === currentConfigDevice.id);
+            if (deviceIndex !== -1) {
+                currentDevices[deviceIndex] = updatedDevice;
+            }
+            
+            // Atualizar informações na tela
+            currentConfigDevice = updatedDevice;
+            document.getElementById('device-config-title').textContent = `Configuração: ${updatedDevice.name}`;
+            document.getElementById('configDeviceStatus').textContent = updatedDevice.status === 'active' ? 'Ativo' : 'Pendente';
+            
+            // NOVO: Atualizar visualização da rotação
+            selectRotation(updatedDevice.rotation);
+
+            loadAllData();
+        }
+    } catch (error) {
+        showNotification('Erro ao salvar configurações: ' + error.message, 'error');
+    }
+}
+
+    // NOVO: Desconectar dispositivo da tela de configuração
+    async function disconnectConfigDevice() {
+        if (!currentConfigDevice) return;
+        
+        const confirmed = await showConfirmation(
+            'Deseja desconectar este dispositivo? Ele precisará ser reativado com um novo código.',
+            'Desconectar Dispositivo'
+        );
+        
+        if (!confirmed) return;
+        
+        try {
+            await disconnectDevice(currentConfigDevice.id);
+            showDevicesList();
+        } catch (error) {
+            showNotification('Erro ao desconectar dispositivo: ' + error.message, 'error');
+        }
+    }
+
     function openEditMediaModal(mediaItem) {
         document.getElementById('editMediaId').value = mediaItem.id;
         document.getElementById('editMediaName').value = mediaItem.originalName;
@@ -1712,22 +1315,379 @@ function checkAuthentication() {
         openModal('editMediaModal');
     }
 
-    function openPlaylistModal(playlist = null) {
-        editingPlaylistId = playlist ? playlist.id : null;
-        const title = document.getElementById('playlistModalTitle');
-        
-        title.textContent = playlist ? 'Editar Playlist' : 'Criar Playlist';
-        
-        if (playlist) {
-            document.getElementById('playlistId').value = playlist.id;
-            document.getElementById('playlistName').value = playlist.name;
-        } else {
-            document.getElementById('playlistForm').reset();
-        }
-        
-        renderMediaCheckboxes(playlist ? playlist.mediaIds : [], playlist ? playlist.mediaOrder : []);
-        openModal('playlistModal');
+function openPlaylistModal(playlist = null) {
+    editingPlaylistId = playlist ? playlist.id : null;
+    const title = document.getElementById('playlistModalTitle');
+    
+    title.textContent = playlist ? 'Editar Playlist' : 'Criar Playlist';
+    
+    if (playlist) {
+        document.getElementById('playlistId').value = playlist.id;
+        document.getElementById('playlistName').value = playlist.name;
+    } else {
+        document.getElementById('playlistForm').reset();
     }
+    
+    // Usar valores padrão se as propriedades não existirem
+    const mediaIds = playlist ? (playlist.mediaIds || []) : [];
+    const campaignIds = playlist ? (playlist.campaignIds || []) : [];
+    const mediaOrder = playlist ? (playlist.mediaOrder || []) : [];
+    const campaignOrder = playlist ? (playlist.campaignOrder || []) : [];
+    
+    renderPlaylistMediaCheckboxes(mediaIds, mediaOrder);
+    renderPlaylistCampaignCheckboxes(campaignIds, campaignOrder);
+    updatePlaylistOrderPreview(playlist);
+    
+    // Inicializar tabs de conteúdo
+    initPlaylistContentTabs();
+    
+    openModal('playlistModal');
+    
+    // Inicializar observers para atualizar o preview
+    setTimeout(() => {
+        initPlaylistCheckboxObservers();
+        updatePlaylistOrderPreview(playlist);
+    }, 100);
+}
+
+
+// Inicializar tabs de conteúdo da playlist
+function initPlaylistContentTabs() {
+    document.querySelectorAll('.content-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remover active de todas as tabs e conteúdos
+            document.querySelectorAll('.content-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.playlist-content').forEach(c => c.classList.remove('active'));
+            
+            // Adicionar active na tab e conteúdo clicados
+            this.classList.add('active');
+            const contentId = this.dataset.content + 'Content';
+            document.getElementById('playlist' + contentId.charAt(0).toUpperCase() + contentId.slice(1)).classList.add('active');
+        });
+    });
+}
+// Renderizar checkboxes de mídias para playlist
+function renderPlaylistMediaCheckboxes(selectedMediaIds = [], mediaOrder = []) {
+    const container = document.getElementById('mediaCheckboxes');
+    container.innerHTML = '';
+    
+    if (currentMedia.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhuma mídia disponível</p>';
+        return;
+    } 
+    
+    let mediaToShow = currentMedia;
+    // if (mediaOrder.length > 0) {
+    //     mediaToShow = mediaOrder.map(id => currentMedia.find(m => m.id === id)).filter(Boolean);
+    // } else {
+        mediaToShow.sort((a, b) => (a.order || 0) - (b.order || 0));
+    // }
+    
+    mediaToShow.forEach(mediaItem => {
+        const div = document.createElement('div');
+        div.className = 'media-checkbox-item';
+        div.draggable = true;
+        div.dataset.id = mediaItem.id;
+        div.dataset.type = 'media';
+        
+        const isChecked = selectedMediaIds.includes(mediaItem.id);
+        const mediaTypeIcon = mediaItem.mediaType === 'youtube' ? '📺' : 
+                           mediaItem.mediaType === 'website' ? '🌐' : 
+                           mediaItem.type === 'image' ? '🖼️' : '🎥';
+        
+        div.innerHTML = `
+            <input type="checkbox" value="${mediaItem.id}" ${isChecked ? 'checked' : ''}>
+            <span class="drag-handle">⠿</span>
+            <span style="flex: 1;">
+                <strong>${mediaItem.originalName}</strong>
+                <br>
+                <small style="color: #666;">
+                    ${mediaTypeIcon} ${mediaItem.mediaType || 'upload'} 
+                    • ${mediaItem.displayTime}s
+                    ${mediaItem.type ? `• ${mediaItem.type}` : ''}
+                </small>
+            </span>
+        `;
+        container.appendChild(div);
+    });
+    
+    initPlaylistMediaDragAndDrop();
+}
+
+// Inicializar drag and drop para mídias na playlist
+function initPlaylistMediaDragAndDrop() {
+    const container = document.getElementById('playlistOrderList');
+    let draggedItem = null;
+    
+    container.querySelectorAll('.media-checkbox-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedItem = null;
+            updatePlaylistOrderPreview();
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedItem && draggedItem !== this) {
+                const container = this.parentNode;
+                if (draggedItem.parentNode === container) {
+                    const fromIndex = Array.from(container.children).indexOf(draggedItem);
+                    const toIndex = Array.from(container.children).indexOf(this);
+                    
+                    if (fromIndex < toIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                    updatePlaylistOrderPreview();
+                }
+            }
+        });
+    });
+}
+// Renderizar checkboxes de campanhas para playlist
+function renderPlaylistCampaignCheckboxes(selectedCampaignIds = [], campaignOrder = []) {
+    const container = document.getElementById('campaignCheckboxes');
+    container.innerHTML = '';
+    
+    if (currentCampaigns.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhuma campanha disponível</p>';
+        return;
+    }
+    
+    let campaignsToShow = currentCampaigns;
+    // if (campaignOrder.length > 0) {
+    //     campaignsToShow = campaignOrder.map(id => currentCampaigns.find(c => c.id === id)).filter(Boolean);
+    // }
+    
+    campaignsToShow.forEach(campaign => {
+        const div = document.createElement('div');
+        div.className = 'campaign-checkbox-item';
+        div.draggable = true;
+        div.dataset.id = campaign.id;
+        div.dataset.type = 'campaign';
+        
+        const isChecked = selectedCampaignIds.includes(campaign.id);
+        
+        div.innerHTML = `
+            <input type="checkbox" value="${campaign.id}" ${isChecked ? 'checked' : ''}>
+            <span class="drag-handle">⠿</span>
+            <span style="flex: 1;">
+                <strong>${campaign.name}</strong>
+                <br>
+                <small style="color: #666;">
+                    🎯 Campanha • ${campaign.mediaIds.length} mídia(s)
+                </small>
+            </span>
+        `;
+        container.appendChild(div);
+    });
+    
+    initPlaylistCampaignDragAndDrop();
+}
+
+// Inicializar drag and drop para campanhas na playlist
+function initPlaylistCampaignDragAndDrop() {
+    const container = document.getElementById('campaignCheckboxes');
+    let draggedItem = null;
+    
+    container.querySelectorAll('.campaign-checkbox-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedItem = null;
+            updatePlaylistOrderPreview();
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedItem && draggedItem !== this) {
+                const container = this.parentNode;
+                if (draggedItem.parentNode === container) {
+                    const fromIndex = Array.from(container.children).indexOf(draggedItem);
+                    const toIndex = Array.from(container.children).indexOf(this);
+                    
+                    if (fromIndex < toIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                    updatePlaylistOrderPreview();
+                }
+            }
+        });
+    });
+}
+
+
+// Atualizar preview da ordem da playlist COM DRAG & DROP
+function updatePlaylistOrderPreview(playlist = null) {
+    const container = document.getElementById('playlistOrderList');
+    container.innerHTML = '';
+    
+    // Coletar todas as mídias selecionadas
+    const selectedMedia = Array.from(document.querySelectorAll('#mediaCheckboxes input[type="checkbox"]:checked'))
+        .map(checkbox => {
+            const item = checkbox.closest('.media-checkbox-item');
+            return {
+                id: item.dataset.id,
+                name: item.querySelector('strong').textContent,
+                type: 'media'
+            };
+        });
+    
+    // Coletar todas as campanhas selecionadas
+    const selectedCampaigns = Array.from(document.querySelectorAll('#campaignCheckboxes input[type="checkbox"]:checked'))
+        .map(checkbox => {
+            const item = checkbox.closest('.campaign-checkbox-item');
+            return {
+                id: item.dataset.id,
+                name: item.querySelector('strong').textContent,
+                type: 'campaign'
+            };
+        });
+    
+    // Combinar todos os itens
+    let allItems = [...selectedMedia, ...selectedCampaigns];
+    
+    // Se temos uma playlist com contentOrder, usar essa ordem
+    if (playlist && playlist.contentOrder && playlist.contentOrder.length > 0) {
+        const orderedItems = [];
+        playlist.contentOrder.forEach(orderedItem => {
+            const foundItem = allItems.find(item => item.id === orderedItem.id && item.type === orderedItem.type);
+            if (foundItem) {
+                orderedItems.push(foundItem);
+            }
+        });
+        // Adicionar quaisquer itens novos que não estavam na ordem antiga
+        allItems.forEach(item => {
+            if (!orderedItems.find(oi => oi.id === item.id && oi.type === item.type)) {
+                orderedItems.push(item);
+            }
+        });
+        allItems = orderedItems;
+    }
+    
+    if (allItems.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center;">Nenhum item selecionado</p>';
+        return;
+    }
+    
+    allItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = `playlist-order-item ${item.type}`;
+        div.draggable = true;
+        div.dataset.id = item.id;
+        div.dataset.type = item.type;
+        
+        div.innerHTML = `
+            <span class="drag-handle">⠿</span>
+            <span style="flex: 1;">
+                <strong>${item.name}</strong>
+                <br>
+                <small style="color: #666;">
+                    ${item.type === 'media' ? '📄 Mídia' : '🎯 Campanha'}
+                    • Posição ${index + 1}
+                </small>
+            </span>
+        `;
+        container.appendChild(div);
+    });
+    
+    // Inicializar drag and drop na preview da ordem
+    initPlaylistOrderDragAndDrop();
+}
+
+// Inicializar drag and drop na ordem da playlist
+function initPlaylistOrderDragAndDrop() {
+    const container = document.getElementById('playlistOrderList');
+    let draggedItem = null;
+    
+    container.querySelectorAll('.playlist-order-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedItem = null;
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedItem && draggedItem !== this) {
+                const container = this.parentNode;
+                if (draggedItem.parentNode === container) {
+                    const fromIndex = Array.from(container.children).indexOf(draggedItem);
+                    const toIndex = Array.from(container.children).indexOf(this);
+                    
+                    if (fromIndex < toIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                    
+                    // Atualizar a ordem visualmente
+                    updatePlaylistOrderNumbers();
+                }
+            }
+        });
+    });
+}
+
+
+// Atualizar números de posição na ordem
+function updatePlaylistOrderNumbers() {
+    const container = document.getElementById('playlistOrderList');
+    const items = container.querySelectorAll('.playlist-order-item');
+    
+    items.forEach((item, index) => {
+        const small = item.querySelector('small');
+        const type = item.dataset.type === 'media' ? '📄 Mídia' : '🎯 Campanha';
+        small.innerHTML = `${type} • Posição ${index + 1}`;
+    });
+}
+// Observar mudanças nos checkboxes para atualizar o preview
+function initPlaylistCheckboxObservers() {
+    // Observar mudanças nas mídias
+    document.querySelectorAll('#mediaCheckboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePlaylistOrderPreview);
+    });
+    
+    // Observar mudanças nas campanhas
+    document.querySelectorAll('#campaignCheckboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePlaylistOrderPreview);
+    });
+}
+
 
     function openAnnouncementModal() {
         loadMediaOptions('announcementMedia');
@@ -1885,9 +1845,9 @@ function checkAuthentication() {
         div.innerHTML = `
             <div class="drag-handle">⠿</div>
             ${previewContent}
-            <div style="display: none; width: 60px; height: 60px; background: #ecf0f1; display: flex; align-items: center; justify-content: center; color: #666; border-radius: 6px;">
+            <!-- <div style="display: none; width: 60px; height: 60px; background: #ecf0f1; display: flex; align-items: center; justify-content: center; color: #666; border-radius: 6px;">
                 ${mediaTypeIcon}
-            </div>
+            </div>-->
             <div class="media-list-info">
                 <h4>${mediaItem.originalName}</h4>
                 <p>${mediaTypeIcon} ${mediaItem.mediaType || 'upload'} • ${mediaItem.displayTime}s</p>
@@ -2132,15 +2092,19 @@ async function loadAllData() {
     }
     
     try {
-        await loadDevices();
         await loadMedia();
         await loadPlaylists();
         await loadAnnouncements();
+        await loadDevices();
+        await loadCampaigns();
+
+
         if (currentUser.role === 'admin') {
             await loadUsers();
         }
         updateStats();
         updateDevicesTable();
+        initMediaTabs(); 
     } catch (error) {
         if (error.message === 'Sessão expirada') {
             // Já foi tratado no authenticatedFetch
@@ -2215,11 +2179,13 @@ async function loadAllData() {
         }
     }
 
-    // ATUALIZADA: Renderizar lista de dispositivos
+    // ATUALIZADA: Renderizar lista de dispositivos - REMOVER botões e adicionar link para configuração
     function renderDevicesList() {
         const tbody = document.querySelector('#devicesListTable tbody');
         tbody.innerHTML = '';
         
+        // currentDevices = currentDevices.filter(device => device.userId !== null);
+
         currentDevices.forEach(device => {
             const playlistName = device.playlistId ? 
                 currentPlaylists.find(p => p.id === device.playlistId)?.name || 'Playlist não encontrada' : 
@@ -2243,35 +2209,24 @@ async function loadAllData() {
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>
+                <td id="tName">
                     <strong>${device.name}</strong>
                     ${device.mac ? `<br><small style="color: #666;">MAC: ${device.mac}</small>` : ''}
                 </td>
-                <td>${device.location}</td>
-                <td><span class="status-${device.status}">${device.status === 'active' ? 'Ativo' : 'Pendente'}</span></td>
-                <td>
+                <td id="tLocation">${device.location}</td>
+                <td id="tStatus"><span class="status-${device.status}">${device.status === 'active' ? 'Ativo' : 'Pendente'}</span></td>
+                <td id="tCode">
                     ${device.status === 'pending' ? 
                         `<span class="auth-code">${device.authCode}</span><br>
                          <small style="color: #e74c3c;">Expira: ${device.codeExpiry ? new Date(device.codeExpiry).toLocaleTimeString() : 'N/A'}</small>` : 
                         '<span style="color: #27ae60;">Ativado</span>'
                     }
                 </td>
-                <td>${playlistName}</td>
-                <td>${lastSeenText}</td>
-                <td class="action-buttons">
-                    <button class="btn btn-warning btn-sm" onclick="openDeviceModal(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        Editar
-                    </button>
-                    ${device.status === 'active' ? `
-                    <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        Visualizar
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
-                        Desconectar
-                    </button>
-                    ` : ''}
-                    <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')">
-                        Excluir
+                <td id="tPlaylist">${playlistName}</td>
+                <td id="tLastSeen">${lastSeenText}</td>
+                <td id="tActionButtons" class="action-buttons">
+                    <button class="butn btn-primary btn-sm" onclick="showDeviceConfig(${JSON.stringify(device).replace(/"/g, '&quot;')})">
+                        <i class="ti ti-settings"></i> Configurar
                     </button>
                 </td>
             `;
@@ -2279,84 +2234,86 @@ async function loadAllData() {
         });
     }
 
-    function renderPlaylistsList() {
-        const container = document.getElementById('playlistsList');
-        container.innerHTML = '';
+function renderPlaylistsList() {
+    const container = document.getElementById('playlistsList');
+    container.innerHTML = '';
+    
+    if (!currentPlaylists || currentPlaylists.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma playlist criada</p>';
+        return;
+    }
+    
+    currentPlaylists.forEach(playlist => {
+        const playlistElement = document.createElement('div');
+        playlistElement.className = 'card';
+        playlistElement.style.marginBottom = '15px';
         
-        if (currentPlaylists.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma playlist criada</p>';
-            return;
-        }
+        // Usar valores padrão se as propriedades não existirem
+        const mediaIds = playlist.mediaIds || [];
+        const campaignIds = playlist.campaignIds || [];
+        const mediaCount = mediaIds.length;
+        const campaignCount = campaignIds.length;
+        const totalItems = mediaCount + campaignCount;
         
-        currentPlaylists.forEach(playlist => {
-            const playlistElement = document.createElement('div');
-            playlistElement.className = 'card';
-            playlistElement.style.marginBottom = '15px';
-            
-            const mediaCount = playlist.mediaIds.length;
-            const assignedDevices = currentDevices.filter(d => d.playlistId === playlist.id);
-            const activeDevices = assignedDevices.filter(d => d.status === 'active');
-            const hasCustomOrder = playlist.mediaOrder && playlist.mediaOrder.length > 0;
-            
-            playlistElement.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div style="flex: 1;">
-                        <h3 style="margin: 0 0 10px 0;">${playlist.name}</h3>
-                        <p style="margin: 0 0 10px 0; color: #666;">
-                            📁 ${mediaCount} mídia(s) • ${assignedDevices.length} dispositivo(s)
-                            ${activeDevices.length > 0 ? `• ${activeDevices.length} ativo(s)` : ''}
-                            ${hasCustomOrder ? '• Ordem personalizada' : ''}
-                        </p>
-                        
-                        ${activeDevices.length > 0 ? `
-                        <div class="playlist-sync-info">
-                            <strong>Dispositivos Ativos:</strong>
-                            <div style="margin-top: 5px;">
-                                ${activeDevices.map(device => 
-                                    `<span class="device-tag" style="margin-right: 5px; margin-bottom: 5px;">${device.name}</span>`
-                                ).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
-                        
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            ${activeDevices.length > 0 ? `
-                            <button class="btn btn-success btn-sm sync-playlist-btn" data-playlist-id="${playlist.id}">
-                                Sincronizar Playlist
-                            </button>
-                            ` : ''}
-                            <button class="btn btn-warning btn-sm" onclick="openPlaylistModal(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
-                                Editar
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deletePlaylist('${playlist.id}')">
-                                Excluir
-                            </button>
+        const assignedDevices = currentDevices.filter(d => d.playlistId === playlist.id);
+        const activeDevices = assignedDevices.filter(d => d.status === 'active');
+        const hasCustomOrder = playlist.contentOrder && playlist.contentOrder.length > 0;
+        
+        playlistElement.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 10px 0;">${playlist.name}</h3>
+                    <p style="margin: 0 0 10px 0; color: #666;">
+                        📁 ${totalItems} item(s) • ${mediaCount} mídia(s) • ${campaignCount} campanha(s)
+                        ${assignedDevices.length > 0 ? `• ${assignedDevices.length} dispositivo(s)` : ''}
+                        ${activeDevices.length > 0 ? `• ${activeDevices.length} ativo(s)` : ''}
+                        ${hasCustomOrder ? '• Ordem personalizada' : ''}
+                    </p>
+                    
+                    ${activeDevices.length > 0 ? `
+                    <div class="playlist-sync-info">
+                        <strong>Dispositivos Ativos:</strong>
+                        <div style="margin-top: 5px;">
+                            ${activeDevices.map(device => 
+                                `<span class="device-tag" style="margin-right: 5px; margin-bottom: 5px;">${device.name}</span>`
+                            ).join('')}
                         </div>
                     </div>
+                    ` : ''}
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        ${activeDevices.length > 0 ? `
+                        <button class="btn btn-success btn-sm sync-playlist-btn" data-playlist-id="${playlist.id}">
+                            Sincronizar Playlist
+                        </button>
+                        ` : ''}
+                        <button class="btn btn-warning btn-sm" onclick="openPlaylistModal(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePlaylist('${playlist.id}')">
+                            Excluir
+                        </button>
+                    </div>
                 </div>
-            `;
-            container.appendChild(playlistElement);
+            </div>
+        `;
+        container.appendChild(playlistElement);
+    });
+    
+    // Re-inicializar botões de sync
+    setTimeout(() => {
+        document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
+            btn.replaceWith(btn.cloneNode(true));
         });
         
-        // ADICIONAR EVENT LISTENERS para os botões de sync - COM CONTROLE DE DUPLICAÇÃO
-        setTimeout(() => {
-            // REMOVER event listeners anteriores se existirem
-            document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
-                btn.replaceWith(btn.cloneNode(true));
+        document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const playlistId = this.getAttribute('data-playlist-id');
+                syncPlaylist(playlistId);
             });
-            
-            // ADICIONAR novos event listeners
-            document.querySelectorAll('.sync-playlist-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const playlistId = this.getAttribute('data-playlist-id');
-                    console.log(`Clicou em sincronizar playlist: ${playlistId}`);
-                    syncPlaylist(playlistId);
-                });
-            });
-            
-            syncButtonsInitialized = true;
-        }, 100);
-    }
+        });
+    }, 100);
+}
 
     function renderAnnouncementsList() {
         const container = document.getElementById('announcementsList');
@@ -2469,7 +2426,10 @@ async function loadAllData() {
                         authCode: authCode,
                         name: deviceData.name,
                         location: deviceData.location,
-                        playlistId: deviceData.playlistId
+                        playlistId: deviceData.playlistId,
+                        audioEnabled: false, // NOVO: Padrão sem áudio
+                        rotation: 'horizontal',  // padrão horizontal
+                        developer: false  
                     })
                 });
                 
@@ -2489,7 +2449,9 @@ async function loadAllData() {
         }
     }
 
-    async function deleteDevice(deviceId) {
+    async function deleteDevice() {
+        if (!deviceId) return;
+
         const confirmed = await showConfirmation(
             'Tem certeza que deseja excluir este dispositivo? Esta ação não pode ser desfeita.',
             'Excluir Dispositivo'
@@ -2498,6 +2460,13 @@ async function loadAllData() {
         if (!confirmed) return;
         
         try {
+
+        // const disconnectResponse = await authenticatedFetch(`${SERVER_URL}/api/devices/${deviceId}/disconnect`, {
+        //     method: 'POST'
+        // });
+
+        // if (disconnectResponse.ok) {
+
             const response = await authenticatedFetch(`${SERVER_URL}/api/devices/${deviceId}`, {
                 method: 'DELETE'
             });
@@ -2505,10 +2474,16 @@ async function loadAllData() {
             if (response.ok) {
                 showNotification('Dispositivo excluído com sucesso!');
                 await loadDevices();
+                showDevicesList()
             } else {
                 const error = await response.json();
                 throw new Error(error.error);
             }
+
+        // } else {
+        //     const error = await disconnectResponse.json();
+        //     throw new Error(error.error);
+        // }
         } catch (error) {
             showNotification(error.message, 'error');
         }
@@ -2532,6 +2507,7 @@ async function loadAllData() {
                 const result = await response.json();
                 showNotification('Dispositivo desconectado com sucesso!');
                 await loadDevices();
+                showDevicesList();
             } else {
                 const error = await response.json();
                 throw new Error(error.error);
@@ -2633,53 +2609,50 @@ async function loadAllData() {
         }
     }
 
-    // Playlists
-    async function savePlaylist(playlistData) {
-        try {
-            const checkboxes = document.querySelectorAll('#mediaCheckboxes input[type="checkbox"]');
-            const mediaItems = Array.from(document.querySelectorAll('#mediaCheckboxes .media-checkbox-item'));
-            
-            const selectedMediaIds = [];
-            const mediaOrder = [];
-            
-            mediaItems.forEach(item => {
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                const mediaId = item.dataset.id;
-                
-                if (checkbox.checked) {
-                    selectedMediaIds.push(mediaId);
-                    mediaOrder.push(mediaId);
-                }
-            });
-            
-            playlistData.mediaIds = selectedMediaIds;
-            playlistData.mediaOrder = mediaOrder;
-            
-            const url = playlistData.id 
-                ? `${SERVER_URL}/api/playlists/${playlistData.id}`
-                : `${SERVER_URL}/api/playlists`;
-            
-            const method = playlistData.id ? 'PUT' : 'POST';
-            
-            const response = await authenticatedFetch(url, {
-                method: method,
-                body: JSON.stringify(playlistData)
-            });
-            
-            if (response.ok) {
-                const playlist = await response.json();
-                showNotification(`Playlist ${playlistData.id ? 'atualizada' : 'criada'} com sucesso!`);
-                closeModal('playlistModal');
-                await loadPlaylists();
-                return playlist;
-            } else {
-                const error = await response.json();
-                throw new Error(error.error);
-            }
-        } catch (error) {
-            showNotification(error.message, 'error');
+async function savePlaylist(playlistData) {
+    try {
+        // Coletar a ordem FINAL da preview (que tem drag & drop)
+        const orderContainer = document.getElementById('playlistOrderList');
+        const orderItems = Array.from(orderContainer.querySelectorAll('.playlist-order-item'));
+        
+        const contentOrder = orderItems.map(item => ({
+            id: item.dataset.id,
+            type: item.dataset.type
+        }));
+        
+        // Coletar IDs de mídias e campanhas baseado na ordem final
+        const selectedMediaIds = contentOrder.filter(item => item.type === 'media').map(item => item.id);
+        const selectedCampaignIds = contentOrder.filter(item => item.type === 'campaign').map(item => item.id);
+        
+        playlistData.mediaIds = selectedMediaIds;
+        playlistData.campaignIds = selectedCampaignIds;
+        playlistData.contentOrder = contentOrder;
+        
+        const url = playlistData.id 
+            ? `${SERVER_URL}/api/playlists/${playlistData.id}`
+            : `${SERVER_URL}/api/playlists`;
+        
+        const method = playlistData.id ? 'PUT' : 'POST';
+        
+        const response = await authenticatedFetch(url, {
+            method: method,
+            body: JSON.stringify(playlistData)
+        });
+        
+        if (response.ok) {
+            const playlist = await response.json();
+            showNotification(`Playlist ${playlistData.id ? 'atualizada' : 'criada'} com sucesso!`);
+            closeModal('playlistModal');
+            await loadPlaylists();
+            return playlist;
+        } else {
+            const error = await response.json();
+            throw new Error(error.error);
         }
+    } catch (error) {
+        showNotification(error.message, 'error');
     }
+}
 
     async function deletePlaylist(playlistId) {
         const confirmed = await showConfirmation(
@@ -2950,14 +2923,7 @@ async function loadAllData() {
                 <td><span class="status-active">Ativo</span></td>
                 <td>${lastSeen}</td>
                 <td>${playlistName}</td>
-                <td>
-                    <button class="btn btn-info btn-sm" onclick="openDevicePreview(${JSON.stringify(device).replace(/"/g, '&quot;')})">
-                        Visualizar
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="disconnectDevice('${device.id}')">
-                        Desconectar
-                    </button>
-                </td>
+
             `;
             tbody.appendChild(tr);
         });
@@ -3044,7 +3010,13 @@ function setupEventListeners() {
             document.querySelectorAll('.sidebar-menu li').forEach(item => {
                 item.addEventListener('click', function() {
                     const tab = this.dataset.tab;
-                    
+
+
+                    if( window.screen.width <= 768 ) {
+                    const sidebarmenu = document.querySelector('.sidebar-menu');
+                    sidebarmenu.classList.toggle('activeMenu');
+                    }
+
                     document.querySelectorAll('.sidebar-menu li').forEach(li => {
                         li.classList.remove('active');
                     });
@@ -3056,6 +3028,8 @@ function setupEventListeners() {
                     document.getElementById(tab).classList.add('active');
                     
                     document.getElementById('page-title').textContent = this.textContent.replace(/[📊📺🖼️📋📢👥💾]/g, '').trim();
+
+                    loadTabSpecificData(tab);
                 });
             });
             
@@ -3098,7 +3072,7 @@ function setupEventListeners() {
             });
             
             fileInput.addEventListener('change', handleFileUpload);
-            
+
             function handleFileUpload() {
                 if (fileInput.files.length > 0) {
                     const formData = new FormData();
@@ -3180,6 +3154,20 @@ function setupEventListeners() {
                 saveUser(userData);
             });
             
+            document.getElementById('campaignForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const campaignData = {
+                    name: document.getElementById('campaignName').value
+                };
+                
+                if (editingCampaignId) {
+                    campaignData.id = editingCampaignId;
+                }
+                
+                saveCampaign(campaignData);
+            });
+
             document.getElementById('addDeviceBtn').addEventListener('click', () => openDeviceModal());
             document.getElementById('addMediaBtn').addEventListener('click', () => openModal('mediaModal'));
             document.getElementById('addExternalMediaBtn').addEventListener('click', () => openModal('externalMediaModal'));
@@ -3187,7 +3175,8 @@ function setupEventListeners() {
             document.getElementById('addAnnouncementBtn').addEventListener('click', () => openAnnouncementModal());
             document.getElementById('addUserBtn').addEventListener('click', () => openModal('userModal'));
             document.getElementById('exportBtn').addEventListener('click', exportBackup);
-            
+            document.getElementById('addCampaignBtn').addEventListener('click', () => openCampaignModal());
+
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
@@ -3222,7 +3211,7 @@ function setupEventListeners() {
 
 // NOVA: Funções para redefinir senha
 function openResetPasswordModal() {
-    closeModal('login-screen');
+    // closeModal('login-screen');
     openModal('resetPasswordModal');
 }
 
@@ -3275,6 +3264,301 @@ document.getElementById('resetPasswordForm').addEventListener('submit', function
     updateSystemStatus();
 
     console.log('Media Indoor Admin carregado com sucesso!');
+
+
+
+        // Mobile menu toggle
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        mobileMenu.addEventListener('click', () => {
+            const sidebarmenu = document.querySelector('.sidebar-menu');
+
+            sidebarmenu.classList.toggle('activeMenu');
+        });
+// ==================== FUNÇÕES DE CAMPANHAS ====================
+
+// Abrir modal de campanha
+function openCampaignModal(campaign = null) {
+    editingCampaignId = campaign ? campaign.id : null;
+    const title = document.getElementById('campaignModalTitle');
+    
+    title.textContent = campaign ? 'Editar Campanha' : 'Criar Campanha';
+    
+    if (campaign) {
+        document.getElementById('campaignId').value = campaign.id;
+        document.getElementById('campaignName').value = campaign.name;
+    } else {
+        document.getElementById('campaignForm').reset();
+    }
+    
+    renderCampaignMediaCheckboxes(campaign ? campaign.mediaIds : [], campaign ? campaign.mediaOrder : []);
+    openModal('campaignModal');
+}
+
+// Renderizar checkboxes de mídias para campanha
+function renderCampaignMediaCheckboxes(selectedMediaIds = [], mediaOrder = []) {
+    const container = document.getElementById('campaignMediaCheckboxes');
+    container.innerHTML = '';
+    
+    if (currentMedia.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhuma mídia disponível</p>';
+        return;
+    }
+    
+    let mediaToShow = currentMedia;
+    // if (mediaOrder.length > 0) {
+    //     mediaToShow = mediaOrder.map(id => currentMedia.find(m => m.id === id)).filter(Boolean);
+    // } else {
+        mediaToShow.sort((a, b) => (a.order || 0) - (b.order || 0));
+    // }
+    
+    mediaToShow.forEach(mediaItem => {
+        const div = document.createElement('div');
+        div.className = 'media-checkbox-item';
+        div.draggable = true;
+        div.dataset.id = mediaItem.id;
+        
+        const isChecked = selectedMediaIds.includes(mediaItem.id);
+        const mediaTypeIcon = mediaItem.mediaType === 'youtube' ? '📺' : 
+                           mediaItem.mediaType === 'website' ? '🌐' : 
+                           mediaItem.type === 'image' ? '🖼️' : '🎥';
+        
+        div.innerHTML = `
+            <input type="checkbox" value="${mediaItem.id}" ${isChecked ? 'checked' : ''}>
+            <span class="drag-handle">⠿</span>
+            <span style="flex: 1;">
+                <strong>${mediaItem.originalName}</strong>
+                <br>
+                <small style="color: #666;">
+                    ${mediaTypeIcon} ${mediaItem.mediaType || 'upload'} 
+                    • ${mediaItem.displayTime}s
+                    ${mediaItem.type ? `• ${mediaItem.type}` : ''}
+                </small>
+            </span>
+        `;
+        container.appendChild(div);
+    });
+    
+    initCampaignDragAndDrop();
+}
+
+// Inicializar drag and drop para campanhas
+function initCampaignDragAndDrop() {
+    const container = document.getElementById('campaignMediaCheckboxes');
+    let draggedItem = null;
+    
+    container.querySelectorAll('.media-checkbox-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedItem = null;
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedItem && draggedItem !== this) {
+                const container = this.parentNode;
+                if (draggedItem.parentNode === container) {
+                    const fromIndex = Array.from(container.children).indexOf(draggedItem);
+                    const toIndex = Array.from(container.children).indexOf(this);
+                    
+                    if (fromIndex < toIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                }
+            }
+        });
+    });
+}
+
+// Salvar campanha
+async function saveCampaign(campaignData) {
+    try {
+        const checkboxes = document.querySelectorAll('#campaignMediaCheckboxes input[type="checkbox"]');
+        const mediaItems = Array.from(document.querySelectorAll('#campaignMediaCheckboxes .media-checkbox-item'));
+        
+        const selectedMediaIds = [];
+        const mediaOrder = [];
+        
+        mediaItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const mediaId = item.dataset.id;
+            
+            if (checkbox.checked) {
+                selectedMediaIds.push(mediaId);
+                mediaOrder.push(mediaId);
+            }
+        });
+        
+        campaignData.mediaIds = selectedMediaIds;
+        campaignData.mediaOrder = mediaOrder;
+        
+        const url = campaignData.id 
+            ? `${SERVER_URL}/api/campaigns/${campaignData.id}`
+            : `${SERVER_URL}/api/campaigns`;
+        
+        const method = campaignData.id ? 'PUT' : 'POST';
+        
+        const response = await authenticatedFetch(url, {
+            method: method,
+            body: JSON.stringify(campaignData)
+        });
+        
+        if (response.ok) {
+            const campaign = await response.json();
+            showNotification(`Campanha ${campaignData.id ? 'atualizada' : 'criada'} com sucesso!`);
+            closeModal('campaignModal');
+            await loadCampaigns();
+            return campaign;
+        } else {
+            const error = await response.json();
+            throw new Error(error.error);
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+// Carregar campanhas
+async function loadCampaigns() {
+    try {
+        const response = await authenticatedFetch(`${SERVER_URL}/api/campaigns`);
+        if (response.ok) {
+            currentCampaigns = await response.json();
+            renderCampaignsList();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar campanhas:', error);
+        showNotification('Erro ao carregar campanhas', 'error');
+    }
+}
+
+// Renderizar lista de campanhas
+function renderCampaignsList() {
+    const container = document.getElementById('campaignsList');
+    container.innerHTML = '';
+    
+    if (currentCampaigns.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma campanha criada</p>';
+        return;
+    }
+    
+    currentCampaigns.forEach(campaign => {
+        const campaignElement = document.createElement('div');
+        campaignElement.className = 'card';
+        campaignElement.style.marginBottom = '15px';
+        
+        const mediaCount = campaign.mediaIds.length;
+        
+        campaignElement.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 10px 0;">${campaign.name}</h3>
+                    <p style="margin: 0 0 10px 0; color: #666;">
+                        📁 ${mediaCount} mídia(s) na campanha
+                    </p>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-warning btn-sm" onclick="openCampaignModal(${JSON.stringify(campaign).replace(/"/g, '&quot;')})">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${campaign.id}')">
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(campaignElement);
+    });
+}
+
+// Excluir campanha
+async function deleteCampaign(campaignId) {
+    const confirmed = await showConfirmation(
+        'Tem certeza que deseja excluir esta campanha? Esta ação não pode ser desfeita.',
+        'Excluir Campanha'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        const response = await authenticatedFetch(`${SERVER_URL}/api/campaigns/${campaignId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Campanha excluída com sucesso!');
+            await loadCampaigns();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error);
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+// ==================== TABS DE MÍDIAS ====================
+
+// Inicializar tabs de mídias
+function initMediaTabs() {
+    document.querySelectorAll('.media-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remover active de todas as tabs
+            document.querySelectorAll('.media-tab').forEach(t => t.classList.remove('active'));
+            // Adicionar active na tab clicada
+            this.classList.add('active');
+            
+            // Filtrar mídias
+            const type = this.dataset.type;
+            filterMediaByType(type);
+        });
+    });
+}
+
+// Filtrar mídias por tipo
+function filterMediaByType(type) {
+    const mediaItems = document.querySelectorAll('.media-list-item');
+    
+    mediaItems.forEach(item => {
+        const mediaId = item.dataset.id;
+        const mediaItem = currentMedia.find(m => m.id === mediaId);
+        
+        if (!mediaItem) return;
+        
+        let shouldShow = false;
+        
+        switch(type) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'image':
+                shouldShow = mediaItem.type === 'image' && !mediaItem.isExternal;
+                break;
+            case 'video':
+                shouldShow = mediaItem.type === 'video' && !mediaItem.isExternal;
+                break;
+            case 'external':
+                shouldShow = mediaItem.isExternal;
+                break;
+        }
+        
+        item.style.display = shouldShow ? 'flex' : 'none';
+    });
+}
 </script>
 </body>
 </html>

@@ -5,230 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEDIA STAFF | Player</title>
     <link rel="icon" href="assets/logo.png" type="image/png">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #000;
-            color: white;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        #player-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-        
-        #media-display, #video-display, #web-display {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border: none;
-        }
-        
-        #youtube-display {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        /* Tela de Autenticação Atualizada */
-        #auth-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #f5f7fa;
-            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            flex-direction: column;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .auth-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            /* box-shadow: 0 20px 40px rgba(0,0,0,0.1); */
-            width: 90%;
-            max-width: 500px;
-            color: #333;
-            border: 1px solid #0000001a;
-        }
-        .logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .logo > img {
-            width: 5vw;
-        }
-        .logo > h2 {
-            margin-bottom: 0;
-        }
-        .logo-container {
-            margin-bottom: 20px;
-        }
-
-        .logo-image {
-            max-width: 200px;
-            max-height: 100px;
-            margin-bottom: 15px;
-        }
-
-        .auth-container h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-        }
-
-        .auth-container p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .auth-code-display {
-            background: #f8f9fa;
-            border: 1px solid #0000001a;
-            border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .auth-code {
-            font-family: 'Courier New', monospace;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #2c3e50;
-            letter-spacing: 8px;
-            margin: 10px 0;
-        }
-
-        .code-expiry {
-            color: #e74c3c;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .device-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            font-size: 14px;
-            text-align: left;
-            border: 1px solid #0000001a;    
-        }
-
-        .device-info strong {
-            color: #2c3e50;
-        }
-
-        /* Status e controles */
-        #status-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 100;
-            border: 1px solid #333;
-        }
-        
-        #connection-error {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            z-index: 100;
-            padding: 20px;
-        }
-        
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 8px;
-            z-index: 50;
-        }
-        
-        .countdown {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            z-index: 100;
-        }
-
-        .debug-panel {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            color: #ccc;
-            z-index: 100;
-        }
-
-        .sync-notification {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(52, 152, 219, 0.9);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 200;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="player-container">
@@ -315,6 +92,11 @@
             this.ws = null;
             this.deviceId = null;
             this.playlistSyncInfo = null;
+            this.pendingPlaylistUpdate = null;
+            
+            // NOVO: Configurações do dispositivo
+            this.audioEnabled = false;
+            this.rotation = 'horizontal';
             
             // Elementos DOM
             this.authScreen = document.getElementById('auth-screen');
@@ -388,10 +170,18 @@
                             this.deviceId = result.device.id;
                             this.deviceInfo = result.device;
                             
+                            // NOVO: Aplicar configurações do dispositivo
+                            this.audioEnabled = result.device.audioEnabled || false;
+                            this.rotation = result.device.rotation || 'horizontal';
+                            this.applyDeviceConfig();
+                            
                             localStorage.setItem('deviceAuth', JSON.stringify({
                                 deviceId: this.deviceId,
                                 mac: this.deviceMac,
-                                activatedAt: new Date()
+                                activatedAt: new Date(),
+                                audioEnabled: this.audioEnabled,
+                                rotation: this.rotation,
+                                developer: this.developerMode || false
                             }));
                             
                             if (this.codeGenerationInterval) {
@@ -408,6 +198,78 @@
             }, 5000);
         }
 
+        // NOVO: Aplicar configurações do dispositivo
+        applyDeviceConfig() {
+            console.log('⚙️ Aplicando configurações do dispositivo:', {
+                audioEnabled: this.audioEnabled,
+                rotation: this.rotation,
+                developer: this.developerMode
+            });
+            
+            // Aplicar configuração de áudio
+            if (this.videoDisplay) {
+                this.videoDisplay.muted = !this.audioEnabled;
+                console.log(`🔊 Áudio ${this.audioEnabled ? 'habilitado' : 'desabilitado'}`);
+            }
+            
+            // Aplicar rotação
+            this.applyRotation();
+            
+            // Aplicar developer flag: mostrar/ocultar overlays de debug/status
+            this.toggleDeveloperElements();
+        }
+        
+// NOVO: Aplicar rotação - CORRIGIDO para funcionar imediatamente
+applyRotation() {
+    console.log(`🔄 Aplicando rotação: ${this.rotation}`);
+    
+    const elements = [
+        this.mediaDisplay,
+        this.videoDisplay,
+        this.youtubeDisplay,
+        this.webDisplay
+    ];
+    
+    elements.forEach(element => {
+        if (element && element.parentElement) {
+            // Remover classes de rotação anteriores
+            element.classList.remove('rotation-horizontal', 'rotation-vertical', 
+                                   'rotation-horizontal-inverted', 'rotation-vertical-inverted');
+            
+            // Adicionar nova classe de rotação
+            element.classList.add(`rotation-${this.rotation}`);
+            
+            console.log(`🎯 Rotação ${this.rotation} aplicada em`, element.id);
+        }
+    });
+    
+    // Forçar redimensionamento se necessário
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
+}
+// Função para aplicar visibilidade dos elementos de developer
+toggleDeveloperElements() {
+    // buscar os elementos (caso não sejam instanciados como this.*)
+    const statusOverlay = document.getElementById('status-overlay');
+    const countdownEl = document.getElementById('countdown');
+    const debugPanel = document.getElementById('debug-panel');
+
+    if (this.developerMode) {
+        if (statusOverlay) statusOverlay.classList.remove('hidden');
+        if (countdownEl) countdownEl.classList.remove('hidden');
+        if (debugPanel) debugPanel.classList.remove('hidden');
+    } else {
+        if (statusOverlay) statusOverlay.classList.add('hidden');
+        if (countdownEl) countdownEl.classList.add('hidden');
+        if (debugPanel) debugPanel.classList.add('hidden');
+    }
+
+    // Forçar redimensionamento se necessário
+    setTimeout(() => {
+        window.dispatchEvent(new Event('dev'));
+    }, 100);
+}
         async generateDeviceMac() {
             let savedMac = localStorage.getItem('deviceMac');
             
@@ -433,6 +295,11 @@
                     const authData = JSON.parse(savedAuth);
                     this.deviceId = authData.deviceId;
                     
+                    // NOVO: Carregar configurações salvas
+                    this.audioEnabled = authData.audioEnabled || false;
+                    this.rotation = authData.rotation || 'horizontal';
+                    this.developerMode = authData.developer || false;
+                    
                     console.log('🔍 Verificando autenticação salva:', authData);
                     
                     try {
@@ -443,10 +310,24 @@
                         });
                         
                         if (response.ok) {
-                            this.deviceInfo = await response.json();
-                            console.log('✅ Dispositivo já autenticado e ativo:', this.deviceInfo);
-                            this.startPlayback();
-                            return;
+                    this.deviceInfo = await response.json();
+                    console.log('✅ Dispositivo já autenticado e ativo:', this.deviceInfo);
+
+                    // Se servidor manda configurações, sobrepor e aplicar
+                    if (this.deviceInfo.audioEnabled !== undefined) {
+                        this.audioEnabled = this.deviceInfo.audioEnabled;
+                    }
+                    if (this.deviceInfo.rotation !== undefined) {
+                        this.rotation = this.deviceInfo.rotation;
+                    }
+                    if (this.deviceInfo.developer !== undefined) {
+                        this.developerMode = this.deviceInfo.developer;
+                    }
+
+                    this.applyDeviceConfig();
+
+                    this.startPlayback();
+                    return;
                         } else if (response.status === 403) {
                             console.log('❌ Autenticação salva não é mais válida');
                             localStorage.removeItem('deviceAuth');
@@ -599,9 +480,132 @@
                     console.log('🔌 Dispositivo desconectado pelo administrador');
                     this.handleDeviceDisconnected(data);
                     break;
+                // NOVO: Tratar atualizações de configuração
+                case 'device_config_update':
+                    console.log('⚙️ Configuração do dispositivo atualizada:', data.config);
+                    this.handleDeviceConfigUpdate(data.config);
+                    break;
+                case 'playlist_updated':
+                    console.log('🔄 Playlist atualizada, recarregando mídias...');
+                    this.handlePlaylistUpdated(data);
+            break;
             }
         }
 
+// NOVA: Função de debug para verificar estado
+debugPlaylistState() {
+    console.log('🐛 DEBUG - Estado da Playlist:');
+    console.log('- Índice atual:', this.currentMediaIndex);
+    console.log('- Total de mídias:', this.mediaList.length);
+    console.log('- Atualização pendente:', this.pendingPlaylistUpdate);
+    console.log('- Mídia atual:', this.currentMedia?.originalName);
+    console.log('- Playback lock:', this.playbackLock);
+}
+
+// CORREÇÃO: Tratar atualização de playlist de forma mais agressiva
+handlePlaylistUpdated(data) {
+    console.log('🔄 Recebida notificação de atualização da playlist:', data.playlistId);
+    console.log(`📊 Estado atual: Índice ${this.currentMediaIndex}/${this.mediaList.length}`);
+    
+    // Mostrar notificação visual
+    this.showUpdateNotification();
+    
+    // Salvar a nova informação da playlist
+    this.pendingPlaylistUpdate = {
+        playlistId: data.playlistId,
+        timestamp: new Date(),
+        applied: false
+    };
+    
+    console.log('📝 Atualização de playlist salva para aplicar');
+    
+    // SE estamos no início ou perto do fim, aplicar imediatamente
+    if (this.currentMediaIndex === 0 || this.currentMediaIndex >= this.mediaList.length - 1) {
+        console.log('🎯 Aplicando imediatamente (índice favorável)...');
+        setTimeout(() => {
+            if (this.pendingPlaylistUpdate && !this.pendingPlaylistUpdate.applied) {
+                this.applyPendingPlaylistUpdate();
+            }
+        }, 1000);
+    }
+}
+
+// NOVO: Tratar atualizações de configuração - CORRIGIDO
+handleDeviceConfigUpdate(config) {
+    console.log('⚙️ Configuração do dispositivo atualizada:', config);
+    
+    let configChanged = false;
+    
+    if (config.audioEnabled !== undefined && config.audioEnabled !== this.audioEnabled) {
+        this.audioEnabled = config.audioEnabled;
+        console.log(`🔊 Configuração de áudio atualizada: ${this.audioEnabled ? 'habilitado' : 'desabilitado'}`);
+        configChanged = true;
+        
+        // Aplicar configuração de áudio imediatamente em todos os elementos de vídeo
+        if (this.videoDisplay) {
+            this.videoDisplay.muted = !this.audioEnabled;
+            console.log(`🎬 Áudio do vídeo ${this.audioEnabled ? 'habilitado' : 'mutado'}`);
+        }
+    }
+    
+    if (config.rotation && config.rotation !== this.rotation) {
+        this.rotation = config.rotation;
+        console.log(`🔄 Configuração de rotação atualizada: ${this.rotation}`);
+        configChanged = true;
+        
+        // Aplicar rotação imediatamente
+        this.applyRotation();
+    }
+        if (config.developer !== undefined && config.developer !== this.developerMode) {
+        this.developerMode = config.developer;
+        console.log(`🛠️ Developer mode: ${this.developerMode}`);
+        configChanged = true;
+
+        this.toggleDeveloperElements();
+    }
+    if (configChanged) {
+        // Salvar configurações atualizadas
+        const savedAuth = localStorage.getItem('deviceAuth');
+        if (savedAuth) {
+            const authData = JSON.parse(savedAuth);
+            authData.audioEnabled = this.audioEnabled;
+            authData.rotation = this.rotation;
+            authData.developer = this.developerMode || false;
+            localStorage.setItem('deviceAuth', JSON.stringify(authData));
+            console.log('💾 Configurações salvas no localStorage');
+        }
+        
+        // Mostrar notificação visual
+        this.showConfigNotification();
+    }
+}
+// NOVO: Mostrar notificação de configuração aplicada
+showConfigNotification() {
+    if (this.developerMode) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #27ae60;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    notification.textContent = '⚙️ Configurações aplicadas com sucesso!';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 3000);
+    }
+}
         // CORRIGIDA: Sincronização que respeita o estado da playlist
         handleSyncCommand(data) {
             console.log('🔄 Processando sincronização da playlist:', data);
@@ -634,36 +638,54 @@
             
             this.showSyncNotification();
         }
-
-         // CORREÇÃO: Aplicar sincronização
-        applyPlaylistSync() {
-            if (!this.playlistSyncInfo || this.mediaList.length === 0) {
-                console.log('❌ Informações de sincronização incompletas');
-                this.playNextMedia();
-                return;
-            }
-            
-            const syncInfo = this.playlistSyncInfo;
-            const targetMediaIndex = syncInfo.currentMediaIndex;
-            
-            // VALIDAR índice da mídia
-            if (targetMediaIndex >= this.mediaList.length) {
-                console.log('❌ Índice de mídia inválido, usando índice 0');
-                this.currentMediaIndex = 0;
-                this.playNextMedia();
-                return;
-            }
-            
-            const targetMedia = this.mediaList[targetMediaIndex];
-            
-            console.log(`🎯 Sincronizando para mídia: ${targetMedia.originalName} (índice: ${targetMediaIndex})`);
-            console.log(`⏱️ ${Math.round(syncInfo.elapsedTime/1000)}s decorridos, ${Math.round(syncInfo.remainingTime/1000)}s restantes`);
-            
-            // SEMPRE trocar para a mídia especificada pela playlist
-            // Não verificar se já está na mesma mídia - a playlist é a verdade absoluta
-            console.log('🔄 Forçando mudança para mídia da playlist');
-            this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
-        }
+// NOVA: Verificar se a sincronização ainda é válida após atualização
+isSyncStillValid(syncInfo) {
+    if (!syncInfo || !this.mediaList.length) {
+        return false;
+    }
+    
+    // Verificar se o índice da sincronização ainda existe na playlist
+    if (syncInfo.currentMediaIndex >= this.mediaList.length) {
+        console.log('❌ Índice de sincronização inválido na nova playlist');
+        return false;
+    }
+    
+    // Verificar se a mídia na posição sincronizada ainda é a mesma (opcional)
+    // Isso pode ser expandido para verificar por ID se necessário
+    
+    return true;
+}
+// CORREÇÃO: Aplicar sincronização da playlist
+applyPlaylistSync() {
+    if (!this.playlistSyncInfo || this.mediaList.length === 0) {
+        console.log('❌ Informações de sincronização incompletas, usando reprodução normal');
+        this.currentMediaIndex = 0;
+        this.playNextMedia();
+        return;
+    }
+    
+    const syncInfo = this.playlistSyncInfo;
+    const targetMediaIndex = syncInfo.currentMediaIndex;
+    
+    console.log(`🎯 Tentando sincronizar para índice: ${targetMediaIndex}`);
+    console.log(`📊 Playlist tem ${this.mediaList.length} mídias`);
+    
+    // VALIDAR índice da mídia
+    if (targetMediaIndex >= this.mediaList.length) {
+        console.log(`❌ Índice de mídia inválido (${targetMediaIndex}), usando índice 0`);
+        this.currentMediaIndex = 0;
+        this.playNextMedia();
+        return;
+    }
+    
+    const targetMedia = this.mediaList[targetMediaIndex];
+    
+    console.log(`🎯 Sincronizando para mídia: ${targetMedia.originalName} (índice: ${targetMediaIndex})`);
+    console.log(`⏱️ ${Math.round(syncInfo.elapsedTime/1000)}s decorridos, ${Math.round(syncInfo.remainingTime/1000)}s restantes de ${Math.round(syncInfo.mediaDuration/1000)}s totais`);
+    
+    // CORREÇÃO: Reproduzir mídia específica com sincronização
+    this.playMediaWithSync(targetMediaIndex, syncInfo.elapsedTime, syncInfo.remainingTime, syncInfo.mediaDuration);
+}
 
         // CORRIGIDA: Atualizar timing da mídia atual
         updateCurrentMediaTiming(elapsedTime, remainingTime, mediaDuration) {
@@ -736,6 +758,7 @@
             // DEBUG: Log do estado após sincronização
             console.log(`🔍 DEBUG SYNCMEDIA: Índice definido: ${this.currentMediaIndex}, Próxima mídia será: ${(this.currentMediaIndex + 1) % this.mediaList.length}`);
         }
+
 
         // NOVO: Método para debug - verificar estado da sincronização
         debugSyncState() {
@@ -833,42 +856,52 @@
             }
         }
 
-        async startPlayback() {
-            console.log('🚀 Iniciando playback para dispositivo:', this.deviceInfo);
-            
-            this.hideAuthScreen();
-            this.connectionError.classList.add('hidden');
-            this.statusOverlay.classList.remove('hidden');
-            this.debugPanel.classList.remove('hidden');
-            
-            this.deviceNameElement.textContent = this.deviceInfo.name;
-            this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
-            this.deviceStatusElement.textContent = 'Autenticado';
-            
-            if (this.activationInterval) {
-                clearInterval(this.activationInterval);
-                this.activationInterval = null;
-            }
-            
-            if (this.codeGenerationInterval) {
-                clearInterval(this.codeGenerationInterval);
-                this.codeGenerationInterval = null;
-            }
-            
-            // PRIMEIRO buscar informações de sincronização da playlist
-            const playlistSyncInfo = await this.fetchPlaylistSyncInfo();
-            
-            if (playlistSyncInfo) {
-                console.log('🎯 Usando sincronização da playlist');
-                this.playlistSyncInfo = playlistSyncInfo;
-            } else {
-                console.log('ℹ️ Iniciando reprodução normal');
-            }
-            
-            // DEPOIS carregar mídias
-            await this.loadMediaList();
-            this.connectWebSocket();
+// ATUALIZAR: Iniciar playback aplicando sincronização corretamente
+async startPlayback() {
+    console.log('🚀 Iniciando playback para dispositivo:', this.deviceInfo);
+    
+    this.hideAuthScreen();
+    this.connectionError.classList.add('hidden');
+    this.statusOverlay.classList.remove('hidden');
+    this.debugPanel.classList.remove('hidden');
+    
+    this.deviceNameElement.textContent = this.deviceInfo.name;
+    this.debugInfo.textContent = `Conectado: ${this.deviceInfo.name}`;
+    this.deviceStatusElement.textContent = 'Autenticado';
+    
+    // NOVO: Aplicar configurações do dispositivo
+    this.applyDeviceConfig();
+    this.toggleDeveloperElements();
+    if (this.activationInterval) {
+        clearInterval(this.activationInterval);
+        this.activationInterval = null;
+    }
+    
+    if (this.codeGenerationInterval) {
+        clearInterval(this.codeGenerationInterval);
+        this.codeGenerationInterval = null;
+    }
+    
+    // PRIMEIRO: Buscar informações de sincronização da playlist (se tiver playlist)
+    if (this.deviceInfo.playlistId) {
+        console.log('🎯 Dispositivo tem playlist específica, buscando sincronização...');
+        const playlistSyncInfo = await this.fetchPlaylistSyncInfo();
+        
+        if (playlistSyncInfo) {
+            console.log('🎯 Sincronização da playlist encontrada:', playlistSyncInfo);
+            this.playlistSyncInfo = playlistSyncInfo;
+        } else {
+            console.log('ℹ️ Nenhuma sincronização disponível para a playlist');
         }
+    } else {
+        console.log('🎯 Dispositivo sem playlist específica');
+    }
+    
+    // DEPOIS: Carregar mídias
+    await this.loadMediaList();
+    
+    this.connectWebSocket();
+}
 
         showErrorScreen(message) {
             console.log('❌ Mostrando tela de erro:', message);
@@ -888,6 +921,8 @@
                 console.log('✅ Imagem carregada');
                 this.hideLoading();
                 this.mediaDisplay.classList.remove('hidden');
+                // NOVO: Aplicar rotação
+                this.mediaDisplay.classList.add(this.rotation);
             };
             
             this.mediaDisplay.onerror = () => {
@@ -907,6 +942,11 @@
                 console.log('✅ Vídeo carregado e pronto para reprodução');
                 this.hideLoading();
                 this.videoDisplay.classList.remove('hidden');
+                // NOVO: Aplicar rotação
+                this.videoDisplay.classList.add(this.rotation);
+                
+                // NOVO: Aplicar configuração de áudio
+                this.videoDisplay.muted = !this.audioEnabled;
                 
                 if (seekTime > 0) {
                     const seekSeconds = seekTime / 1000;
@@ -934,7 +974,6 @@
             };
             
             this.videoDisplay.src = `${this.serverUrl}${media.path}?t=${Date.now()}`;
-            this.videoDisplay.muted = true; // Mutar para evitar problemas de autoplay
             this.videoDisplay.playsInline = true; // Importante para iOS
         }
 
@@ -962,6 +1001,8 @@
                 console.log('✅ YouTube carregado');
                 this.hideLoading();
                 this.youtubeDisplay.classList.remove('hidden');
+                // NOVO: Aplicar rotação
+                this.youtubeDisplay.classList.add(this.rotation);
             };
             
             this.youtubeDisplay.onerror = () => {
@@ -980,6 +1021,8 @@
                 console.log('✅ Site carregado');
                 this.hideLoading();
                 this.webDisplay.classList.remove('hidden');
+                // NOVO: Aplicar rotação
+                this.webDisplay.classList.add(this.rotation);
             };
             
             this.webDisplay.onerror = () => {
@@ -1014,7 +1057,7 @@
                 this.currentCountdown = null;
             }
             
-            this.countdownElement.classList.add('hidden');
+            // this.countdownElement.classList.add('hidden');
         }
 
         extractYouTubeId(url) {
@@ -1024,7 +1067,7 @@
         }
 
         startCountdown(duration) {
-            this.countdownElement.classList.remove('hidden');
+            // this.countdownElement.classList.remove('hidden');
             let timeLeft = duration / 1000;
             this.countdownTimer.textContent = Math.round(timeLeft);
             
@@ -1038,7 +1081,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(this.currentCountdown);
-                    this.countdownElement.classList.add('hidden');
+                    // this.countdownElement.classList.add('hidden');
                 }
             }, 1000);
         }
@@ -1083,129 +1126,314 @@
             return this.currentMediaIndex;
         }
 
-        // ATUALIZAR: Carregar mídias com validação de índice
-        async loadMediaList() {
-            if (this.isLoadingMedia) {
-                return;
+// ATUALIZAR: Carregar mídias sem reiniciar automaticamente se há atualização pendente
+async loadMediaList() {
+    if (this.isLoadingMedia) {
+        console.log('⏳ Já está carregando mídias, aguardando...');
+        return;
+    }
+    
+    this.isLoadingMedia = true;
+    
+    try {
+        this.showLoading('Carregando conteúdo...');
+        
+        const response = await fetch(`${this.serverUrl}/api/player/media`, {
+            headers: {
+                'x-device-mac': this.deviceMac
             }
+        });
+        
+        if (response.ok) {
+            const newMediaList = await response.json();
+            console.log(`📋 ${newMediaList.length} mídia(s) carregada(s)`);
             
-            this.isLoadingMedia = true;
+            // SALVAR a lista antiga para comparação
+            const oldMediaList = this.mediaList;
+            this.mediaList = newMediaList;
             
-            try {
-                this.showLoading('Carregando conteúdo...');
+            if (this.mediaList.length > 0) {
+                this.hideLoading();
                 
-                const response = await fetch(`${this.serverUrl}/api/player/media`, {
-                    headers: {
-                        'x-device-mac': this.deviceMac
-                    }
-                });
+                // CORREÇÃO: Validar índice antes de usar
+                this.validateMediaIndex();
                 
-                if (response.ok) {
-                    this.mediaList = await response.json();
-                    console.log(`📋 ${this.mediaList.length} mídia(s) carregada(s)`);
-                    
-                    if (this.mediaList.length > 0) {
-                        this.hideLoading();
-                        
-                        // CORREÇÃO: Validar índice antes de usar
-                        this.validateMediaIndex();
-                        
-                        // SE temos sincronização da playlist, aplicar
-                        if (this.playlistSyncInfo) {
-                            console.log('🎯 Aplicando sincronização da playlist após carregamento');
-                            this.applyPlaylistSync();
-                        } else {
-                            // CORREÇÃO: Iniciar reprodução com índice validado
-                            console.log(`🎬 Iniciando reprodução normal do índice: ${this.currentMediaIndex}`);
-                            this.playNextMedia();
-                        }
-                    } else {
-                        this.showLoading('⚠️ Nenhum conteúdo disponível');
-                    }
-                } else {
-                    throw new Error('Erro ao carregar conteúdo');
-                }
-            } catch (error) {
-                console.error('❌ Erro ao carregar mídias:', error);
-                this.showErrorScreen('Erro ao carregar conteúdo');
-            } finally {
-                this.isLoadingMedia = false;
-            }
-        }
-
-        // CORREÇÃO: Reproduzir próxima mídia com controle correto de índice
-        playNextMedia() {
-            if (this.playbackLock) {
-                console.log('⏸️  Playback bloqueado, aguardando...');
-                return;
-            }
-            
-            if (this.mediaList.length === 0) {
-                console.log('❌ Nenhuma mídia para reproduzir');
-                return;
-            }
-            
-            this.clearTimers();
-            
-            // CORREÇÃO: Verificar se chegou ao final da playlist
-            if (this.currentMediaIndex >= this.mediaList.length) {
-                this.currentMediaIndex = 0;
-                console.log('🔄 Fim da playlist, reiniciando do índice 0...');
-            }
-            
-            const media = this.mediaList[this.currentMediaIndex];
-            console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName}`);
-            
-            // CORREÇÃO: Reproduzir a mídia atual ANTES de incrementar o índice
-            this.playMedia(media);
-            
-            // CORREÇÃO: Incrementar índice APÓS reproduzir a mídia atual
-            this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
-            console.log(`📊 Próximo índice será: ${this.currentMediaIndex}`);
-        }
-
-        // CORREÇÃO: Reproduzir mídia normalmente
-        playMedia(media, isAnnouncement = false) {
-            if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
-                console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
-                return;
-            }
-            
-            this.currentMedia = media;
-            this.stopAllMedia();
-            this.playbackLock = true;
-            
-            this.currentMediaElement.textContent = media.originalName;
-            
-            const displayTime = (media.displayTime || 10) * 1000;
-            const displaySeconds = Math.round(displayTime / 1000);
-            
-            this.mediaTimeElement.textContent = `${displaySeconds}s/${displaySeconds}s`;
-            this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
-            
-            this.mediaStartTime = new Date();
-            
-            this.startCountdown(displayTime);
-            
-            if (this.currentTimeout) {
-                clearTimeout(this.currentTimeout);
-            }
-            
-            this.currentTimeout = setTimeout(() => {
-                console.log('⏰ Timer da mídia finalizado, indo para próxima...');
-                this.playbackLock = false;
-                if (!isAnnouncement) {
+                // SE temos sincronização da playlist, aplicar
+                if (this.playlistSyncInfo) {
+                    console.log('🎯 Aplicando sincronização da playlist após carregamento');
+                    this.applyPlaylistSync();
+                } else if (!this.pendingPlaylistUpdate) {
+                    // CORREÇÃO: Só iniciar automaticamente se NÃO há atualização pendente
+                    console.log(`🎬 Iniciando reprodução normal do índice: ${this.currentMediaIndex}`);
                     this.playNextMedia();
+                } else {
+                    console.log('⏳ Atualização pendente, aguardando ciclo completo para aplicar');
                 }
-            }, displayTime);
+            } else {
+                this.showLoading('⚠️ Nenhum conteúdo disponível');
+            }
+        } else {
+            throw new Error('Erro ao carregar conteúdo');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar mídias:', error);
+        this.showErrorScreen('Erro ao carregar conteúdo');
+    } finally {
+        this.isLoadingMedia = false;
+    }
+}
+        //  Verificar se a lista de mídias mudou significativamente
+        hasMediaListChanged(oldList, newList) {
+            if (oldList.length !== newList.length) {
+                return true;
+            }
             
-            this.sendCurrentMedia();
-            this.playMediaByType(media, 0);
+            // Verificar se os IDs são os mesmos
+            const oldIds = oldList.map(m => m.id).sort();
+            const newIds = newList.map(m => m.id).sort();
             
-            // DEBUG: Log do estado atual
-            console.log(`🔍 DEBUG PLAYMEDIA: Índice atual: ${this.currentMediaIndex}, Mídia: ${media.originalName}`);
+            return !oldIds.every((id, index) => id === newIds[index]);
         }
 
+
+
+        // NOVA: Mostrar notificação de atualização pendente
+        showUpdateNotification() {
+                if (this.developerMode) {   
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #ffa500;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                z-index: 9999;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                text-align: center;
+            `;
+            notification.innerHTML = '🔄 Playlist atualizada - Será aplicada no próximo ciclo';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        }
+// CORREÇÃO DEFINITIVA: Reproduzir próxima mídia com verificação robusta de atualização
+playNextMedia() {
+    if (this.playbackLock) {
+        console.log('⏸️  Playback bloqueado, aguardando...');
+        return;
+    }
+    
+    if (this.mediaList.length === 0) {
+        console.log('❌ Nenhuma mídia para reproduzir');
+        return;
+    }
+    
+    this.clearTimers();
+    
+    console.log(`🔍 VERIFICAÇÃO: Índice atual: ${this.currentMediaIndex}, Total: ${this.mediaList.length}, Pendente: ${this.pendingPlaylistUpdate ? 'SIM' : 'NÃO'}`);
+    
+    // VERIFICAÇÃO ROBUSTA: Se temos atualização pendente E estamos no ciclo completo
+    if (this.pendingPlaylistUpdate && !this.pendingPlaylistUpdate.applied) {
+        const isAtStart = this.currentMediaIndex === 0;
+        const isAtEnd = this.currentMediaIndex >= this.mediaList.length - 1;
+        const willRestart = this.currentMediaIndex >= this.mediaList.length;
+        
+        console.log(`🔄 Status: Início=${isAtStart}, Fim=${isAtEnd}, Reiniciará=${willRestart}`);
+        
+        // APLICAR atualização se estamos no final OU prestes a reiniciar
+        if (willRestart || isAtEnd) {
+            console.log('🔄 Condição de atualização atendida - Aplicando nova playlist...');
+            this.applyPendingPlaylistUpdate();
+            return;
+        }
+    }
+    
+    // CORREÇÃO: Verificar se chegou ao final da playlist
+    if (this.currentMediaIndex >= this.mediaList.length) {
+        this.currentMediaIndex = 0;
+        console.log('🔄 Fim da playlist, reiniciando do índice 0...');
+        
+        // VERIFICAR NOVAMENTE após reset para 0
+        if (this.pendingPlaylistUpdate && !this.pendingPlaylistUpdate.applied) {
+            console.log('🔄 Índice resetado para 0 - Aplicando atualização da playlist...');
+            this.applyPendingPlaylistUpdate();
+            return;
+        }
+    }
+    
+    const media = this.mediaList[this.currentMediaIndex];
+    console.log(`🎬 Reproduzindo mídia ${this.currentMediaIndex + 1}/${this.mediaList.length}: ${media.originalName}`);
+    
+    // CORREÇÃO: Reproduzir a mídia atual ANTES de incrementar o índice
+    this.playMedia(media);
+    
+    // CORREÇÃO: Incrementar índice APÓS reproduzir a mídia atual
+    this.currentMediaIndex = (this.currentMediaIndex + 1) % this.mediaList.length;
+    console.log(`📊 Próximo índice será: ${this.currentMediaIndex}`);
+}
+
+
+// ADICIONAR: Verificação no playMedia para detectar ciclo completo
+playMedia(media, isAnnouncement = false) {
+    if (this.playbackLock && this.currentMedia && this.currentMedia.id === media.id) {
+        console.log('⏸️  Mídia já está sendo reproduzida, ignorando...');
+        return;
+    }
+    
+    // VERIFICAR se temos atualização pendente ao iniciar nova mídia
+    if (this.pendingPlaylistUpdate && !this.pendingPlaylistUpdate.applied && this.currentMediaIndex === 0) {
+        console.log('🔄 Iniciando mídia no índice 0 com atualização pendente - Aplicando...');
+        this.applyPendingPlaylistUpdate();
+        return;
+    }
+    
+    this.currentMedia = media;
+    this.stopAllMedia();
+    this.playbackLock = true;
+    
+    this.currentMediaElement.textContent = media.originalName;
+    
+    const displayTime = (media.displayTime || 10) * 1000;
+    const displaySeconds = Math.round(displayTime / 1000);
+    
+    this.mediaTimeElement.textContent = `${displaySeconds}s/${displaySeconds}s`;
+    this.debugInfo.textContent = `Reproduzindo: ${media.originalName} ${isAnnouncement ? '(Anunciamento)' : ''}`;
+    
+    this.mediaStartTime = new Date();
+    
+    this.startCountdown(displayTime);
+    
+    if (this.currentTimeout) {
+        clearTimeout(this.currentTimeout);
+    }
+    
+    this.currentTimeout = setTimeout(() => {
+        console.log('⏰ Timer da mídia finalizado, indo para próxima...');
+        this.playbackLock = false;
+        if (!isAnnouncement) {
+            this.playNextMedia();
+        }
+    }, displayTime);
+    
+    this.sendCurrentMedia();
+    this.playMediaByType(media, 0);
+    
+    // DEBUG: Log do estado atual
+    console.log(`🔍 DEBUG PLAYMEDIA: Índice atual: ${this.currentMediaIndex}, Mídia: ${media.originalName}`);
+}
+// CORREÇÃO: Aplicar atualização pendente da playlist com reset correto
+async applyPendingPlaylistUpdate() {
+    if (!this.pendingPlaylistUpdate || this.pendingPlaylistUpdate.applied) {
+        console.log('ℹ️ Nenhuma atualização pendente para aplicar');
+        return;
+    }
+    
+    console.log('🔄 APLICANDO ATUALIZAÇÃO DA PLAYLIST...');
+    
+    this.showLoading('Atualizando playlist...');
+    this.clearTimers();
+    this.stopAllMedia();
+    
+    // CORREÇÃO IMPORTANTE: Resetar o playbackLock ANTES de recarregar
+    this.playbackLock = false;
+    
+    try {
+        console.log('📥 Recarregando lista de mídias...');
+        
+        // Recarregar a lista de mídias
+        const response = await fetch(`${this.serverUrl}/api/player/media`, {
+            headers: {
+                'x-device-mac': this.deviceMac
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar conteúdo');
+        }
+        
+        const newMediaList = await response.json();
+        console.log(`📋 ${newMediaList.length} nova(s) mídia(s) carregada(s)`);
+        
+        // ATUALIZAR lista de mídias
+        this.mediaList = newMediaList;
+        
+        if (this.mediaList.length === 0) {
+            throw new Error('Nenhuma mídia disponível na nova playlist');
+        }
+        
+        // SEMPRE reiniciar do índice 0 para nova playlist
+        this.currentMediaIndex = 0;
+        console.log('🔄 Reiniciando reprodução do índice 0 com nova playlist');
+        
+        // Marcar como aplicada e LIMPAR
+        this.pendingPlaylistUpdate.applied = true;
+        this.pendingPlaylistUpdate.appliedAt = new Date();
+        this.pendingPlaylistUpdate = null;
+        
+        console.log('✅ Atualização da playlist aplicada com sucesso!');
+        
+        // Mostrar notificação de sucesso
+        this.showUpdateAppliedNotification();
+        
+        // CORREÇÃO: Garantir que o playbackLock está desbloqueado
+        this.playbackLock = false;
+        
+        // Reiniciar reprodução do índice 0
+        this.hideLoading();
+        this.playNextMedia();
+        
+    } catch (error) {
+        console.error('❌ Erro ao aplicar atualização da playlist:', error);
+        
+        // CORREÇÃO: Resetar estado mesmo em caso de erro
+        this.pendingPlaylistUpdate = null;
+        this.playbackLock = false;
+        
+        // Tentar continuar com a playlist atual
+        this.currentMediaIndex = 0;
+        this.hideLoading();
+        this.playNextMedia();
+    }
+}
+// NOVA: Mostrar notificação de atualização aplicada
+showUpdateAppliedNotification() {
+    if (this.developerMode) {    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #27ae60;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        text-align: center;
+    `;
+    notification.innerHTML = '✅ Playlist atualizada - Nova programação em execução';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+}
         handleAnnouncement(data) {
             console.log('📢 Anunciamento recebido:', data.announcement.name);
             
@@ -1253,10 +1481,12 @@
         }
         
         showSyncNotification() {
+        if (this.developerMode) {    
             this.syncNotification.classList.remove('hidden');
             setTimeout(() => {
                 this.syncNotification.classList.add('hidden');
             }, 3000);
+        }
         }
     }
     

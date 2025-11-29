@@ -247,6 +247,7 @@
             max-width: 800px;
             padding: 0 20px;
             z-index: 2;
+            padding-top: 8vw;
         }
 
         .hero h1 {
@@ -754,7 +755,7 @@
             .nav-links {
                 display: none;
                 position: absolute;
-                top: 80px;
+                top: 77px;
                 left: 0;
                 width: 100%;
                 background: var(--white);
@@ -795,10 +796,16 @@
                 padding: 20px;
             }
             
-            .hero {
+            /* .hero {
                 height: 80vh;
-            }
+            } */
             
+            .logo {
+                font-size: 1.4rem;
+            }
+            .logo-img {
+                width: 10vw;
+            }
             .hero h1 {
                 font-size: 2.5rem;
             }
@@ -1123,7 +1130,8 @@
         // Header scroll effect
         window.addEventListener('scroll', () => {
             const header = document.getElementById('header');
-            if (window.scrollY > 50) {
+            const navlinks = document.querySelector('.nav-links');
+            if (window.scrollY > 50 || navlinks.classList.contains('active')) {
                 header.classList.add('scrolled');
             } else {
                 header.classList.remove('scrolled');
@@ -1179,9 +1187,12 @@
         // Mobile menu toggle
         const mobileMenu = document.querySelector('.mobile-menu');
         const navLinks = document.querySelector('.nav-links');
-        
+
         mobileMenu.addEventListener('click', () => {
+            const header = document.getElementById('header');
+
             navLinks.classList.toggle('active');
+            header.classList.toggle('scrolled');
         });
         
         // Contact form submission

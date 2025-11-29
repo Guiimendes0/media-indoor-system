@@ -31,5 +31,46 @@
       "lastSync": "2025-11-07T14:18:50.799Z",
       "syncBy": "1"
     }
+  },
+  {
+    "id": "1764290035859",
+    "name": "Vertical",
+    "mediaIds": [
+      "1763935546378",
+      "1763933938266",
+      "1763935317942",
+      "1764289948943"
+    ],
+    "campaignIds": [],
+    "contentOrder": [
+      {
+        "id": "1763935546378",
+        "type": "media"
+      },
+      {
+        "id": "1763933938266",
+        "type": "media"
+      },
+      {
+        "id": "1763935317942",
+        "type": "media"
+      },
+      {
+        "id": "1764289948943",
+        "type": "media"
+      }
+    ],
+    "schedule": {},
+    "userId": "1",
+    "createdAt": "2025-11-28T00:33:55.859Z",
+    "syncInfo": {
+      "currentMediaIndex": 0,
+      "mediaStartTime": "2025-11-28T00:33:55.859Z",
+      "lastSync": "2025-11-29T04:16:55.018Z",
+      "syncBy": "1",
+      "calculatedElapsedTime": 4159,
+      "calculatedRemainingTime": 10841
+    },
+    "updatedAt": "2025-11-29T04:44:55.267Z"
   }
 ]

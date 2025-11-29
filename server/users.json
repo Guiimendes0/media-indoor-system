@@ -2,21 +2,41 @@
   {
     "id": "1",
     "username": "admin",
-    "password": "$2b$10$fpa8qEYmTTESKtE7fXRU2e/fbjjlbhjAeboDsNbOnY1FQ6MfAUppi",
+    "password": "$2b$10$SDeMccUWjDdox5Oos8yymerlJe9Lw7Q9FXQZj/iWGzz04uO/ssXHa",
     "name": "Administrador",
     "role": "admin",
     "createdAt": "2025-11-06T10:13:48.701Z",
-    "lastLogin": "2025-11-07T23:36:58.439Z",
-    "token": "ijt5nk3xp5lmhphw5zb"
+    "lastLogin": "2025-11-29T02:52:15.321Z",
+    "token": "mzzbmbklafmijp46s9"
   },
   {
     "id": "1762424957386",
     "username": "Guiimendes0",
-    "password": "$2b$10$RwhWSf60UDKEwXeqJMl1cOcRO57xYIFjQZKkkUeQ0n7rRhNsR9e7S",
+    "password": "$2b$10$wDp81jcKmi/zztvQ/ue49On0Nlt.QlLQrb09WY2CibzpFQqNvpJNG",
     "name": "Guilherme B. Mendes",
     "role": "user",
     "createdAt": "2025-11-06T10:29:17.386Z",
-    "lastLogin": "2025-11-06T10:30:04.687Z",
+    "lastLogin": "2025-11-28T18:55:44.498Z",
+    "token": null
+  },
+  {
+    "id": "1764354850584",
+    "username": "Anderson.Borges",
+    "password": "$2b$10$tFiBEtq2UtasKsl4graEEuBfFN9sF9JE/rrxnKL.TwP1UlLXGtfYW",
+    "name": "Anderson Borges",
+    "role": "user",
+    "createdAt": "2025-11-28T18:34:10.584Z",
+    "lastLogin": "2025-11-28T18:34:13.106Z",
+    "token": null
+  },
+  {
+    "id": "1764391734257",
+    "username": "Paulo.Vieira",
+    "password": "$2b$10$4JMtQpO9dMTa7RYqhQGafebvfbcjilGdwMnEqynm.SDYaqlUz97Xi",
+    "name": "Paulo Henrique Mendes Vieria",
+    "role": "user",
+    "createdAt": "2025-11-29T04:48:54.257Z",
+    "lastLogin": null,
     "token": null
   }
 ]
