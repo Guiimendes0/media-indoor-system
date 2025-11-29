@@ -2183,7 +2183,7 @@ async function loadAllData() {
     function renderDevicesList() {
         const tbody = document.querySelector('#devicesListTable tbody');
         tbody.innerHTML = '';
-        
+        //
         currentDevices = currentDevices.filter(device => device.userId !== null);
 
         currentDevices.forEach(device => {
